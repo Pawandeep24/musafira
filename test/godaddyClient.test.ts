@@ -19,14 +19,14 @@ function make(fetchImpl: typeof fetch, extra: Partial<ConstructorParameters<type
 }
 
 describe("GoDaddyClient", () => {
-  it("sends the bearer token and query params", async () => {
+  it("sends the sso-key credential and query params", async () => {
     const fetchImpl = vi.fn(async () => json({ ok: true }));
     const { client } = make(fetchImpl as unknown as typeof fetch);
-    await client.request("/v3/x", { query: { domain: "a.com", skip: undefined } });
+    await client.request("/v1/x", { query: { domain: "a.com", skip: undefined } });
 
     const [url, init] = fetchImpl.mock.calls[0] as unknown as [string, RequestInit];
-    expect(url).toBe("https://api.test/v3/x?domain=a.com");
-    expect((init.headers as Record<string, string>).Authorization).toBe("Bearer secret-pat");
+    expect(url).toBe("https://api.test/v1/x?domain=a.com");
+    expect((init.headers as Record<string, string>).Authorization).toBe("sso-key secret-pat");
   });
 
   it("retries GET on 503 then succeeds", async () => {

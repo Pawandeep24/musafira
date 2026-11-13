@@ -5,7 +5,7 @@ GoDaddy Inclusive Innovation Hackathon 2026 – project foundation (TypeScript /
 ## Architecture
 
 ```
-Client ──(Firebase ID token)──▶ Our API ──(GoDaddy PAT, server-side only)──▶ GoDaddy APIs
+Client ──(Firebase ID token)──▶ Our API ──(GoDaddy key+secret, server-side only)──▶ GoDaddy APIs
                                   │
                                   └──▶ Firestore (via Admin SDK)
 ```
@@ -18,9 +18,9 @@ Client ──(Firebase ID token)──▶ Our API ──(GoDaddy PAT, server-sid
 | Routes | `src/routes/` | `/healthz` (public), `/api/me`, `/api/domains/availability` (protected) |
 
 **Security rules of thumb**
-- The GoDaddy PAT and Firebase service account live only on the server (`.env`, never committed, never in a browser bundle).
+- The GoDaddy key/secret and Firebase service account live only on the server (`.env`, never committed, never in a browser bundle).
 - Use `GODADDY_ENV=ote` (sandbox) until you deliberately need production.
-- Give the PAT the minimum scopes (e.g. `domains.domain:read`).
+- GoDaddy keys have no scopes: a production key can do anything on the account. Revoke it when you are done.
 
 ## Setup
 
@@ -28,13 +28,14 @@ Client ──(Firebase ID token)──▶ Our API ──(GoDaddy PAT, server-sid
 npm ci
 cp .env.example .env     # then fill in values
 npm run typecheck && npm test
-npm run smoke:godaddy    # verifies your GoDaddy PAT
+npm run smoke:godaddy    # verifies the GoDaddy key for GODADDY_ENV
 npm run dev              # http://localhost:3000/healthz
 ```
 
 ### GoDaddy
-1. Sign in at https://developer.godaddy.com and create a **Personal Access Token** with the scopes you need.
-2. Put it in `.env` as `GODADDY_PAT`, then run `npm run smoke:godaddy`.
+1. Sign in at https://developer.godaddy.com and create an OTE key and a production key.
+2. Put each key/secret pair in `.env` (`GODADDY_OTE_API_*`, `GODADDY_PRODUCTION_API_*`).
+3. Set `GODADDY_ENV` to `ote` or `production`, then run `npm run smoke:godaddy`.
 
 ### Firebase (free Spark plan)
 1. https://console.firebase.google.com → create project → stay on **Spark**.

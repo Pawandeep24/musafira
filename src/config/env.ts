@@ -15,9 +15,13 @@ const schema = z.object({
     ),
 
   GODADDY_ENV: z.enum(["ote", "production"]).default("ote"),
-  GODADDY_PAT: z.string().min(1).optional(),
+  GODADDY_OTE_API_KEY: z.string().min(1).optional(),
+  GODADDY_OTE_API_SECRET: z.string().min(1).optional(),
+  GODADDY_PRODUCTION_API_KEY: z.string().min(1).optional(),
+  GODADDY_PRODUCTION_API_SECRET: z.string().min(1).optional(),
 
   FIREBASE_PROJECT_ID: z.string().min(1).optional(),
+  FIREBASE_WEB_API_KEY: z.string().min(1).optional(),
   FIREBASE_SERVICE_ACCOUNT_JSON: z.string().min(1).optional(),
   FIREBASE_AUTH_EMULATOR_HOST: z.string().min(1).optional(),
   FIRESTORE_EMULATOR_HOST: z.string().min(1).optional(),

@@ -16,8 +16,8 @@ const verifier: TokenVerifier = {
 
 describe("loadEnv", () => {
   it("treats blank values (KEY=) as unset", () => {
-    const e = loadEnv({ GODADDY_PAT: "", FIREBASE_PROJECT_ID: "  ", PORT: "4000" });
-    expect(e.GODADDY_PAT).toBeUndefined();
+    const e = loadEnv({ GODADDY_OTE_API_KEY: "", FIREBASE_PROJECT_ID: "  ", PORT: "4000" });
+    expect(e.GODADDY_OTE_API_KEY).toBeUndefined();
     expect(e.FIREBASE_PROJECT_ID).toBeUndefined();
     expect(e.PORT).toBe(4000);
   });
@@ -59,7 +59,7 @@ describe("auth guard + routes", () => {
     const app = await buildApp({ env, verifier, godaddy: { request } as unknown as GoDaddyClient });
     const res = await app.inject({ method: "GET", url: "/api/domains/availability?domain=Example.com", headers: auth });
     expect(res.statusCode).toBe(200);
-    expect(request).toHaveBeenCalledWith("/v3/domains/check-availability", { query: { domain: "example.com" } });
+    expect(request).toHaveBeenCalledWith("/v1/domains/available", { query: { domain: "example.com" } });
   });
 
   it("maps upstream GoDaddy auth failures to 502, not 401", async () => {

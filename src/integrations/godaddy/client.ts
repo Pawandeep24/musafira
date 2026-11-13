@@ -70,7 +70,7 @@ export class GoDaddyClient {
     for (let attempt = 1; ; attempt++) {
       const token = await this.#tokens.getToken();
       const headers: Record<string, string> = {
-        Authorization: `Bearer ${token}`,
+        Authorization: `sso-key ${token}`,
         Accept: "application/json",
       };
       if (opts.body !== undefined) headers["Content-Type"] = "application/json";

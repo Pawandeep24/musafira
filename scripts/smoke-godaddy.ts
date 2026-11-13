@@ -1,30 +1,26 @@
-/**
- * Verifies your GoDaddy PAT works. Read-only (domain availability check) - no charges.
- *   npm run smoke:godaddy [-- example.com]
- */
 import { loadEnv } from "../src/config/env.js";
-import { GoDaddyApiError, GoDaddyClient } from "../src/integrations/godaddy/client.js";
+import { GoDaddyApiError } from "../src/integrations/godaddy/client.js";
 import { checkDomainAvailability } from "../src/integrations/godaddy/domains.js";
-import { StaticTokenProvider } from "../src/integrations/godaddy/tokenProvider.js";
+import { createGoDaddyClient } from "../src/integrations/godaddy/factory.js";
 
 const env = loadEnv();
-if (!env.GODADDY_PAT) {
-  console.error("GODADDY_PAT is not set. Add it to .env (see .env.example).");
+const domain = process.argv[2] ?? "my-hackathon-idea-2026.com";
+const client = createGoDaddyClient(env);
+
+if (!client) {
+  console.error(`No GoDaddy key/secret configured for GODADDY_ENV="${env.GODADDY_ENV}". See .env.example.`);
   process.exit(1);
 }
 
-const domain = process.argv[2] ?? "my-hackathon-idea-2026.com";
-const client = new GoDaddyClient({ tokenProvider: new StaticTokenProvider(env.GODADDY_PAT), env: env.GODADDY_ENV });
+console.log(`env=${env.GODADDY_ENV} domain=${domain}`);
 
-console.log(`GoDaddy env: ${env.GODADDY_ENV}; checking "${domain}"...`);
 try {
-  const result = await checkDomainAvailability(client, domain);
-  console.log("OK:", JSON.stringify(result, null, 2));
+  console.log("OK", JSON.stringify(await checkDomainAvailability(client, domain), null, 2));
 } catch (err) {
   if (err instanceof GoDaddyApiError) {
-    console.error(`FAILED: HTTP ${err.status} ${err.code ?? ""} - ${err.message}`);
-    if (err.status === 401) console.error("Hint: token invalid/expired, or created for a different environment (OTE vs production).");
-    if (err.status === 403) console.error("Hint: token is missing the domains.domain:read scope, or the account is not eligible.");
+    console.error(`FAILED: HTTP ${err.status} ${err.code ?? ""} ${err.message}`);
+    if (err.status === 401) console.error("Hint: key/secret wrong for this environment, or revoked.");
+    if (err.status === 403) console.error("Hint: the account is not eligible for this call.");
   } else {
     console.error("FAILED:", err);
   }

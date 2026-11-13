@@ -3,15 +3,11 @@ import { getFirebaseApp } from "./auth/firebaseApp.js";
 import { FirebaseTokenVerifier } from "./auth/tokenVerifier.js";
 import { loadEnv } from "./config/env.js";
 import { getDb } from "./db/firestore.js";
-import { GoDaddyClient } from "./integrations/godaddy/client.js";
-import { StaticTokenProvider } from "./integrations/godaddy/tokenProvider.js";
+import { createGoDaddyClient } from "./integrations/godaddy/factory.js";
 
 const env = loadEnv();
 const firebase = getFirebaseApp(env);
-
-const godaddy = env.GODADDY_PAT
-  ? new GoDaddyClient({ tokenProvider: new StaticTokenProvider(env.GODADDY_PAT), env: env.GODADDY_ENV })
-  : undefined;
+const godaddy = createGoDaddyClient(env);
 
 const app = await buildApp({
   env,
@@ -20,7 +16,7 @@ const app = await buildApp({
   godaddy,
 });
 
-if (!godaddy) app.log.warn("GODADDY_PAT not set - /api/domains/* will return 503");
+if (!godaddy) app.log.warn(`No GoDaddy credentials for "${env.GODADDY_ENV}" - /api/domains/* will return 503`);
 if (env.GODADDY_ENV === "production") app.log.warn("GoDaddy client is pointed at PRODUCTION");
 
 const shutdown = async (signal: string) => {
