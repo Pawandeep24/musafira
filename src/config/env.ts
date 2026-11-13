@@ -27,7 +27,9 @@ export type Env = z.infer<typeof schema>;
 
 /** Parse + validate env once, failing fast with a readable message (never echoing values). */
 export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
-  const result = schema.safeParse(source);
+  // `KEY=` in a .env file yields "" - treat blank values as unset.
+  const cleaned = Object.fromEntries(Object.entries(source).filter(([, v]) => v !== undefined && v.trim() !== ""));
+  const result = schema.safeParse(cleaned);
   if (!result.success) {
     const issues = result.error.issues.map((i) => `  - ${i.path.join(".")}: ${i.message}`).join("\n");
     throw new Error(`Invalid environment configuration:\n${issues}`);

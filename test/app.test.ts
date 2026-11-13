@@ -14,6 +14,15 @@ const verifier: TokenVerifier = {
   },
 };
 
+describe("loadEnv", () => {
+  it("treats blank values (KEY=) as unset", () => {
+    const e = loadEnv({ GODADDY_PAT: "", FIREBASE_PROJECT_ID: "  ", PORT: "4000" });
+    expect(e.GODADDY_PAT).toBeUndefined();
+    expect(e.FIREBASE_PROJECT_ID).toBeUndefined();
+    expect(e.PORT).toBe(4000);
+  });
+});
+
 describe("auth guard + routes", () => {
   it("healthz is public", async () => {
     const app = await buildApp({ env, verifier });
