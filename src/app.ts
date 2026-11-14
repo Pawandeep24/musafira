@@ -6,19 +6,37 @@ import type { Firestore } from "firebase-admin/firestore";
 import { ZodError } from "zod";
 import { createAuthGuard } from "./auth/guard.js";
 import type { TokenVerifier } from "./auth/tokenVerifier.js";
+import { createCityRegistry, type CityRegistry } from "./city/cityRegistry.js";
 import type { Env } from "./config/env.js";
+import type { PreferencesStore } from "./db/preferencesStore.js";
 import type { GoDaddyClient } from "./integrations/godaddy/client.js";
 import { GoDaddyApiError } from "./integrations/godaddy/client.js";
 import { AppError } from "./lib/errors.js";
+import { UpstreamError } from "./lib/http.js";
+import type { CommunityReports } from "./planner/communityReports.js";
+import { createPlaceSuggester } from "./planner/placeSuggester.js";
+import type { Geocoder } from "./planner/ports.js";
+import type { RoutePlanner } from "./planner/routePlanner.js";
+import { configRoutes } from "./routes/config.js";
 import { domainRoutes } from "./routes/domains.js";
 import { healthRoutes } from "./routes/health.js";
 import { meRoutes } from "./routes/me.js";
+import { placesRoutes } from "./routes/places.js";
+import { planRoutes } from "./routes/plan.js";
+import { preferencesRoutes } from "./routes/preferences.js";
+import { reportRoutes } from "./routes/reports.js";
 
 export interface AppDeps {
   env: Env;
   verifier: TokenVerifier;
   godaddy?: GoDaddyClient;
   db?: Firestore;
+  cities?: CityRegistry;
+  planner?: RoutePlanner;
+  geocoder?: Geocoder;
+  preferences?: PreferencesStore;
+  reports?: CommunityReports;
+  now?: () => Date;
 }
 
 export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
@@ -56,6 +74,10 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
         error: { code: "UPSTREAM_ERROR", message: "GoDaddy API request failed" },
       });
     }
+    if (err instanceof UpstreamError) {
+      req.log.error({ service: err.service, upstreamStatus: err.status }, "upstream error");
+      return reply.status(502).send({ error: { code: "UPSTREAM_ERROR", message: `${err.service} is unavailable` } });
+    }
     const status = (err as { statusCode?: number }).statusCode;
     if (status && status >= 400 && status < 500) {
       return reply.status(status).send({ error: { code: "REQUEST_ERROR", message: (err as Error).message } });
@@ -65,10 +87,23 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
   });
 
   const requireAuth = createAuthGuard(deps.verifier);
+  const cities = deps.cities ?? createCityRegistry([]);
 
   await app.register(healthRoutes);
   await app.register(meRoutes({ requireAuth, db: deps.db }), { prefix: "/api" });
   await app.register(domainRoutes({ requireAuth, godaddy: deps.godaddy }), { prefix: "/api" });
+  await app.register(configRoutes(cities), { prefix: "/api" });
+  await app.register(
+    placesRoutes({ cities, suggester: createPlaceSuggester(deps.geocoder), ...(deps.geocoder ? { geocoder: deps.geocoder } : {}) }),
+    { prefix: "/api" },
+  );
+  await app.register(planRoutes({ ...(deps.planner ? { planner: deps.planner } : {}), ...(deps.now ? { now: deps.now } : {}) }), {
+    prefix: "/api",
+  });
+  await app.register(preferencesRoutes({ requireAuth, ...(deps.preferences ? { store: deps.preferences } : {}) }), {
+    prefix: "/api",
+  });
+  await app.register(reportRoutes({ requireAuth, ...(deps.reports ? { reports: deps.reports } : {}) }), { prefix: "/api" });
 
   return app;
 }

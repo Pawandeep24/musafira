@@ -20,6 +20,12 @@ const schema = z.object({
   GODADDY_PRODUCTION_API_KEY: z.string().min(1).optional(),
   GODADDY_PRODUCTION_API_SECRET: z.string().min(1).optional(),
 
+  VALHALLA_URL: z.string().url().default("https://valhalla1.openstreetmap.de"),
+  ORS_API_KEY: z.string().min(1).optional(),
+  TOMTOM_API_KEY: z.string().min(1).optional(),
+  OPENCELLID_API_KEY: z.string().min(1).optional(),
+  NASA_EARTHDATA_TOKEN: z.string().min(1).optional(),
+
   FIREBASE_PROJECT_ID: z.string().min(1).optional(),
   FIREBASE_WEB_API_KEY: z.string().min(1).optional(),
   FIREBASE_SERVICE_ACCOUNT_JSON: z.string().min(1).optional(),

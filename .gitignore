@@ -152,3 +152,6 @@ vite.config.ts.timestamp-*
 *-firebase-adminsdk-*.json
 service-account*.json
 serviceAccount*.json
+
+# Raw downloads for city ingest (large, licensed per source)
+data/raw/

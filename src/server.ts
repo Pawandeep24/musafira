@@ -1,21 +1,52 @@
+import { fileURLToPath } from "node:url";
 import { buildApp } from "./app.js";
 import { getFirebaseApp } from "./auth/firebaseApp.js";
 import { FirebaseTokenVerifier } from "./auth/tokenVerifier.js";
+import { loadCityRegistry } from "./city/cityRegistry.js";
 import { loadEnv } from "./config/env.js";
 import { getDb } from "./db/firestore.js";
+import { createFirestorePreferencesStore } from "./db/preferencesStore.js";
+import { createFirestoreReportStore } from "./db/reportStore.js";
 import { createGoDaddyClient } from "./integrations/godaddy/factory.js";
+import { OrsGeocoder } from "./integrations/ors/geocoder.js";
+import { TomTomTrafficFlow } from "./integrations/tomtom/trafficFlow.js";
+import { ValhallaClient } from "./integrations/valhalla/client.js";
+import { createCommunityReports } from "./planner/communityReports.js";
+import { createRoutePlanner } from "./planner/routePlanner.js";
 
 const env = loadEnv();
 const firebase = getFirebaseApp(env);
+const db = getDb(firebase);
 const godaddy = createGoDaddyClient(env);
+const cities = await loadCityRegistry(fileURLToPath(new URL("../data/cities", import.meta.url)));
+const reports = createCommunityReports({ store: createFirestoreReportStore(db), cities });
 
 const app = await buildApp({
   env,
   verifier: new FirebaseTokenVerifier(firebase),
-  db: getDb(firebase),
+  db,
   godaddy,
+  cities,
+  planner: createRoutePlanner({
+    cities,
+    routing: new ValhallaClient({ baseUrl: env.VALHALLA_URL }),
+    ...(env.TOMTOM_API_KEY ? { traffic: new TomTomTrafficFlow(env.TOMTOM_API_KEY) } : {}),
+    reports,
+  }),
+  ...(env.ORS_API_KEY ? { geocoder: new OrsGeocoder(env.ORS_API_KEY) } : {}),
+  preferences: createFirestorePreferencesStore(db),
+  reports,
 });
 
+reports.load().then(
+  (count) => app.log.info({ count }, "rider reports loaded"),
+  (err: unknown) => app.log.warn({ reason: err instanceof Error ? err.message : String(err) }, "Could not load rider reports - starting with none"),
+);
+
+app.log.info({ cities: cities.cities.map((c) => `${c.id}@${c.data.version}`) }, "city data loaded");
+if (cities.cities.length === 0) app.log.warn("No city data in data/cities - run `npm run ingest`");
+if (!env.TOMTOM_API_KEY) app.log.warn("No TOMTOM_API_KEY - crowd scores use open places only");
+if (!env.ORS_API_KEY) app.log.warn("No ORS_API_KEY - place search uses city data only; reverse lookup returns 503");
 if (!godaddy) app.log.warn(`No GoDaddy credentials for "${env.GODADDY_ENV}" - /api/domains/* will return 503`);
 if (env.GODADDY_ENV === "production") app.log.warn("GoDaddy client is pointed at PRODUCTION");
 
