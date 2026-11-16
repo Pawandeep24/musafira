@@ -16,7 +16,7 @@
   }
 }
 
-/* Mobile-only pieces: map tool rail, layers menu, sheet grip, folded trip */
+/* Mobile-only pieces: map tool rail, sheet grip, folded trip. More menu items come after the rail's pills to override them. */
 
 .map-rail {
   position: absolute;
@@ -35,23 +35,12 @@
   padding: 0;
 }
 
-.map-rail__layers {
-  position: relative;
-}
-
-.layers-menu {
-  position: absolute;
+.map-rail .more-menu {
   top: 0;
   right: calc(100% + 8px);
-  display: grid;
-  gap: 2px;
-  min-width: 180px;
-  padding: 6px;
-  border-radius: var(--radius-lg);
-  animation: fade-in 160ms var(--ease);
 }
 
-.map-rail .layers-menu .pill {
+.more-menu .pill {
   justify-content: flex-start;
   gap: 10px;
   width: 100%;
@@ -64,11 +53,11 @@
   -webkit-backdrop-filter: none;
 }
 
-.map-rail .layers-menu .pill.is-on {
+.more-menu .pill.is-on {
   background: var(--accent-soft);
 }
 
-.layers-menu .pill span {
+.more-menu .pill span {
   display: inline;
 }
 

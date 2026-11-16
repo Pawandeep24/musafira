@@ -109,6 +109,7 @@ export function App() {
   const [mode, setMode] = useState<Mode>("ride");
   const [editingTrip, setEditingTrip] = useState(false);
   const mobile = useMediaQuery("(max-width: 760px)");
+  const roomyTopBar = useMediaQuery("(min-width: 1401px)");
   const sheet = useSheet();
 
   const auth = useAuth();
@@ -276,6 +277,7 @@ export function App() {
     void listing.start();
   };
   const startListing = () => (auth.user ? openListing() : setAuthPurpose("listing"));
+  const toggleListing = () => (listing.open ? listing.close() : startListing());
 
   const rideToWashroom = (washroom: Washroom) => {
     const from = washrooms.point;
@@ -434,12 +436,14 @@ export function App() {
           cities={config.cities}
           {...(cityId ? { cityId } : {})}
           compact={mobile}
+          roomy={roomyTopBar}
           theme={mapTheme.theme}
           showLights={showLights}
           showSignal={showSignal}
           dnaOpen={dnaOpen}
           reporting={report.open}
           washrooms={washrooms.open}
+          listing={listing.open}
           auth={auth}
           onCity={switchCity}
           onToggleTheme={mapTheme.toggle}
@@ -448,6 +452,7 @@ export function App() {
           onToggleDna={toggleDna}
           onToggleReport={toggleReport}
           onToggleWashrooms={toggleWashrooms}
+          onToggleListing={toggleListing}
           onSignIn={() => setAuthPurpose("sync")}
         />
       )}

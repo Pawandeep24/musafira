@@ -9,12 +9,14 @@ interface Props {
   cities: readonly City[];
   cityId?: string;
   compact: boolean;
+  roomy: boolean;
   theme: MapTheme;
   showLights: boolean;
   showSignal: boolean;
   dnaOpen: boolean;
   reporting: boolean;
   washrooms: boolean;
+  listing: boolean;
   auth: AuthState;
   onCity(id: string): void;
   onToggleTheme(): void;
@@ -23,6 +25,7 @@ interface Props {
   onToggleDna(): void;
   onToggleReport(): void;
   onToggleWashrooms(): void;
+  onToggleListing(): void;
   onSignIn(): void;
 }
 
@@ -52,19 +55,24 @@ export function Logo({ size = 30 }: { size?: number }) {
 export function TopBar(props: Props) {
   const { auth } = props;
   const initial = (auth.user?.displayName ?? auth.user?.email ?? "?").slice(0, 1).toUpperCase();
-  const [layersOpen, setLayersOpen] = useState(false);
-  const layersRef = useRef<HTMLDivElement>(null);
+  const [moreOpen, setMoreOpen] = useState(false);
+  const moreRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!layersOpen) return;
+    if (!moreOpen) return;
     const closeOutside = (e: PointerEvent) => {
-      if (!layersRef.current?.contains(e.target as Node)) setLayersOpen(false);
+      if (!moreRef.current?.contains(e.target as Node)) setMoreOpen(false);
     };
     addEventListener("pointerdown", closeOutside);
     return () => removeEventListener("pointerdown", closeOutside);
-  }, [layersOpen]);
+  }, [moreOpen]);
 
-  const layers = (
+  const toggleDna = () => {
+    setMoreOpen(false);
+    props.onToggleDna();
+  };
+
+  const secondary = (
     <>
       <button
         className="pill pill--icon glass"
@@ -80,13 +88,13 @@ export function TopBar(props: Props) {
       <button className={`pill glass ${props.showSignal ? "is-on" : ""}`} onClick={props.onToggleSignal} aria-pressed={props.showSignal} title="Mobile tower density">
         <Icon name="signal" size={15} /> <span>Signal</span>
       </button>
-    </>
-  );
-  const tools = (
-    <>
-      <button className={`pill glass ${props.dnaOpen ? "is-on" : ""}`} onClick={props.onToggleDna} aria-pressed={props.dnaOpen} aria-label="Safety DNA">
+      <button className={`pill glass ${props.dnaOpen ? "is-on" : ""}`} onClick={toggleDna} aria-pressed={props.dnaOpen} aria-label="Safety DNA">
         <Icon name="sliders" size={15} /> <span>Safety DNA</span>
       </button>
+    </>
+  );
+  const primary = (
+    <>
       <button
         className={`pill glass ${props.washrooms ? "is-on" : ""}`}
         onClick={props.onToggleWashrooms}
@@ -107,6 +115,17 @@ export function TopBar(props: Props) {
           <Icon name="flag" size={15} /> <span>Report</span>
         </button>
       )}
+      {auth.available && (
+        <button
+          className={`pill glass ${props.listing ? "is-on" : ""}`}
+          onClick={props.onToggleListing}
+          aria-pressed={props.listing}
+          aria-label="List your shop"
+          title="List your shop as a Safe Stop, verified with your GoDaddy domain"
+        >
+          <Icon name="shield" size={15} /> <span>List your shop</span>
+        </button>
+      )}
     </>
   );
   const account =
@@ -120,6 +139,18 @@ export function TopBar(props: Props) {
         <Icon name="user" size={15} /> <span>Sign in</span>
       </button>
     ));
+  const more = (
+    <div className="more" ref={moreRef}>
+      <button className={`pill glass ${moreOpen ? "is-on" : ""}`} onClick={() => setMoreOpen((v) => !v)} aria-expanded={moreOpen} aria-label="More">
+        <Icon name="more" size={17} />
+      </button>
+      {moreOpen && (
+        <div className="more-menu glass" role="group" aria-label="More">
+          {secondary}
+        </div>
+      )}
+    </div>
+  );
 
   return (
     <>
@@ -142,25 +173,17 @@ export function TopBar(props: Props) {
         />
 
         <div className="topbar__actions">
-          {!props.compact && layers}
-          {!props.compact && tools}
+          {!props.compact && props.roomy && secondary}
+          {!props.compact && primary}
+          {!props.compact && !props.roomy && more}
           {account}
         </div>
       </header>
 
       {props.compact && (
         <nav className="map-rail" aria-label="Map tools">
-          <div className="map-rail__layers" ref={layersRef}>
-            <button className={`pill glass ${layersOpen ? "is-on" : ""}`} onClick={() => setLayersOpen((v) => !v)} aria-expanded={layersOpen} aria-label="Map layers">
-              <Icon name="layers" size={17} />
-            </button>
-            {layersOpen && (
-              <div className="layers-menu glass" role="group" aria-label="Map layers">
-                {layers}
-              </div>
-            )}
-          </div>
-          {tools}
+          {more}
+          {primary}
         </nav>
       )}
     </>
