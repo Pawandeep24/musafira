@@ -59,6 +59,6 @@ export function useAuth(): AuthState {
     async signOut() {
       if (auth) await signOut(auth);
     },
-    idToken: async () => user?.getIdToken(),
+    idToken: async () => auth?.currentUser?.getIdToken(),
   };
 }

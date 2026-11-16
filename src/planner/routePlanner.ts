@@ -4,11 +4,13 @@
  *
  *   plan()    → city lookup → route candidates (cached 10 min) → live traffic when
  *               leaving within 15 min → analyseRoute per candidate with the city's
- *               rider reports → store analyses under a random searchId (30 min,
- *               memory only) → score with weights
+ *               rider reports and listed Safe Stops → store analyses under a random
+ *               searchId (30 min, memory only) → score with weights
  *             Rider reports within 1 km of any candidate are returned for the map,
  *             each tagged with the routes it affected.
  *   rescore() → re-weights a stored search without any network call
+ *   route()   → one stored route, plus analysis of any other route (a ride app's) for the
+ *               same city, departure time and rider reports, so their scores compare
  *
  * Stored searches hold route geometry, so they never leave process memory and are
  * not logged. Traffic is snapshotted at plan time, which keeps rescoring deterministic.
@@ -26,7 +28,7 @@ import { spotsWithin, type SpotReport } from "../safety/community.js";
 import type { ScoringOptions, Weights } from "../safety/parameters.js";
 import { scoreRoute } from "../safety/scoring.js";
 import type { CandidateRoute, RouteAnalysis, RouteScore, TrafficSample } from "../safety/types.js";
-import type { ReportSource, RouteProvider, TrafficProvider, TrafficReading } from "./ports.js";
+import type { ReportSource, RouteProvider, SafeStopSource, TrafficProvider, TrafficReading } from "./ports.js";
 
 const LIVE_WINDOW_MS = 15 * 60_000;
 const TRAFFIC_SPACING_METERS = 2000;
@@ -65,9 +67,17 @@ export interface PlanRequest {
   readonly options: ScoringOptions;
 }
 
+export interface StoredRoute {
+  readonly city: CityIndex;
+  readonly departAt: Date;
+  readonly analysis: RouteAnalysis;
+  analyze(route: CandidateRoute): RouteAnalysis;
+}
+
 export interface RoutePlanner {
   plan(request: PlanRequest): Promise<PlanResult>;
   rescore(searchId: string, weights: Weights, options: ScoringOptions): PlanResult;
+  route(searchId: string, routeId: string): StoredRoute;
 }
 
 export interface PlannerDeps {
@@ -75,6 +85,7 @@ export interface PlannerDeps {
   readonly routing: RouteProvider;
   readonly traffic?: TrafficProvider;
   readonly reports?: ReportSource;
+  readonly safeStops?: SafeStopSource;
   readonly now?: () => Date;
 }
 
@@ -112,13 +123,19 @@ export function rankRoutes(analyses: readonly RouteAnalysis[], weights: Weights,
     }));
 }
 
-export function createRoutePlanner({ cities, routing, traffic, reports, now = () => new Date() }: PlannerDeps): RoutePlanner {
+export function createRoutePlanner({ cities, routing, traffic, reports, safeStops, now = () => new Date() }: PlannerDeps): RoutePlanner {
   const candidatesCache = new TtlCache<string, Promise<CandidateRoute[]>>(10 * 60_000, 200);
   const trafficCache = new TtlCache<string, Promise<TrafficReading | undefined>>(2 * 60_000, 2000);
   const searches = new TtlCache<string, StoredSearch>(30 * 60_000, 500);
   const hoursByCity = new Map<string, HoursEvaluator>(
     cities.cities.map((c) => [c.id, createHoursEvaluator(c.data.center, c.data.utcOffsetMinutes)]),
   );
+
+  const storedSearch = (searchId: string) => {
+    const search = searches.get(searchId);
+    if (!search) throw new AppError(404, "SEARCH_EXPIRED", "This search has expired. Plan the route again.");
+    return search;
+  };
 
   const candidatesFor = (from: LngLat, to: LngLat) => {
     const key = [...from, ...to].map((v) => v.toFixed(5)).join(",");
@@ -162,9 +179,10 @@ export function createRoutePlanner({ cities, routing, traffic, reports, now = ()
       const candidates = await candidatesFor(from, to);
       const hours = hoursByCity.get(city.id)!;
       const cityReports = reports?.active(city.id) ?? [];
+      const extraPois = safeStops?.listed(city.id) ?? [];
       const analyses = await Promise.all(
         candidates.map(async (route) =>
-          analyzeRoute({ route, departAt, city, hours, traffic: live ? await sampleTraffic(route) : [], reports: cityReports }),
+          analyzeRoute({ route, departAt, city, hours, traffic: live ? await sampleTraffic(route) : [], reports: cityReports, extraPois }),
         ),
       );
 
@@ -180,10 +198,30 @@ export function createRoutePlanner({ cities, routing, traffic, reports, now = ()
     },
 
     rescore(searchId, weights, options) {
-      const search = searches.get(searchId);
-      if (!search) throw new AppError(404, "SEARCH_EXPIRED", "This search has expired. Plan the route again.");
-      const { city, departAt, analyses, reports: tripReports } = search;
+      const { city, departAt, analyses, reports: tripReports } = storedSearch(searchId);
       return { searchId, city, departAt, routes: rankRoutes(analyses, weights, options), reports: tripReports };
+    },
+
+    route(searchId, id) {
+      const { city, departAt, analyses } = storedSearch(searchId);
+      const analysis = analyses.find((_, i) => routeId(i) === id);
+      if (!analysis) throw new AppError(404, "ROUTE_NOT_FOUND", "That route is not part of this search");
+      const hours = hoursByCity.get(city.id)!;
+      return {
+        city,
+        departAt,
+        analysis,
+        analyze: (route) =>
+          analyzeRoute({
+            route,
+            departAt,
+            city,
+            hours,
+            traffic: [],
+            reports: reports?.active(city.id) ?? [],
+            extraPois: safeStops?.listed(city.id) ?? [],
+          }),
+      };
     },
   };
 }

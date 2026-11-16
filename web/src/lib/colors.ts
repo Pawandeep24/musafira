@@ -72,6 +72,7 @@ export const CATEGORY_RGB: Record<PoiCategory, Rgb> = {
   bike_repair: [255, 214, 102],
   bus_stop: [140, 160, 220],
   transit_station: [140, 160, 220],
+  safe_stop: [214, 140, 255],
 };
 
 export const CATEGORY_LABEL: Record<PoiCategory, string> = {
@@ -91,4 +92,5 @@ export const CATEGORY_LABEL: Record<PoiCategory, string> = {
   bike_repair: "Tyre & bike repair",
   bus_stop: "Bus stop",
   transit_station: "Station",
+  safe_stop: "Musafira Safe Stop",
 };

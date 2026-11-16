@@ -3,9 +3,10 @@
  *
  * Two sources, in order:
  * 1. The OSM `opening_hours` tag, evaluated with the `opening_hours` library.
- * 2. A per-category default table (POI categories and sight kinds), flagged
- *    `estimated: true` so the UI and the confidence score can say so. Most Indian
- *    POIs have no hours tag.
+ * 2. A per-category default table (POI categories, sight kinds and public
+ *    washrooms), flagged `estimated: true` so the UI and the confidence score can
+ *    say so. Most Indian POIs have no hours tag. Safe Stops always declare their
+ *    hours, so their default is "closed" rather than a guess.
  *
  * Time zones: the `opening_hours` library reads a Date's *local* fields, which
  * depend on the server's zone. We hand it a "wall clock" Date whose local fields
@@ -15,8 +16,10 @@ import OpeningHours from "opening_hours";
 import type { LngLat } from "../geo/geometry.js";
 import type { PoiCategory, SightKind } from "./cityData.js";
 
+type HoursCategory = PoiCategory | SightKind | "washroom";
+
 export interface HoursSubject {
-  readonly cat: PoiCategory | SightKind;
+  readonly cat: HoursCategory;
   readonly hours?: string;
 }
 
@@ -33,7 +36,7 @@ const ALWAYS: readonly Interval[] = [[0, MINUTES_PER_DAY]];
 const hm = (h: number, m = 0) => h * 60 + m;
 
 /** Conservative typical hours for Indian cities; end minutes past 1440 run into the next day. */
-const DEFAULT_HOURS: Record<PoiCategory | SightKind, readonly Interval[]> = {
+const DEFAULT_HOURS: Record<HoursCategory, readonly Interval[]> = {
   police: ALWAYS,
   hospital: ALWAYS,
   hotel: ALWAYS,
@@ -53,6 +56,8 @@ const DEFAULT_HOURS: Record<PoiCategory | SightKind, readonly Interval[]> = {
   bike_repair: [[hm(9, 30), hm(20, 30)]],
   bus_stop: [[hm(6), hm(23)]],
   transit_station: [[hm(6), hm(23)]],
+  safe_stop: [],
+  washroom: [[hm(6), hm(22)]],
   heritage: [[hm(9), hm(17, 30)]],
   museum: [[hm(10), hm(17)]],
   worship: [
@@ -64,7 +69,7 @@ const DEFAULT_HOURS: Record<PoiCategory | SightKind, readonly Interval[]> = {
   attraction: [[hm(9), hm(18)]],
 };
 
-function defaultState(category: PoiCategory | SightKind, at: Date, utcOffsetMinutes: number): OpenState {
+function defaultState(category: HoursCategory, at: Date, utcOffsetMinutes: number): OpenState {
   const local = new Date(at.getTime() + utcOffsetMinutes * 60_000);
   const minute = local.getUTCHours() * 60 + local.getUTCMinutes();
   for (const [start, end] of DEFAULT_HOURS[category]) {

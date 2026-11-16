@@ -35,6 +35,13 @@ const PATHS = {
   landmark: "M3 21h18M5 21V10M9.5 21V10M14.5 21V10M19 21V10M2.5 10L12 4l9.5 6h-19z",
   coffee: "M4 9h12v4a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V9zM16 10h1.5a2.5 2.5 0 0 1 0 5H16M8 3v3M12 3v3",
   route: "M6 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM18 9a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM8 17h7a3 3 0 0 0 0-6H9a3 3 0 0 1 0-6h7",
+  auto: "M3 16v-4.5L6.5 6H15l3.5 5.5H21v4.5M3 16h18M10 6v5.5H4.5M7 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM17 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4z",
+  phone: "M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z",
+  share: "M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7M16 6l-4-4-4 4M12 2v13",
+  check: "M5 12l5 5L20 7",
+  back: "M15 6l-6 6 6 6",
+  link: "M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1",
+  copy: "M9 9h11v12H9zM5 15H4V4a1 1 0 0 1 1-1h11v1",
 } as const satisfies Record<string, string>;
 
 export type IconName = keyof typeof PATHS | ParameterId;

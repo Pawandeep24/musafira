@@ -58,18 +58,27 @@ export function createLocalProjection(origin: LngLat): LocalProjection {
 }
 
 export function distanceToPathMeters(point: LngLat, path: readonly LngLat[]): number {
-  const { toMeters } = createLocalProjection(point);
+  return distancesToPathMeters([point], path)[0]!;
+}
+
+/** Distance from each point to the nearest point of `path`, projecting the path once. */
+export function distancesToPathMeters(points: readonly LngLat[], path: readonly LngLat[]): number[] {
+  if (points.length === 0 || path.length === 0) return points.map(() => Infinity);
+  const { toMeters } = createLocalProjection(points[0]!);
   const vertices = path.map(toMeters);
-  if (vertices.length === 1) return Math.hypot(...vertices[0]!);
-  let best = Infinity;
-  for (let i = 1; i < vertices.length; i++) {
-    const [ax, ay] = vertices[i - 1]!;
-    const [bx, by] = vertices[i]!;
-    const dx = bx - ax;
-    const dy = by - ay;
-    const lengthSquared = dx * dx + dy * dy;
-    const t = lengthSquared > 0 ? Math.min(1, Math.max(0, -(ax * dx + ay * dy) / lengthSquared)) : 0;
-    best = Math.min(best, Math.hypot(ax + t * dx, ay + t * dy));
-  }
-  return best;
+  return points.map((point) => {
+    const [px, py] = toMeters(point);
+    if (vertices.length === 1) return Math.hypot(vertices[0]![0] - px, vertices[0]![1] - py);
+    let best = Infinity;
+    for (let i = 1; i < vertices.length; i++) {
+      const ax = vertices[i - 1]![0] - px;
+      const ay = vertices[i - 1]![1] - py;
+      const dx = vertices[i]![0] - vertices[i - 1]![0];
+      const dy = vertices[i]![1] - vertices[i - 1]![1];
+      const lengthSquared = dx * dx + dy * dy;
+      const t = lengthSquared > 0 ? Math.min(1, Math.max(0, -(ax * dx + ay * dy) / lengthSquared)) : 0;
+      best = Math.min(best, Math.hypot(ax + t * dx, ay + t * dy));
+    }
+    return best;
+  });
 }

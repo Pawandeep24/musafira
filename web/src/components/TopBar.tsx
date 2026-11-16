@@ -9,12 +9,14 @@ interface Props {
   showSignal: boolean;
   dnaOpen: boolean;
   reporting: boolean;
+  washrooms: boolean;
   auth: AuthState;
   onCity(id: string): void;
   onToggleLights(): void;
   onToggleSignal(): void;
   onToggleDna(): void;
   onToggleReport(): void;
+  onToggleWashrooms(): void;
   onSignIn(): void;
 }
 
@@ -71,6 +73,14 @@ export function TopBar(props: Props) {
         </button>
         <button className={`pill glass ${props.dnaOpen ? "is-on" : ""}`} onClick={props.onToggleDna} aria-pressed={props.dnaOpen}>
           <Icon name="sliders" size={15} /> <span>Safety DNA</span>
+        </button>
+        <button
+          className={`pill glass ${props.washrooms ? "is-on" : ""}`}
+          onClick={props.onToggleWashrooms}
+          aria-pressed={props.washrooms}
+          title="Open washrooms near you, women-friendly first"
+        >
+          <Icon name="droplet" size={15} /> <span>Washrooms</span>
         </button>
         {auth.available && (
           <button

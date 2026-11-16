@@ -17,6 +17,7 @@ export const POI_CATEGORIES = [
   "bike_repair",
   "bus_stop",
   "transit_station",
+  "safe_stop",
 ] as const;
 
 export type PoiCategory = (typeof POI_CATEGORIES)[number];
@@ -61,6 +62,20 @@ const sightSchema = z.object({
   hours: z.string().optional(),
 });
 
+/** A public toilet; a missing field means the source doesn't say, not "no". */
+const washroomSchema = z.object({
+  id: z.string(),
+  lon: z.number(),
+  lat: z.number(),
+  name: z.string().optional(),
+  hours: z.string().optional(),
+  women: z.boolean().optional(),
+  free: z.boolean().optional(),
+  wheelchair: z.boolean().optional(),
+  babyChanging: z.boolean().optional(),
+  pads: z.boolean().optional(),
+});
+
 /** Row-major raster, row 0 at `north`. `values` uses `null` for no-data cells. */
 const gridSchema = z.object({
   west: z.number(),
@@ -88,6 +103,7 @@ export const cityDataSchema = z.object({
   pois: z.array(poiSchema),
   places: z.array(namedPlaceSchema).default([]),
   sights: z.array(sightSchema).default([]),
+  washrooms: z.array(washroomSchema).default([]),
   lights: gridSchema.optional(),
   cellDensity: gridSchema.optional(),
   sources: z.array(sourceSchema),
@@ -97,5 +113,6 @@ export type CityData = z.infer<typeof cityDataSchema>;
 export type Poi = z.infer<typeof poiSchema>;
 export type NamedPlace = z.infer<typeof namedPlaceSchema>;
 export type Sight = z.infer<typeof sightSchema>;
+export type Washroom = z.infer<typeof washroomSchema>;
 export type Grid = z.infer<typeof gridSchema>;
 export type DataSource = z.infer<typeof sourceSchema>;

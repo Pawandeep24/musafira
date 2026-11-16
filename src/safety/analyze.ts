@@ -1,5 +1,7 @@
-import type { CityIndex } from "../city/cityIndex.js";
+import type { Poi } from "../city/cityData.js";
+import type { CityIndex, NearbyPoi } from "../city/cityIndex.js";
 import type { HoursEvaluator } from "../city/openingHours.js";
+import { haversineMeters, type LngLat } from "../geo/geometry.js";
 import { applyReports, type CommunityReport } from "./community.js";
 import { isDark } from "./daylight.js";
 import { FEATURE_EXTRACTORS } from "./features/index.js";
@@ -18,14 +20,23 @@ export interface AnalyzeInput {
   readonly hours: HoursEvaluator;
   readonly traffic: readonly TrafficSample[];
   readonly reports?: readonly CommunityReport[];
+  /** Places not in the city data, such as listed Safe Stops. */
+  readonly extraPois?: readonly Poi[];
+}
+
+function extraWithin(pois: readonly Poi[], point: LngLat, radiusMeters: number): NearbyPoi[] {
+  return pois.flatMap((poi) => {
+    const distanceMeters = haversineMeters(point, [poi.lon, poi.lat]);
+    return distanceMeters <= radiusMeters ? [{ poi, distanceMeters }] : [];
+  });
 }
 
 /** Measures every safety parameter along a route. Pure: same input, same output. */
-export function analyzeRoute({ route, departAt, city, hours, traffic, reports = [] }: AnalyzeInput): RouteAnalysis {
+export function analyzeRoute({ route, departAt, city, hours, traffic, reports = [], extraPois = [] }: AnalyzeInput): RouteAnalysis {
   const segments: SegmentContext[] = segmentRoute(route, departAt, SEGMENT_METERS).map((segment) => ({
     ...segment,
     dark: isDark(segment.midpoint, segment.arrival),
-    nearby: city.poisWithin(segment.midpoint, NEARBY_RADIUS_METERS),
+    nearby: [...city.poisWithin(segment.midpoint, NEARBY_RADIUS_METERS), ...extraWithin(extraPois, segment.midpoint, NEARBY_RADIUS_METERS)],
   }));
   const stateAt: HoursEvaluator["stateAt"] = (poi, at) => hours.stateAt(poi, at);
   const stops = findRouteStops(segments, stateAt);

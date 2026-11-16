@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { api } from "./api/client";
-import type { AppConfig, ItineraryLeg, LngLat, Place, ReportCategory, ReportWhen, Route, TripReport } from "./api/types";
+import type { AppConfig, City, ItineraryLeg, LngLat, Place, ReportCategory, ReportWhen, Route, TripReport, Washroom } from "./api/types";
 import { useAuth } from "./auth/useAuth";
 import { AuthDialog, type AuthPurpose } from "./components/AuthDialog";
 import { DepartureControl } from "./components/DepartureControl";
@@ -10,31 +10,42 @@ import { ItineraryView } from "./components/ItineraryView";
 import { Attribution, Legend } from "./components/Legend";
 import { ReportSheet } from "./components/ReportSheet";
 import { RideHud } from "./components/RideHud";
+import { RideSheet } from "./components/RideSheet";
+import { RideAlert } from "./components/RideTracker";
 import { RouteCards } from "./components/RouteCards";
 import { RouteInsights } from "./components/RouteInsights";
 import { SafetyDna } from "./components/SafetyDna";
 import { Scanning } from "./components/Scanning";
+import { StopOnboarding } from "./components/StopOnboarding";
 import { TopBar } from "./components/TopBar";
 import { TripInputs } from "./components/TripInputs";
 import { TripPlanner } from "./components/TripPlanner";
+import { WashroomSheet } from "./components/WashroomSheet";
 import { skyRgb } from "./lib/colors";
 import { cityHour, formatDuration, nextCityHour } from "./lib/format";
+import { SOURCE_LABEL, washroomName } from "./lib/safeStops";
+import { shareTrip } from "./lib/shareTrip";
 import { useMediaQuery } from "./lib/useMediaQuery";
 import { routeVerdict } from "./lib/verdict";
 import { gridDots, nightLightDot, signalDot, type GridDot } from "./map/gridDots";
 import { MapView, type Insets } from "./map/MapView";
-import type { TripScene } from "./map/sceneLayers";
+import type { RideScene, TripScene } from "./map/sceneLayers";
 import { PREVIEW_SECONDS, retimePreview, startPreview, type RidePreview } from "./state/ridePreview";
 import { useItinerary } from "./state/useItinerary";
 import { usePlanner } from "./state/usePlanner";
 import { useReport } from "./state/useReport";
+import { RIDE_POLL_MS, useRideBooking } from "./state/useRideBooking";
 import { useSafetyProfile } from "./state/useSafetyProfile";
+import { useStopOnboarding } from "./state/useStopOnboarding";
+import { useWashrooms } from "./state/useWashrooms";
 
 const DEMO_HOUR = 23;
 const DEFAULT_CITY_ID = "pune";
 const TOAST_MS = 4500;
+const LIVE_RIDE_WINDOW_MS = 15 * 60_000;
 const NO_REPORTS: readonly TripReport[] = [];
 const NO_ROUTES: readonly Route[] = [];
+const NO_CITIES: readonly City[] = [];
 
 type Mode = "ride" | "trip";
 
@@ -46,6 +57,17 @@ interface Rasters {
 async function placeAt(point: LngLat): Promise<Place> {
   const found = await api.reverse(point).catch(() => null);
   return { id: `pin:${point.join(",")}`, name: found?.name ?? "Dropped pin", label: found?.label ?? "Dropped pin", point };
+}
+
+/** A destination passed in the URL (`?to=lon,lat&name=`), as a Safe Stop page links to the planner. */
+function linkedDestination(cities: readonly City[]): { cityId: string; place: Place } | undefined {
+  const params = new URLSearchParams(location.search);
+  const [lon, lat] = (params.get("to") ?? "").split(",").map(Number);
+  if (lon === undefined || lat === undefined || !Number.isFinite(lon) || !Number.isFinite(lat)) return undefined;
+  const city = cities.find(({ bbox }) => lon >= bbox.west && lon <= bbox.east && lat >= bbox.south && lat <= bbox.north);
+  if (!city) return undefined;
+  const name = params.get("name")?.slice(0, 60) || "Safe Stop";
+  return { cityId: city.id, place: { id: `link:${lon},${lat}`, name, label: name, point: [lon, lat] } };
 }
 
 export function App() {
@@ -68,6 +90,9 @@ export function App() {
   const planner = usePlanner(safety.profile && { weights: safety.profile.weights, options: safety.profile.options });
   const report = useReport(auth);
   const trip = useItinerary();
+  const rides = useRideBooking();
+  const washrooms = useWashrooms();
+  const listing = useStopOnboarding(auth, config?.cities ?? NO_CITIES);
 
   useEffect(() => {
     if (!toast) return;
@@ -80,7 +105,12 @@ export function App() {
       .config()
       .then((c) => {
         setConfig(c);
-        setCityId((id) => id ?? (c.cities.find((city) => city.id === DEFAULT_CITY_ID) ?? c.cities[0])?.id);
+        const linked = linkedDestination(c.cities);
+        if (linked) {
+          planner.setTo(linked.place);
+          history.replaceState(null, "", location.pathname);
+        }
+        setCityId((id) => id ?? linked?.cityId ?? (c.cities.find((city) => city.id === DEFAULT_CITY_ID) ?? c.cities[0])?.id);
       })
       .catch(() => setLoadError(true));
   }, []);
@@ -121,10 +151,43 @@ export function App() {
   }, [preview, selected?.id]);
 
   useEffect(() => {
+    if (!rides.active) rides.close();
+  }, [planner.plan?.searchId, planner.selectedId]);
+
+  const rideScene = useMemo<RideScene | undefined>(() => {
+    const { ride, quote, selectedOption } = rides;
+    if (rides.step === "ride" && ride) {
+      return {
+        key: `ride:${ride.ref}`,
+        path: ride.route,
+        checkpoints: ride.checkpoints.map((c) => c.point),
+        ...(ride.position ? { driver: ride.position } : {}),
+        offRoute: Boolean(ride.guard?.offRoute),
+        tweenMs: RIDE_POLL_MS[ride.mode],
+      };
+    }
+    if (!rides.open || rides.step !== "compare" || !quote || !selectedOption) return undefined;
+    const other = quote.options.find((o) => o.kind !== selectedOption.kind);
+    return {
+      key: `quote:${quote.quoteId}:${selectedOption.kind}`,
+      path: selectedOption.path,
+      ...(other ? { alternative: other.path } : {}),
+      checkpoints: selectedOption.kind === "safe" ? quote.checkpoints.map((c) => c.point) : [],
+      offRoute: false,
+      tweenMs: RIDE_POLL_MS.demo,
+    };
+  }, [rides.open, rides.step, rides.ride, rides.quote, rides.selectedOption]);
+
+  useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && setPreview(undefined);
     addEventListener("keydown", onKey);
     return () => removeEventListener("keydown", onKey);
   }, []);
+
+  const closeSheets = () => {
+    washrooms.close();
+    listing.close();
+  };
 
   const routeMeters = selected?.segments.at(-1)?.endMeters ?? 0;
   const beginPreview = () => {
@@ -132,12 +195,34 @@ export function App() {
     setSpeed(1);
     setDnaOpen(false);
     report.close();
+    closeSheets();
+    if (!rides.active) rides.close();
     setPreview(startPreview(selected.id, routeMeters, performance.now()));
+  };
+
+  const openRide = () => {
+    if (!selected || !planner.plan || !safety.profile) return;
+    setDnaOpen(false);
+    report.close();
+    closeSheets();
+    setPreview(undefined);
+    rides.start(
+      { searchId: planner.plan.searchId, routeId: selected.id, weights: safety.profile.weights, options: safety.profile.options },
+      Boolean(city?.rides.live),
+    );
+  };
+
+  const shareRide = async () => {
+    if (!rides.ride) return;
+    const result = await shareTrip(rides.ride);
+    if (result === "copied") setToast("Trip link copied. Send it to someone you trust.");
+    if (result === "failed") setToast("Couldn't share from this browser. Call 112 if you need help.");
   };
 
   const openReport = () => {
     setDnaOpen(false);
     setPreview(undefined);
+    closeSheets();
     report.start();
   };
   const toggleReport = () => {
@@ -147,7 +232,39 @@ export function App() {
   };
   const toggleDna = () => {
     report.close();
+    closeSheets();
     setDnaOpen((v) => !v);
+  };
+  const toggleWashrooms = () => {
+    if (washrooms.open) return washrooms.close();
+    setDnaOpen(false);
+    setPreview(undefined);
+    report.close();
+    listing.close();
+    washrooms.start();
+  };
+  const openListing = () => {
+    setDnaOpen(false);
+    setPreview(undefined);
+    report.close();
+    washrooms.close();
+    void listing.start();
+  };
+  const startListing = () => (auth.user ? openListing() : setAuthPurpose("listing"));
+
+  const rideToWashroom = (washroom: Washroom) => {
+    const from = washrooms.point;
+    if (!from) return;
+    const washroomCity = washrooms.result?.cityId;
+    washrooms.close();
+    setPreview(undefined);
+    setMode("ride");
+    if (washroomCity && washroomCity !== cityId) setCityId(washroomCity);
+    planner.search({
+      from: { id: `pin:${from.join(",")}`, name: "Where you searched", label: "Where you searched", point: from },
+      to: { id: `washroom:${washroom.id}`, name: washroomName(washroom), label: SOURCE_LABEL[washroom.source], point: washroom.point },
+      departure: { mode: "now" },
+    });
   };
   const sendReport = async (category: ReportCategory, when: ReportWhen) => {
     if (!(await report.send(category, when))) return;
@@ -191,9 +308,18 @@ export function App() {
     else planner.setTo(place);
   };
 
+  const sheetOpen = (washrooms.open || listing.open) && !preview;
+  const rideSheetOpen = rides.open && !dnaOpen && !report.open && !sheetOpen && !preview;
+  const tapPoint = report.open ? report.mark : washrooms.open ? washrooms.mark : listing.open && listing.step === "place" ? listing.mark : undefined;
+  const markedPoint = report.open ? report.point : washrooms.open ? washrooms.point : listing.open ? listing.draft.point : undefined;
+  const rideable = Boolean(city && (city.rides.live || city.rides.demo));
+  const planDepartsNow = planner.plan ? Math.abs(new Date(planner.plan.departAt).getTime() - Date.now()) <= LIVE_RIDE_WINDOW_MS : false;
+  const liveOffered = Boolean(city?.rides.live);
+  const liveBlocker = liveOffered && !planDepartsNow ? "Live rides leave now. Set departure to Now and update routes to book one." : undefined;
+
   const insets: Insets = mobile
-    ? { top: 110, right: 30, bottom: Math.round(innerHeight * 0.54), left: 30 }
-    : { top: 120, right: dnaOpen || report.open ? 460 : 120, bottom: 120, left: 500 };
+    ? { top: 110, right: 30, bottom: Math.round(innerHeight * (rideSheetOpen || sheetOpen ? 0.64 : 0.54)), left: 30 }
+    : { top: 120, right: dnaOpen || report.open || rideSheetOpen || sheetOpen ? 460 : 120, bottom: 120, left: 500 };
 
   const skyHour = planner.departure.mode === "at" ? cityHour(planner.departure.at, offset) : cityHour(new Date(), offset);
   const [r, g, b] = skyRgb(skyHour);
@@ -212,24 +338,28 @@ export function App() {
   }
 
   return (
-    <div className={`app ${preview ? "is-previewing" : ""} ${dnaOpen ? "has-dna" : ""} ${report.open ? "is-reporting" : ""}`}>
+    <div
+      className={`app ${preview ? "is-previewing" : ""} ${dnaOpen ? "has-dna" : ""} ${report.open ? "is-reporting" : ""} ${rideSheetOpen ? "is-booking" : ""} ${sheetOpen ? "has-sheet" : ""} ${tapPoint ? "is-picking" : ""}`}
+    >
       <MapView
         {...(city ? { city } : {})}
         routes={routes}
         reports={(!tripMode && planner.plan?.reports) || NO_REPORTS}
         {...(tripScene ? { trip: tripScene } : {})}
+        {...(rideScene ? { ride: rideScene } : {})}
         {...(!tripMode && planner.plan ? { searchId: planner.plan.searchId } : {})}
         {...(!tripMode && planner.selectedId ? { selectedId: planner.selectedId } : {})}
         {...(tripMode ? (!tripScene && trip.base ? { from: trip.base.point } : {}) : planner.from ? { from: planner.from.point } : {})}
         {...(!tripMode && planner.to ? { to: planner.to.point } : {})}
-        {...(report.point ? { reportPoint: report.point } : {})}
+        {...(markedPoint ? { markedPoint } : {})}
+        {...(washrooms.open ? { washrooms: washrooms.shown } : {})}
         {...(showLights && rasters.lights ? { lights: rasters.lights } : {})}
         {...(showSignal && rasters.signal ? { signal: rasters.signal } : {})}
         {...(preview ? { preview } : {})}
         insets={insets}
-        onSelectRoute={(id) => !report.open && planner.setSelectedId(id)}
+        onSelectRoute={(id) => !tapPoint && planner.setSelectedId(id)}
         onPickPoint={pickPoint}
-        {...(report.open ? { onTapPoint: report.mark } : {})}
+        {...(tapPoint ? { onTapPoint: tapPoint } : {})}
         onPreviewEnd={() => setPreview(undefined)}
       />
       <div className="sky-tint" style={{ background: `radial-gradient(120% 60% at 50% 0%, rgba(${r},${g},${b},0.22), transparent 70%)` }} />
@@ -242,12 +372,14 @@ export function App() {
           showSignal={showSignal}
           dnaOpen={dnaOpen}
           reporting={report.open}
+          washrooms={washrooms.open}
           auth={auth}
           onCity={switchCity}
           onToggleLights={() => setShowLights((v) => !v)}
           onToggleSignal={() => setShowSignal((v) => !v)}
           onToggleDna={toggleDna}
           onToggleReport={toggleReport}
+          onToggleWashrooms={toggleWashrooms}
           onSignIn={() => setAuthPurpose("sync")}
         />
       )}
@@ -332,11 +464,16 @@ export function App() {
               )}
 
               {selected && !outdated && (
-                <div className="panel__footer">
-                  <button className="button button--primary button--wide" onClick={beginPreview}>
-                    <Icon name="play" size={15} /> Preview the ride
+                <div className={`panel__footer ${rideable ? "panel__footer--split" : ""}`}>
+                  <button className={`button ${rideable ? "button--secondary" : "button--primary button--wide"}`} onClick={beginPreview}>
+                    <Icon name="play" size={15} /> {rideable ? "Preview" : "Preview the ride"}
                     <span className="button__meta">{formatDuration(selected.durationSeconds)}</span>
                   </button>
+                  {rideable && (
+                    <button className="button button--primary" onClick={openRide} aria-expanded={rides.open}>
+                      <Icon name="auto" size={16} /> Book this route
+                    </button>
+                  )}
                 </div>
               )}
             </>
@@ -391,6 +528,25 @@ export function App() {
         />
       )}
 
+      {washrooms.open && !preview && (
+        <WashroomSheet washrooms={washrooms} utcOffsetMinutes={offset} onGo={rideToWashroom} {...(auth.available ? { onListShop: startListing } : {})} />
+      )}
+
+      {listing.open && !preview && <StopOnboarding onboarding={listing} />}
+
+      {rideSheetOpen && city && (
+        <RideSheet
+          booking={rides}
+          cityName={city.name}
+          liveOffered={liveOffered}
+          {...(liveBlocker ? { liveBlocker } : {})}
+          utcOffsetMinutes={offset}
+          onShare={() => void shareRide()}
+        />
+      )}
+
+      {rides.alertVisible && rides.ride && <RideAlert ride={rides.ride} onDismiss={rides.dismissAlert} onShare={() => void shareRide()} />}
+
       {preview && selected && (
         <RideHud route={selected} preview={preview} utcOffsetMinutes={offset} speed={speed} onSpeed={changeSpeed} onExit={() => setPreview(undefined)} />
       )}
@@ -410,7 +566,7 @@ export function App() {
         <AuthDialog
           auth={auth}
           purpose={authPurpose}
-          {...(authPurpose === "report" ? { onSignedIn: openReport } : {})}
+          {...(authPurpose === "report" ? { onSignedIn: openReport } : authPurpose === "listing" ? { onSignedIn: openListing } : {})}
           onClose={() => setAuthPurpose(undefined)}
         />
       )}

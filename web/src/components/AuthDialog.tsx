@@ -12,7 +12,7 @@ const friendly = (error: unknown) => {
   return "Couldn't sign you in. Please try again.";
 };
 
-export type AuthPurpose = "sync" | "report";
+export type AuthPurpose = "sync" | "report" | "listing";
 
 const COPY: Record<AuthPurpose, { title: string; body: string }> = {
   sync: {
@@ -22,6 +22,10 @@ const COPY: Record<AuthPurpose, { title: string; body: string }> = {
   report: {
     title: "Sign in to report",
     body: "An account stops one person flooding the map. Reports are saved without your name or email, and planning routes never needs sign-in.",
+  },
+  listing: {
+    title: "Sign in to list your shop",
+    body: "Your account owns the listing, so only you can change it. Riders see your shop's details, never your email.",
   },
 };
 

@@ -9,14 +9,20 @@ import { loadEnv } from "./config/env.js";
 import { getDb } from "./db/firestore.js";
 import { createFirestorePreferencesStore } from "./db/preferencesStore.js";
 import { createFirestoreReportStore } from "./db/reportStore.js";
+import { createFirestoreSafeStopStore } from "./db/safeStopStore.js";
 import { AnthropicTextModel } from "./integrations/anthropic/client.js";
+import { txtRecords } from "./integrations/dns/txt.js";
 import { createGoDaddyClient } from "./integrations/godaddy/factory.js";
+import { NammaYatriClient } from "./integrations/nammayatri/client.js";
 import { OrsGeocoder } from "./integrations/ors/geocoder.js";
+import { RdapClient } from "./integrations/rdap/client.js";
 import { TomTomTrafficFlow } from "./integrations/tomtom/trafficFlow.js";
 import { ValhallaClient } from "./integrations/valhalla/client.js";
 import { createCommunityReports } from "./planner/communityReports.js";
 import { createItineraryPlanner } from "./planner/itineraryPlanner.js";
+import { createRideBooking } from "./planner/rideBooking.js";
 import { createRoutePlanner } from "./planner/routePlanner.js";
+import { createSafeStops } from "./planner/safeStops.js";
 
 const env = loadEnv();
 const firebase = getFirebaseApp(env);
@@ -25,6 +31,21 @@ const godaddy = createGoDaddyClient(env);
 const cities = await loadCityRegistry(fileURLToPath(new URL("../data/cities", import.meta.url)));
 const reports = createCommunityReports({ store: createFirestoreReportStore(db), cities });
 const webRoot = fileURLToPath(new URL("../web/dist", import.meta.url));
+const rdap = new RdapClient();
+const safeStops = createSafeStops({
+  store: createFirestoreSafeStopStore(db),
+  cities,
+  lookup: { txt: txtRecords, registrar: (domain) => rdap.registrar(domain) },
+  ...(godaddy ? { godaddy } : {}),
+});
+const valhalla = new ValhallaClient({ baseUrl: env.VALHALLA_URL });
+const planner = createRoutePlanner({
+  cities,
+  routing: valhalla,
+  ...(env.TOMTOM_API_KEY ? { traffic: new TomTomTrafficFlow(env.TOMTOM_API_KEY) } : {}),
+  reports,
+  safeStops,
+});
 
 const app = await buildApp({
   env,
@@ -32,11 +53,12 @@ const app = await buildApp({
   db,
   godaddy,
   cities,
-  planner: createRoutePlanner({
-    cities,
-    routing: new ValhallaClient({ baseUrl: env.VALHALLA_URL }),
-    ...(env.TOMTOM_API_KEY ? { traffic: new TomTomTrafficFlow(env.TOMTOM_API_KEY) } : {}),
-    reports,
+  planner,
+  rides: createRideBooking({
+    planner,
+    car: valhalla,
+    hailing: new NammaYatriClient({ baseUrl: env.NAMMA_YATRI_API_URL }),
+    live: env.NAMMA_YATRI_LIVE,
   }),
   itineraries: createItineraryPlanner({
     cities,
@@ -46,12 +68,17 @@ const app = await buildApp({
   ...(env.ORS_API_KEY ? { geocoder: new OrsGeocoder(env.ORS_API_KEY) } : {}),
   preferences: createFirestorePreferencesStore(db),
   reports,
+  safeStops,
   ...(existsSync(join(webRoot, "index.html")) ? { webRoot } : {}),
 });
 
 reports.load().then(
   (count) => app.log.info({ count }, "rider reports loaded"),
   (err: unknown) => app.log.warn({ reason: err instanceof Error ? err.message : String(err) }, "Could not load rider reports - starting with none"),
+);
+safeStops.load().then(
+  (count) => app.log.info({ count }, "listed Safe Stops loaded"),
+  (err: unknown) => app.log.warn({ reason: err instanceof Error ? err.message : String(err) }, "Could not load Safe Stops - starting with none"),
 );
 
 app.log.info({ cities: cities.cities.map((c) => `${c.id}@${c.data.version}`) }, "city data loaded");

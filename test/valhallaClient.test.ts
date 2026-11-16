@@ -56,6 +56,36 @@ describe("Valhalla client", () => {
     expect(body).toMatchObject({ costing: "motor_scooter", alternates: 2 });
   });
 
+  it("routes a car through checkpoints in order as one leg", async () => {
+    const fetchImpl = fakeValhalla();
+    const route = await new ValhallaClient({ baseUrl: "https://valhalla.test", fetchImpl }).through([
+      [73.8, 18.52],
+      [73.81, 18.521],
+      [73.815, 18.52],
+    ]);
+
+    expect(route.distanceMeters).toBe(1580);
+    expect(route.shape).toHaveLength(4);
+    expect(route.roads).toEqual([]);
+    const body = JSON.parse(fetchImpl.mock.calls[0]![1]!.body as string);
+    expect(body.costing).toBe("auto");
+    expect(body.locations.map((l: { type: string }) => l.type)).toEqual(["break", "via", "break"]);
+  });
+
+  it("matches someone else's route to the map for road classes, or returns none", async () => {
+    const fetchImpl = fakeValhalla();
+    const client = new ValhallaClient({ baseUrl: "https://valhalla.test", fetchImpl });
+    const roads = await client.roadsAlong(shape);
+
+    expect(roads.map((r) => r.roadClass)).toEqual(["primary", "alley"]);
+    const body = JSON.parse(fetchImpl.mock.calls[0]![1]!.body as string);
+    expect(body).toMatchObject({ shape_match: "map_snap", costing: "auto" });
+    expect(body.shape[0]).toEqual({ lon: 73.8, lat: 18.52 });
+
+    const failing = new ValhallaClient({ baseUrl: "https://valhalla.test", fetchImpl: vi.fn(async () => json({}, 500)) });
+    await expect(failing.roadsAlong(shape)).resolves.toEqual([]);
+  });
+
   it("maps 'no route' to a 422 the rider can act on", async () => {
     const fetchImpl = vi.fn(async () => json({ error_code: 442, error: "No path could be found" }, 400));
     const client = new ValhallaClient({ baseUrl: "https://valhalla.test", fetchImpl });

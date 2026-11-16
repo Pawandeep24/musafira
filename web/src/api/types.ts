@@ -45,6 +45,7 @@ export interface City {
   utcOffsetMinutes: number;
   version: string;
   sources: DataSource[];
+  rides: { live: boolean; demo: boolean };
 }
 
 export interface AppConfig {
@@ -97,7 +98,8 @@ export type PoiCategory =
   | "fast_food"
   | "bike_repair"
   | "bus_stop"
-  | "transit_station";
+  | "transit_station"
+  | "safe_stop";
 
 export interface Stop {
   id: string;
@@ -243,4 +245,193 @@ export interface Preferences {
   weights: Weights;
   options: ScoringOptions;
   presetId?: string;
+}
+
+export type RideMode = "live" | "demo";
+export type RideOptionKind = "safe" | "direct";
+export type RideStatus = "searching" | "assigned" | "riding" | "completed" | "cancelled" | "no_driver";
+
+export interface RidePlace {
+  point: LngLat;
+  name: string | null;
+}
+
+export interface RideEstimate {
+  id: string;
+  tier: string;
+  fare: number;
+  minFare: number | null;
+  maxFare: number | null;
+  pickupSeconds: number | null;
+}
+
+export interface RideOption {
+  kind: RideOptionKind;
+  path: LngLat[];
+  distanceMeters: number;
+  durationSeconds: number;
+  score: number;
+  coverage: number;
+  estimates: RideEstimate[];
+}
+
+export interface RideQuote {
+  quoteId: string;
+  mode: RideMode;
+  city: { id: string; name: string };
+  departAt: string;
+  expiresAt: string;
+  planScore: number;
+  pickup: RidePlace;
+  drop: RidePlace;
+  checkpoints: RidePlace[];
+  options: RideOption[];
+}
+
+export interface RideDriver {
+  name: string | null;
+  vehicleNumber: string | null;
+  vehicle: string | null;
+  otp: string | null;
+}
+
+export interface Ride {
+  ref: string;
+  mode: RideMode;
+  status: RideStatus;
+  city: { id: string; name: string };
+  route: LngLat[];
+  checkpoints: RidePlace[];
+  tier: string;
+  fare: number;
+  driver: RideDriver | null;
+  position: LngLat | null;
+  area: string | null;
+  pickupSeconds: number | null;
+  guard: { offRoute: boolean; metersOff: number; progress: number } | null;
+  shareUrl: string | null;
+  reassigning: boolean;
+  cancelledByRider: boolean;
+  stale: boolean;
+  canCancel: boolean;
+  cancelFee: boolean;
+  canDetour: boolean;
+}
+
+export type SafeStopKind = "cafe" | "restaurant" | "shop" | "pharmacy" | "fuel" | "hotel" | "clinic" | "other";
+
+export type Language = "kn" | "mr" | "hi" | "en" | "ta" | "te" | "ur";
+
+export type SafeStopFeature =
+  | "washroom_inside"
+  | "separate_entry"
+  | "lock_inside"
+  | "lit_inside"
+  | "running_water"
+  | "soap"
+  | "helmet_hook"
+  | "western_toilet"
+  | "indian_toilet"
+  | "tampons"
+  | "menstrual_cups"
+  | "disposal_bin"
+  | "pad_vending"
+  | "painkillers"
+  | "staff_always"
+  | "woman_on_shift"
+  | "cctv"
+  | "lit_entrance"
+  | "guard"
+  | "wait_inside"
+  | "seating"
+  | "first_aid"
+  | "drinking_water"
+  | "charging"
+  | "parking_watched"
+  | "covered_parking"
+  | "tyre_help"
+  | "all_genders"
+  | "step_free"
+  | "baby_changing"
+  | "feeding_space";
+
+export type SafeStopHours = { allDay: true } | { opens: string; closes: string };
+
+export interface SafeStopProfile {
+  name: string;
+  kind: SafeStopKind;
+  point: LngLat;
+  hours: SafeStopHours;
+  languages: Language[];
+  washrooms: { total: number; women: number; unisex: number; accessible: number };
+  access: "anyone" | "customers" | "paid";
+  feeRupees?: number;
+  attendant: "always" | "daytime" | "none";
+  pads: "free" | "sold" | "none";
+  cleaned: "hourly" | "few_daily" | "daily";
+  features: SafeStopFeature[];
+  offer?: string;
+  promise: true;
+  domain: string;
+}
+
+export interface OwnedSafeStop {
+  id: string;
+  status: "draft" | "listed";
+  cityId: string;
+  profile: SafeStopProfile;
+  verify: { name: string; value: string };
+  registrar: string | null;
+  verifiedAt: string | null;
+}
+
+export interface PublicSafeStop {
+  id: string;
+  cityId: string;
+  profile: SafeStopProfile;
+  registrar: string | null;
+  verifiedAt: string | null;
+  open: boolean;
+  closesAt: string | null;
+}
+
+export interface VerifyChecks {
+  codeFound: boolean;
+  registrar: string | null;
+  godaddy: boolean;
+}
+
+export interface DomainIdea {
+  domain: string;
+  available: boolean | null;
+  buyUrl: string;
+}
+
+export interface WashroomFacts {
+  women?: boolean;
+  free?: boolean;
+  pads?: boolean;
+  attendant?: boolean;
+  lockInside?: boolean;
+  wheelchair?: boolean;
+  babyChanging?: boolean;
+}
+
+export interface Washroom {
+  id: string;
+  source: "safeStop" | "public" | "fuel";
+  name?: string;
+  point: LngLat;
+  facts: WashroomFacts;
+  safeStopId?: string;
+  distanceMeters: number;
+  rideMinutes: number;
+  estimated: boolean;
+  closesAt: string | null;
+}
+
+export interface WashroomsNear {
+  cityId: string;
+  at: string;
+  washrooms: Washroom[];
 }

@@ -13,9 +13,11 @@ web/ (React · MapLibre · deck.gl)
 API (Fastify) ──▶ Valhalla        two-wheeler routes, road classes
    │          ├─▶ TomTom Flow     live traffic (only when leaving now)
    │          ├─▶ openrouteservice addresses the city index doesn't know
-   │          └─▶ Firestore       signed-in riders' preferences, rider reports
+   │          ├─▶ Namma Yatri     live auto fares, booking and ride status (Bengaluru)
+   │          ├─▶ GoDaddy · RDAP · DNS  Safe Stop domain ideas and proof of ownership
+   │          └─▶ Firestore       signed-in riders' preferences, rider reports, Safe Stop listings
    ▼
-data/cities/*.json  ◀── npm run ingest (OSM POIs and named places, NASA Black Marble, OpenCelliD)
+data/cities/*.json  ◀── npm run ingest (OSM POIs, named places and public toilets, NASA Black Marble, OpenCelliD)
 ```
 
 Place search answers from an in-memory index of each city's named places: housing societies, areas, landmarks, streets and POIs (about 17,600 in Pune and 52,000 in Bengaluru). It matches as you type, tolerates typos and transliteration ("Pruthvi" finds "Prithvi"), and answers in a few milliseconds. openrouteservice only tops up when the index has little to offer. See `src/city/placeSearch.ts`.
@@ -23,6 +25,12 @@ Place search answers from an in-memory index of each city's named places: housin
 Signed-in riders can report what they saw at a spot: poor lighting, a deserted stretch, harassment, a bad road, police nearby and so on. Reports correct the sensor-based scores for riders passing at a similar hour and fade over weeks; harassment and loitering add a penalty that no slider can switch off. After a search, reports around the trip rise on the 3D map as pillars, bright where they count for the selected route. They are stored without the reporter's identity. See `src/safety/community.ts`.
 
 Day trips start from a base place and four quick questions: how long, interests, diet and when to be back. `POST /api/itinerary` offers Claude Haiku a numbered list of real places near the base, and Haiku replies with one short line per stop (about $0.0006 a plan). The server then sets the times in city time, checks opening hours, keeps rides before dusk unless the rider chose a later return, and flags any ride after dark. Any leg opens in the route planner for a safety check. Without `ANTHROPIC_API_KEY`, or after the daily spend cap, the same places are planned without AI. See `src/itinerary/`.
+
+**Book this route** hands the safe route to an auto. Musafira places a few safety checkpoints where a car would otherwise leave the safe route and sends them as stops, so both the route and the fare go through them. It shows the fare and safety score of that ride next to the usual route. During the ride it tracks the driver and alerts the rider, with Share trip and Call 112, if the ride strays more than 100 m from the route. In Bengaluru the ride is booked for real on the rider's own Namma Yatri account: they link it with a 2-minute code from the app (Profile → About us → tap the version number), and the sign-in stays on the server for 12 hours, never in the browser. Pune, and anyone without an account, gets a demo ride with meter fares and a simulated driver; nothing is booked. Live booking is off unless `NAMMA_YATRI_LIVE=true`; until then every city gets the demo. See `src/planner/rideBooking.ts`.
+
+**Washrooms near me** lists open washrooms within a short ride, ranked by ride time: Musafira Safe Stops first, then OpenStreetMap public toilets (94 in Pune, 495 in Bengaluru) and fuel stations, which must keep a washroom for customers. Riders can filter for women's, free, pads, attendant or accessible, and get a safe route to any of them. See `src/stops/washrooms.ts`.
+
+**Musafira Safe Stops** let a shop owner list their place for riders: washroom counts, who can use it, period care, safety and rider features, and the Safe Stop Promise. To go live they prove they own a GoDaddy domain by adding a TXT record (`_musafira` → `musafira-verify=<code>`); Musafira reads it from DNS and checks through RDAP that GoDaddy is the registrar. Musafira suggests domain names and links to GoDaddy to buy them; it never buys a domain for anyone. Listed stops count as safety stops on route scores, appear first in washrooms near me, and get a public page at `/s/<id>`. Changing the domain takes a stop back to draft until it is verified again. See `src/planner/safeStops.ts`.
 
 Planning has two stages. `POST /api/plan` fetches the routes and measures every segment at its arrival time; the result is cached under a `searchId` for 30 minutes. `POST /api/plan/:searchId/score` re-weights that cached analysis in tens of milliseconds, which is why the sliders feel live. The formula lives in `src/safety/scoring.ts`.
 
@@ -33,9 +41,11 @@ Planning has two stages. `POST /api/plan` fetches the routes and measures every 
 | City data | `src/city/`, `data/cities/` | Spatial index, opening hours in city time |
 | Inbound auth (who is calling us?) | `src/auth/` | Verifies Firebase ID tokens; `requireAuth`, `requireVerifiedEmail`, `requireClaim` guards |
 | Trip plans | `src/itinerary/`, `src/planner/itineraryPlanner.ts` | Candidates, Claude line format, schedule, fallback |
-| Outbound clients | `src/integrations/` | Valhalla, TomTom, openrouteservice, GoDaddy, Anthropic |
+| Ride booking | `src/rides/`, `src/planner/rideBooking.ts` | Checkpoints, route guard, live and demo rides |
+| Safe Stops and washrooms | `src/stops/`, `src/planner/safeStops.ts` | Questionnaire, domain proof, washroom ranking |
+| Outbound clients | `src/integrations/` | Valhalla, TomTom, openrouteservice, GoDaddy, Anthropic, Namma Yatri, RDAP, DNS |
 | Config | `src/config/env.ts` | Zod-validated env, fails fast |
-| Routes | `src/routes/` | `/api/config`, `/api/plan`, `/api/itinerary`, `/api/places/*`, `/api/me/preferences` and `/api/reports` (protected), `/healthz` |
+| Routes | `src/routes/` | `/api/config`, `/api/plan`, `/api/itinerary`, `/api/places/*`, `/api/rides/*`, `/api/washrooms`, `/api/stops/:id`; `/api/me/preferences`, `/api/reports` and owner `/api/stops/*` (protected), `/healthz` |
 | Web app | `web/` | Map scene in `web/src/map/`, state hooks in `web/src/state/` |
 
 ## Run it locally
@@ -67,6 +77,7 @@ To refresh a city's data, run `npm run ingest -- pune` (or `bengaluru`). This ne
 npm run typecheck && npm test
 npm run web:typecheck
 npm run smoke:godaddy    # verifies the GoDaddy key for GODADDY_ENV
+npm run smoke:nammayatri -- <code>   # signs in with a fresh Namma Yatri code and fetches fares; never books
 ```
 
 ### GoDaddy

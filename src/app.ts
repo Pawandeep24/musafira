@@ -17,7 +17,9 @@ import type { CommunityReports } from "./planner/communityReports.js";
 import type { ItineraryPlanner } from "./planner/itineraryPlanner.js";
 import { createPlaceSuggester } from "./planner/placeSuggester.js";
 import type { Geocoder } from "./planner/ports.js";
+import type { RideBooking } from "./planner/rideBooking.js";
 import type { RoutePlanner } from "./planner/routePlanner.js";
+import type { SafeStops } from "./planner/safeStops.js";
 import { configRoutes } from "./routes/config.js";
 import { domainRoutes } from "./routes/domains.js";
 import { healthRoutes } from "./routes/health.js";
@@ -27,6 +29,8 @@ import { placesRoutes } from "./routes/places.js";
 import { planRoutes } from "./routes/plan.js";
 import { preferencesRoutes } from "./routes/preferences.js";
 import { reportRoutes } from "./routes/reports.js";
+import { rideRoutes, SESSION_HEADER } from "./routes/rides.js";
+import { stopRoutes } from "./routes/stops.js";
 import { serveWebApp, webAppCsp } from "./routes/webApp.js";
 
 export interface AppDeps {
@@ -40,6 +44,8 @@ export interface AppDeps {
   geocoder?: Geocoder;
   preferences?: PreferencesStore;
   reports?: CommunityReports;
+  rides?: RideBooking;
+  safeStops?: SafeStops;
   now?: () => Date;
   webRoot?: string;
 }
@@ -50,7 +56,7 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
     logger: {
       level: env.LOG_LEVEL,
       // Never log credentials.
-      redact: ["req.headers.authorization", "req.headers.cookie"],
+      redact: ["req.headers.authorization", "req.headers.cookie", `req.headers["${SESSION_HEADER}"]`],
     },
     trustProxy: true, // correct client IPs behind Render/Fly/Cloud Run proxies (rate limiting)
   });
@@ -84,7 +90,7 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
       });
     }
     if (err instanceof UpstreamError) {
-      req.log.error({ service: err.service, upstreamStatus: err.status }, "upstream error");
+      req.log.error({ service: err.service, upstreamStatus: err.status, upstreamCode: (err as { code?: unknown }).code }, "upstream error");
       return reply.status(502).send({ error: { code: "UPSTREAM_ERROR", message: `${err.service} is unavailable` } });
     }
     const status = (err as { statusCode?: number }).statusCode;
@@ -101,7 +107,7 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
   await app.register(healthRoutes);
   await app.register(meRoutes({ requireAuth, db: deps.db }), { prefix: "/api" });
   await app.register(domainRoutes({ requireAuth, godaddy: deps.godaddy }), { prefix: "/api" });
-  await app.register(configRoutes(cities), { prefix: "/api" });
+  await app.register(configRoutes(cities, deps.rides), { prefix: "/api" });
   await app.register(
     placesRoutes({ cities, suggester: createPlaceSuggester(deps.geocoder), ...(deps.geocoder ? { geocoder: deps.geocoder } : {}) }),
     { prefix: "/api" },
@@ -114,6 +120,8 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
     prefix: "/api",
   });
   await app.register(reportRoutes({ requireAuth, ...(deps.reports ? { reports: deps.reports } : {}) }), { prefix: "/api" });
+  await app.register(rideRoutes({ ...(deps.rides ? { rides: deps.rides } : {}) }), { prefix: "/api" });
+  await app.register(stopRoutes({ requireAuth, ...(deps.safeStops ? { safeStops: deps.safeStops } : {}) }), { prefix: "/api" });
   if (deps.webRoot) await serveWebApp(app, deps.webRoot);
 
   return app;

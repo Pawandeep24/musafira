@@ -45,6 +45,23 @@ export const poi = (id: string, lon: number, cat: Poi["cat"], hours?: string): P
   ...(hours ? { hours } : {}),
 });
 
+/** Safe Stop questionnaire answers for a cafe on the test route, ~1 km east of its middle, open 07:00-01:00. */
+export const safeStopAnswers = {
+  name: "Sharma Chai",
+  kind: "cafe",
+  point: [MIDDLE_LON + 0.0095, ROUTE_LAT],
+  hours: { opens: "07:00", closes: "01:00" },
+  languages: ["mr", "hi"],
+  washrooms: { total: 2, women: 1, unisex: 0, accessible: 1 },
+  access: "anyone",
+  attendant: "always",
+  pads: "free",
+  cleaned: "few_daily",
+  features: ["lock_inside", "lit_inside", "cctv"],
+  promise: true,
+  domain: "sharmachai.in",
+};
+
 export function testCity(overrides: Partial<CityData> = {}): CityIndex {
   return new CityIndex({
     id: "testville",
@@ -56,6 +73,7 @@ export function testCity(overrides: Partial<CityData> = {}): CityIndex {
     pois: [],
     places: [],
     sights: [],
+    washrooms: [],
     lights: grid(() => 40),
     cellDensity: grid(() => 50),
     sources: [],

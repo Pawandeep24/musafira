@@ -4,8 +4,11 @@
  * Stack, bottom to top: data dot-matrices → other routes (ghosts) → selected route
  * (dark casing, wide translucent glow, per-segment safety colour core) → pulsing
  * dark stretches and dead zones → two "comets" of light flowing along the route →
- * stops → rider-report pillars → start/end beacons → the spot being reported →
- * ride-preview puck.
+ * stops → rider-report pillars → washroom pins (lilac Safe Stops, larger; blue public
+ * toilets; amber fuel stations) → booked ride (the other option dim, the ride as a white
+ * line with glow, numbered violet safety checkpoints) → start/end beacons → the marked spot
+ * (a report, a washroom search, a shop being listed) → ride-preview puck → driver puck
+ * (teal, rose and faster when off route).
  *
  * A day trip replaces the routes with its own layers: legs as arcs (rose when ridden
  * after dark), numbered stops (amber to eat, teal to see) and a beacon at the base.
@@ -20,9 +23,10 @@
  */
 import type { Layer, PickingInfo } from "@deck.gl/core";
 import { ArcLayer, ColumnLayer, PathLayer, ScatterplotLayer, TextLayer } from "@deck.gl/layers";
-import type { ItineraryLeg, ItineraryStop, LngLat, Route, Segment, Stop, Stretch, TripReport } from "../api/types";
+import type { ItineraryLeg, ItineraryStop, LngLat, Route, Segment, Stop, Stretch, TripReport, Washroom } from "../api/types";
 import { CATEGORY_RGB, safetyRgba, type Rgba } from "../lib/colors";
 import { REPORT_META, TONE_RGB } from "../lib/reports";
+import { SOURCE_RGB } from "../lib/safeStops";
 import { pointAt, sliceTrack, type Track } from "../lib/track";
 import type { GridDot } from "./gridDots";
 
@@ -32,15 +36,30 @@ export interface TripScene {
   readonly legs: readonly ItineraryLeg[];
 }
 
+export interface RideScene {
+  /** Changes when the camera should frame the ride again (a new quote option or booking). */
+  readonly key: string;
+  readonly path: LngLat[];
+  readonly alternative?: LngLat[];
+  readonly checkpoints: readonly LngLat[];
+  readonly driver?: LngLat;
+  readonly offRoute: boolean;
+  /** How long the driver puck glides between two reported positions. */
+  readonly tweenMs: number;
+}
+
 export interface SceneInput {
   readonly routes: readonly Route[];
   readonly trip?: TripScene;
+  readonly ride?: RideScene;
+  readonly rideDriver?: LngLat;
   readonly selected?: Route;
   readonly tracks: ReadonlyMap<string, Track>;
   readonly from?: LngLat;
   readonly to?: LngLat;
   readonly reports: readonly TripReport[];
-  readonly reportPoint?: LngLat;
+  readonly markedPoint?: LngLat;
+  readonly washrooms?: readonly Washroom[];
   readonly lights?: readonly GridDot[];
   readonly signal?: readonly GridDot[];
   readonly previewMeters?: number;
@@ -51,12 +70,17 @@ export interface SceneInput {
   onHoverStop(info: PickingInfo<Stop>): void;
   onHoverReport(info: PickingInfo<TripReport>): void;
   onHoverTripStop(info: PickingInfo<ItineraryStop>): void;
+  onHoverWashroom(info: PickingInfo<Washroom>): void;
 }
 
 const EAT_RGB = [255, 196, 87] as const;
 const SEE_RGB = [46, 242, 200] as const;
 const LEG_RGB = [168, 140, 255] as const;
 const DARK_LEG_RGB = [255, 61, 110] as const;
+const RIDE_RGB = [236, 244, 255] as const;
+const CHECKPOINT_RGB = [139, 124, 255] as const;
+const DRIVER_RGB = [46, 242, 200] as const;
+const OFF_ROUTE_RGB = [255, 61, 110] as const;
 const EATERY_KINDS: ReadonlySet<string> = new Set(["restaurant", "cafe", "fast_food"]);
 
 const PILLAR_RADIUS_PX = 6;
@@ -98,10 +122,10 @@ function dotLayers(id: string, dots: readonly GridDot[] | undefined, dimmed: boo
   return [layer("bloom", 2.4, 0.07, 0, 22), layer("core", 1, 1, 1, 8)];
 }
 
-function puck(position: LngLat, rgb: readonly [number, number, number], timeMs: number) {
-  const breathe = pulse(timeMs, 1600);
+function puck(id: string, position: LngLat, rgb: readonly [number, number, number], timeMs: number, periodMs = 1600) {
+  const breathe = pulse(timeMs, periodMs);
   return new ScatterplotLayer<{ radius: number; color: Rgba; line?: Rgba }>({
-    id: "puck",
+    id,
     data: [
       { radius: 30 + 8 * breathe, color: [...rgb, Math.round(40 + 30 * breathe)] },
       { radius: 14, color: [...rgb, 255], line: [255, 255, 255, 255] },
@@ -214,6 +238,58 @@ function tripLayers(trip: TripScene, timeMs: number, onHover: SceneInput["onHove
       characterSet: "0123456789",
     }),
     ...beacon("trip-base", trip.base, LEG_RGB, timeMs),
+  ];
+}
+
+function rideLayers(ride: RideScene, timeMs: number): Layer[] {
+  const glow = pulse(timeMs, 1800);
+  const line = (id: string, path: LngLat[] | undefined, color: Rgba, width: number) =>
+    new PathLayer<LngLat[]>({
+      id,
+      data: path ? [path] : [],
+      getPath: (p) => p,
+      getColor: color,
+      getWidth: width,
+      widthUnits: "pixels",
+      capRounded: true,
+      jointRounded: true,
+    });
+  return [
+    line("ride-alternative", ride.alternative, [150, 160, 200, 110], 4),
+    line("ride-glow", ride.path, [...RIDE_RGB, 45], 16),
+    line("ride-path", ride.path, [...RIDE_RGB, 235], 3),
+    new ScatterplotLayer<LngLat>({
+      id: "checkpoint-halos",
+      data: ride.checkpoints,
+      getPosition: (p) => p,
+      getRadius: 17 + 6 * glow,
+      radiusUnits: "pixels",
+      getFillColor: [...CHECKPOINT_RGB, 55],
+      updateTriggers: { getRadius: glow },
+    }),
+    new ScatterplotLayer<LngLat>({
+      id: "checkpoints",
+      data: ride.checkpoints,
+      getPosition: (p) => p,
+      getRadius: 11,
+      radiusUnits: "pixels",
+      getFillColor: [...CHECKPOINT_RGB, 255],
+      stroked: true,
+      getLineColor: [255, 255, 255, 255],
+      lineWidthUnits: "pixels",
+      getLineWidth: 2,
+    }),
+    new TextLayer<LngLat>({
+      id: "checkpoint-numbers",
+      data: ride.checkpoints,
+      getPosition: (p) => p,
+      getText: (_, { index }) => String(index + 1),
+      getSize: 12,
+      getColor: [255, 255, 255, 255],
+      fontFamily: "Inter, system-ui, sans-serif",
+      fontWeight: 700,
+      characterSet: "0123456789",
+    }),
   ];
 }
 
@@ -352,10 +428,34 @@ export function sceneLayers(input: SceneInput): Layer[] {
       updateTriggers: { getFillColor: selected?.id },
     }),
 
+    new ScatterplotLayer<Washroom>({
+      id: "washroom-halos",
+      data: input.washrooms ?? [],
+      getPosition: (w) => w.point,
+      getRadius: (w) => (w.source === "safeStop" ? 20 : 13),
+      radiusUnits: "pixels",
+      getFillColor: (w) => [...SOURCE_RGB[w.source], 45],
+    }),
+    new ScatterplotLayer<Washroom>({
+      id: "washrooms",
+      data: input.washrooms ?? [],
+      getPosition: (w) => w.point,
+      getRadius: (w) => (w.source === "safeStop" ? 9 : 6),
+      radiusUnits: "pixels",
+      getFillColor: (w) => [...SOURCE_RGB[w.source], 245],
+      stroked: true,
+      getLineColor: [255, 255, 255, 230],
+      lineWidthUnits: "pixels",
+      getLineWidth: (w) => (w.source === "safeStop" ? 2.5 : 1.5),
+      pickable: true,
+      onHover: input.onHoverWashroom,
+    }),
+
+    ...(input.ride ? rideLayers(input.ride, timeMs) : []),
     ...(input.trip ? tripLayers(input.trip, timeMs, input.onHoverTripStop) : []),
     ...beacon("origin", input.from, [168, 140, 255], timeMs),
     ...beacon("destination", input.to, [46, 242, 200], timeMs + 1100),
-    ...beacon("report-spot", input.reportPoint, [255, 196, 87], timeMs + 500),
+    ...beacon("marked-spot", input.markedPoint, [255, 196, 87], timeMs + 500),
   ];
 
   if (track && input.previewMeters !== undefined) {
@@ -372,8 +472,13 @@ export function sceneLayers(input: SceneInput): Layer[] {
         widthUnits: "pixels",
         capRounded: true,
       }),
-      puck(position, [rgb[0], rgb[1], rgb[2]], timeMs),
+      puck("puck", position, [rgb[0], rgb[1], rgb[2]], timeMs),
     );
+  }
+
+  if (input.ride && input.rideDriver) {
+    const off = input.ride.offRoute;
+    layers.push(puck("driver", input.rideDriver, off ? OFF_ROUTE_RGB : DRIVER_RGB, timeMs, off ? 700 : 1600));
   }
 
   return layers.filter((layer): layer is Layer => layer !== null);

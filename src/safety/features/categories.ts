@@ -28,6 +28,7 @@ export const SAFETY_STOPS: ReadonlySet<PoiCategory> = new Set([
   "hotel",
   "convenience",
   "clinic",
+  "safe_stop",
 ]);
 
 export const BREAKDOWN_HELP: ReadonlySet<PoiCategory> = new Set(["fuel", "bike_repair"]);

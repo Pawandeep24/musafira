@@ -9,6 +9,7 @@ import { cropNightLights } from "./nightLights.js";
 import { fetchOsmPlaceElements, toNamedPlaces } from "./osmPlaces.js";
 import { fetchOsmPois } from "./osmPois.js";
 import { toSights } from "./osmSights.js";
+import { fetchOsmWashrooms } from "./osmWashrooms.js";
 
 const OUT_DIR = join(import.meta.dirname, "../../data/cities");
 
@@ -58,6 +59,9 @@ for (const city of targets) {
   const sights = toSights(placeElements);
   console.log(`  sights: ${sights.length} (${sights.filter((s) => s.famous).length} famous)`);
 
+  const washrooms = await cachedJson(`${city.id}-osm-washrooms.json`, () => fetchOsmWashrooms(city.bbox));
+  console.log(`  public washrooms: ${washrooms.length} (${washrooms.filter((w) => w.women).length} marked usable by women)`);
+
   const lights = await optional("night lights", () =>
     cachedJson(`${city.id}-night-lights.json`, () => cropNightLights(city.bbox, env.NASA_EARTHDATA_TOKEN)),
   );
@@ -81,6 +85,7 @@ for (const city of targets) {
     pois,
     places,
     sights,
+    washrooms,
     ...(lights ? { lights: lights.grid } : {}),
     ...(cellDensity ? { cellDensity } : {}),
     sources: [OSM, ...(lights ? [BLACK_MARBLE] : []), ...(cellDensity ? [OPENCELLID] : [])],

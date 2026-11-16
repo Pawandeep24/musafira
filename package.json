@@ -15,6 +15,7 @@
     "test:watch": "vitest",
     "smoke:godaddy": "tsx --env-file-if-exists=.env scripts/smoke-godaddy.ts",
     "smoke:firebase": "tsx --env-file-if-exists=.env scripts/smoke-firebase.ts",
+    "smoke:nammayatri": "tsx --env-file-if-exists=.env scripts/smoke-nammayatri.ts",
     "ingest": "tsx --env-file-if-exists=.env scripts/ingest/index.ts",
     "deploy": "tsx --env-file-if-exists=.env scripts/deploy.ts",
     "web:dev": "npm --prefix web run dev",

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { api, ApiError } from "../api/client";
 import type { LngLat, ReportCategory, ReportWhen } from "../api/types";
 import type { AuthState } from "../auth/useAuth";
+import { locateRider } from "../lib/locate";
 
 type Status = "idle" | "locating" | "sending";
 
@@ -36,19 +37,17 @@ export function useReport(auth: AuthState) {
       setError(undefined);
     },
     locate() {
-      if (!navigator.geolocation) return setError("Location isn't available in this browser. Tap the map instead.");
       setStatus("locating");
-      navigator.geolocation.getCurrentPosition(
-        ({ coords }) => {
+      locateRider(
+        (found) => {
           setStatus("idle");
-          setPoint([coords.longitude, coords.latitude]);
+          setPoint(found);
           setError(undefined);
         },
-        () => {
+        (message) => {
           setStatus("idle");
-          setError("Couldn't get your location. Tap the map instead.");
+          setError(message);
         },
-        { enableHighAccuracy: true, timeout: 10_000 },
       );
     },
     async send(category: ReportCategory, when: ReportWhen): Promise<boolean> {

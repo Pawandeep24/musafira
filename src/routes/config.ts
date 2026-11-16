@@ -2,13 +2,14 @@ import type { FastifyPluginAsync } from "fastify";
 import { z } from "zod";
 import type { CityRegistry } from "../city/cityRegistry.js";
 import { AppError } from "../lib/errors.js";
+import type { RideBooking } from "../planner/rideBooking.js";
 import { DEFAULT_OPTIONS, DEFAULT_WEIGHTS, MAX_WEIGHT, PARAMETERS, PRESETS } from "../safety/parameters.js";
 
 const cityParams = z.object({ cityId: z.string().max(40) });
 
 /** Everything the client needs to render the planner: parameters, presets and covered cities. */
 export const configRoutes =
-  (cities: CityRegistry): FastifyPluginAsync =>
+  (cities: CityRegistry, rides?: RideBooking): FastifyPluginAsync =>
   async (app) => {
     app.get("/config", async () => ({
       parameters: PARAMETERS,
@@ -23,6 +24,7 @@ export const configRoutes =
         utcOffsetMinutes: data.utcOffsetMinutes,
         version: data.version,
         sources: data.sources,
+        rides: rides?.support(data.id) ?? { live: false, demo: false },
       })),
     }));
 

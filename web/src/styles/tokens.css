@@ -17,6 +17,8 @@
   --risk: #ff3d6e;
   --warn: #ffc457;
   --ok: #2ef2c8;
+  --namma-yatri: #fcc32c;
+  --lilac: #d68cff;
 
   /* Brand accent is a muted sea green, kept softer and darker than --teal so it never reads as the "safe" signal. */
   --accent: #7fd8c6;

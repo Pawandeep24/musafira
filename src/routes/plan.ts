@@ -9,7 +9,7 @@ import { lngLatSchema } from "./schemas.js";
 const MAX_PAST_MS = 60 * 60_000;
 const MAX_FUTURE_MS = 14 * 24 * 60 * 60_000;
 
-const scoringBody = {
+export const scoringBody = {
   weights: weightsSchema.default(DEFAULT_WEIGHTS),
   options: optionsSchema.default(DEFAULT_OPTIONS),
 };
