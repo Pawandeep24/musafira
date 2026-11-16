@@ -1,6 +1,9 @@
 import type { Itinerary, ItineraryLeg, ItineraryStop, SightKind, TripSlot } from "../api/types";
 import { cityTime, formatClock, formatDistance, formatDuration } from "../lib/format";
 import { Icon, type IconName } from "./Icon";
+import { LinkButton } from "./ui/LinkButton";
+import { Notice } from "./ui/Notice";
+import { Segmented } from "./ui/Segmented";
 
 const FREE_TIME_MINUTES = 30;
 const SLOT_LABEL: Record<TripSlot, string> = {
@@ -65,9 +68,9 @@ export function ItineraryView({ itinerary, dayIndex, onDay, onEdit, onCheckRoute
             {leg.dark && <strong> · after dark</strong>}
           </span>
         </span>
-        <button className="link-button itinerary__check" onClick={() => onCheckRoute(leg, fromName, toName)}>
+        <LinkButton className="itinerary__check" onClick={() => onCheckRoute(leg, fromName, toName)}>
           Check route
-        </button>
+        </LinkButton>
       </li>
     );
   };
@@ -94,32 +97,21 @@ export function ItineraryView({ itinerary, dayIndex, onDay, onEdit, onCheckRoute
         <h1>{itinerary.title}</h1>
         <p>
           {date} · from {baseName} ·{" "}
-          <button className="link-button" onClick={onEdit}>
-            Change answers
-          </button>
+          <LinkButton onClick={onEdit}>Change answers</LinkButton>
         </p>
       </header>
 
-      {notice && (
-        <div className="notice notice--info">
-          <Icon name="alert" size={15} /> {notice}
-        </div>
-      )}
+      {notice && <Notice tone="info">{notice}</Notice>}
 
       {itinerary.days.length > 1 && (
-        <div className="segmented segmented--small itinerary__days" role="tablist">
-          {itinerary.days.map((d) => (
-            <button
-              key={d.index}
-              role="tab"
-              aria-selected={d.index === day.index}
-              className={d.index === day.index ? "is-on" : ""}
-              onClick={() => onDay(d.index)}
-            >
-              Day {d.index + 1}
-            </button>
-          ))}
-        </div>
+        <Segmented
+          kind="tabs"
+          small
+          className="itinerary__days"
+          options={itinerary.days.map((d) => [d.index, `Day ${d.index + 1}`] as const)}
+          value={day.index}
+          onChange={onDay}
+        />
       )}
 
       {!home || !lastStop ? (

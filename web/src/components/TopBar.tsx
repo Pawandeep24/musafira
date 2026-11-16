@@ -3,6 +3,7 @@ import type { City } from "../api/types";
 import type { AuthState } from "../auth/useAuth";
 import type { MapTheme } from "../state/useMapTheme";
 import { Icon } from "./Icon";
+import { Segmented } from "./ui/Segmented";
 
 interface Props {
   cities: readonly City[];
@@ -131,13 +132,14 @@ export function TopBar(props: Props) {
           </div>
         </div>
 
-        <div className="segmented glass topbar__cities" role="tablist" aria-label="City">
-          {props.cities.map((city) => (
-            <button key={city.id} role="tab" aria-selected={city.id === props.cityId} className={city.id === props.cityId ? "is-on" : ""} onClick={() => props.onCity(city.id)}>
-              {city.name}
-            </button>
-          ))}
-        </div>
+        <Segmented
+          kind="tabs"
+          label="City"
+          className="glass topbar__cities"
+          options={props.cities.map((city) => [city.id, city.name] as const)}
+          value={props.cityId}
+          onChange={props.onCity}
+        />
 
         <div className="topbar__actions">
           {!props.compact && layers}

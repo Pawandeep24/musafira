@@ -16,6 +16,7 @@ export interface JsonRequest {
   readonly headers?: Readonly<Record<string, string>>;
   readonly body?: unknown;
   readonly timeoutMs?: number;
+  readonly errorFor?: (status: number, body: unknown) => Error;
 }
 
 export async function fetchJson<T>(
@@ -23,7 +24,7 @@ export async function fetchJson<T>(
   service: string,
   url: string,
   schema: z.ZodType<T>,
-  { method = "GET", headers = {}, body, timeoutMs = 10_000 }: JsonRequest = {},
+  { method = "GET", headers = {}, body, timeoutMs = 10_000, errorFor }: JsonRequest = {},
 ): Promise<T> {
   let response: Response;
   try {
@@ -36,7 +37,10 @@ export async function fetchJson<T>(
   } catch {
     throw new UpstreamError(service);
   }
-  if (!response.ok) throw new UpstreamError(service, response.status);
+  if (!response.ok) {
+    if (errorFor) throw errorFor(response.status, await response.json().catch(() => undefined));
+    throw new UpstreamError(service, response.status);
+  }
   const parsed = schema.safeParse(await response.json().catch(() => undefined));
   if (!parsed.success) throw new UpstreamError(service, response.status);
   return parsed.data;

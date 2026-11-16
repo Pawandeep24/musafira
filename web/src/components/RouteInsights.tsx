@@ -4,6 +4,7 @@ import { CATEGORY_LABEL, safetyCss } from "../lib/colors";
 import { formatClock, formatDistance } from "../lib/format";
 import { REPORT_META, reportAge, reportSummary } from "../lib/reports";
 import { Icon } from "./Icon";
+import { Segmented } from "./ui/Segmented";
 
 interface Props {
   route: Route;
@@ -13,6 +14,11 @@ interface Props {
 }
 
 type Tab = "why" | "along";
+
+const TABS: readonly (readonly [Tab, string])[] = [
+  ["why", "Why this score"],
+  ["along", "Along the way"],
+];
 
 const emptyReason = (id: ParameterInfo["id"]) => (id === "lighting" ? "Daylight" : "No data");
 
@@ -25,14 +31,7 @@ export function RouteInsights({ route, parameters, weights, city }: Props) {
 
   return (
     <section className="insights">
-      <div className="segmented segmented--small">
-        <button className={tab === "why" ? "is-on" : ""} onClick={() => setTab("why")}>
-          Why this score
-        </button>
-        <button className={tab === "along" ? "is-on" : ""} onClick={() => setTab("along")}>
-          Along the way
-        </button>
-      </div>
+      <Segmented small options={TABS} value={tab} onChange={setTab} />
 
       {tab === "why" && (
         <>

@@ -2,6 +2,12 @@ import { useState } from "react";
 import type { LngLat, ReportCategory, ReportWhen } from "../api/types";
 import { REPORT_META, REPORT_WHEN } from "../lib/reports";
 import { Icon } from "./Icon";
+import { Button } from "./ui/Button";
+import { IconButton } from "./ui/IconButton";
+import { LinkButton } from "./ui/LinkButton";
+import { Notice } from "./ui/Notice";
+import { SheetHeader } from "./ui/SheetHeader";
+import { ToggleChip } from "./ui/ToggleChip";
 
 const PROBLEMS: readonly ReportCategory[] = ["poorlyLit", "deserted", "harassment", "loitering", "badRoad", "waterlogged", "noSignal"];
 const GOOD_SIGNS: readonly ReportCategory[] = ["wellLit", "busy", "policeNearby"];
@@ -25,15 +31,16 @@ export function ReportSheet({ point, locating, sending, error, onUseLocation, on
       {ids.map((id) => {
         const meta = REPORT_META[id];
         return (
-          <button
+          <ToggleChip
             key={id}
             role="radio"
             aria-checked={category === id}
-            className={`chip chip--preset report__chip is-${meta.tone} ${category === id ? "is-on" : ""}`}
+            on={category === id}
+            className={`report__chip is-${meta.tone}`}
             onClick={() => setCategory(id)}
           >
             <Icon name={meta.icon} size={14} /> {meta.label}
-          </button>
+          </ToggleChip>
         );
       })}
     </div>
@@ -41,13 +48,10 @@ export function ReportSheet({ point, locating, sending, error, onUseLocation, on
 
   return (
     <aside className="report-panel glass" aria-label="Report what you saw">
-      <button className="icon-button report-panel__close" onClick={onClose} aria-label="Close report">
-        <Icon name="close" size={16} />
-      </button>
-      <header className="report__head">
-        <h2>Report what you saw</h2>
+      <IconButton icon="close" label="Close report" className="report-panel__close" onClick={onClose} />
+      <SheetHeader className="report__head" title="Report what you saw">
         <p>Riders passing this spot at a similar hour get route scores that reflect it.</p>
-      </header>
+      </SheetHeader>
 
       <section className="report__step">
         <h3>Where</h3>
@@ -55,9 +59,9 @@ export function ReportSheet({ point, locating, sending, error, onUseLocation, on
           <Icon name="pin" size={16} />
           <span>{point ? "Spot marked. Tap the map to move it." : "Tap the map where it happened."}</span>
         </div>
-        <button className="link-button report__locate" onClick={onUseLocation} disabled={locating}>
+        <LinkButton className="report__locate" onClick={onUseLocation} disabled={locating}>
           <Icon name="locate" size={14} /> {locating ? "Finding you…" : "Use my location"}
-        </button>
+        </LinkButton>
       </section>
 
       <section className="report__step">
@@ -71,27 +75,18 @@ export function ReportSheet({ point, locating, sending, error, onUseLocation, on
         <h3>When</h3>
         <div className="report__chips" role="radiogroup" aria-label="When">
           {REPORT_WHEN.map(({ id, label }) => (
-            <button key={id} role="radio" aria-checked={when === id} className={`chip chip--preset ${when === id ? "is-on" : ""}`} onClick={() => setWhen(id)}>
+            <ToggleChip key={id} role="radio" aria-checked={when === id} on={when === id} onClick={() => setWhen(id)}>
               {label}
-            </button>
+            </ToggleChip>
           ))}
         </div>
       </section>
 
-      {error && (
-        <div className="notice notice--error">
-          <Icon name="alert" size={15} /> {error}
-        </div>
-      )}
+      {error && <Notice tone="error">{error}</Notice>}
 
-      <button
-        className="button button--primary button--wide"
-        disabled={!point || !category || sending}
-        aria-busy={sending}
-        onClick={() => category && onSubmit(category, when)}
-      >
+      <Button variant="primary" wide disabled={!point || !category || sending} aria-busy={sending} onClick={() => category && onSubmit(category, when)}>
         <Icon name="flag" size={15} /> {sending ? "Sending…" : "Send report"}
-      </button>
+      </Button>
       <p className="report__privacy">
         <Icon name="shield" size={13} /> Saved without your name or email.
       </p>

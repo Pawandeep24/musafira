@@ -1,6 +1,8 @@
 import { useState } from "react";
 import type { AuthState } from "../auth/useAuth";
-import { Icon } from "./Icon";
+import { Button } from "./ui/Button";
+import { IconButton } from "./ui/IconButton";
+import { LinkButton } from "./ui/LinkButton";
 
 const friendly = (error: unknown) => {
   const code = (error as { code?: string }).code ?? "";
@@ -60,14 +62,12 @@ export function AuthDialog({ auth, purpose = "sync", onSignedIn, onClose }: Prop
   return (
     <div className="dialog-backdrop" onMouseDown={onClose}>
       <div className="dialog glass" role="dialog" aria-modal="true" aria-label="Sign in" onMouseDown={(e) => e.stopPropagation()}>
-        <button className="icon-button dialog__close" onClick={onClose} aria-label="Close">
-          <Icon name="close" size={16} />
-        </button>
+        <IconButton icon="close" label="Close" className="dialog__close" onClick={onClose} />
         <h2>{COPY[purpose].title}</h2>
         <p>{COPY[purpose].body}</p>
-        <button className="button button--light" disabled={busy} aria-busy={busy} onClick={() => run(auth.signInWithGoogle)}>
+        <Button variant="light" disabled={busy} aria-busy={busy} onClick={() => run(auth.signInWithGoogle)}>
           Continue with Google
-        </button>
+        </Button>
         <div className="dialog__divider">or</div>
         <form
           onSubmit={(e) => {
@@ -86,13 +86,11 @@ export function AuthDialog({ auth, purpose = "sync", onSignedIn, onClose }: Prop
             autoComplete={creating ? "new-password" : "current-password"}
           />
           {error && <div className="dialog__error">{error}</div>}
-          <button className="button button--primary" disabled={busy} aria-busy={busy} type="submit">
+          <Button variant="primary" disabled={busy} aria-busy={busy} type="submit">
             {creating ? "Create account" : "Sign in"}
-          </button>
+          </Button>
         </form>
-        <button className="link-button" onClick={() => setCreating((c) => !c)}>
-          {creating ? "I already have an account" : "New here? Create an account"}
-        </button>
+        <LinkButton onClick={() => setCreating((c) => !c)}>{creating ? "I already have an account" : "New here? Create an account"}</LinkButton>
       </div>
     </div>
   );

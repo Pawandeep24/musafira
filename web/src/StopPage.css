@@ -1,0 +1,146 @@
+.stop-page {
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: 18px;
+  height: 100dvh;
+  padding: 24px 16px 48px;
+  background: radial-gradient(90% 50% at 50% 0%, rgba(214, 140, 255, 0.14), transparent 70%), var(--bg);
+  overflow-y: auto;
+}
+
+.stop-page__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text);
+  font: 600 16px var(--display);
+  text-decoration: none;
+}
+
+.stop-page__status {
+  color: var(--text-dim);
+}
+
+.stop-card {
+  display: grid;
+  gap: 14px;
+  width: min(100%, 520px);
+  padding: 24px;
+  border-radius: var(--radius-xl);
+  animation: rise 500ms var(--ease);
+}
+
+.stop-card .eyebrow {
+  color: var(--lilac);
+}
+
+.stop-card h1 {
+  margin: -6px 0 0;
+  font: 600 28px/1.15 var(--display);
+  letter-spacing: -0.01em;
+}
+
+.stop-card__meta {
+  margin-top: -8px;
+  color: var(--text-dim);
+  font-size: 13.5px;
+}
+
+.stop-card__open {
+  justify-self: start;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.stop-card__open.is-open {
+  background: rgba(46, 242, 200, 0.1);
+  color: var(--teal);
+}
+
+.stop-card__open.is-closed {
+  background: rgba(255, 61, 110, 0.1);
+  color: #ffb3c6;
+}
+
+.stop-card__offer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  background: rgba(255, 196, 87, 0.08);
+  color: #ffe2a8;
+  font-size: 13px;
+}
+
+.stop-card__section {
+  display: grid;
+  gap: 8px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.stop-card__section h2 {
+  color: var(--text-dim);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.stop-card__facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 6px 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13.5px;
+}
+
+.stop-card__facts li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.stop-card__facts svg {
+  flex: none;
+  color: var(--teal);
+}
+
+.stop-card__verified {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid rgba(214, 140, 255, 0.3);
+  border-radius: var(--radius);
+  background: rgba(214, 140, 255, 0.07);
+  color: var(--text-dim);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.stop-card__verified svg {
+  flex: none;
+  margin-top: 1px;
+  color: var(--lilac);
+}
+
+.stop-card__verified strong {
+  color: var(--text);
+}
+
+.stop-card .button {
+  text-decoration: none;
+}
+
+.stop-card__fine {
+  color: var(--text-faint);
+  font-size: 11.5px;
+  text-align: center;
+}

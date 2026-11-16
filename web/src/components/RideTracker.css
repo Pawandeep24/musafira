@@ -1,0 +1,298 @@
+.ride-stages {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ride-stages li {
+  display: grid;
+  gap: 6px;
+  color: var(--text-faint);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.ride-stages li > span {
+  position: relative;
+  height: 4px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.ride-stages li.is-done {
+  color: var(--text-dim);
+}
+
+.ride-stages li.is-done > span {
+  background: var(--teal);
+}
+
+.ride-stages li.is-on {
+  color: var(--text);
+}
+
+.ride-stages li.is-on > span {
+  background: rgba(46, 242, 200, 0.25);
+}
+
+.ride-stages li.is-on > span::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, var(--teal), transparent) 0 0 / 50% 100% no-repeat;
+  animation: sweep 1.4s linear infinite;
+}
+
+.ride-radar {
+  position: relative;
+  display: grid;
+  place-items: center;
+  height: 130px;
+}
+
+.ride-radar.is-live {
+  color: var(--namma-yatri);
+}
+
+.ride-radar.is-demo {
+  color: var(--violet);
+}
+
+.ride-radar span {
+  position: absolute;
+  width: 56px;
+  height: 56px;
+  border: 1.5px solid currentColor;
+  border-radius: 50%;
+  opacity: 0;
+  animation: radar 2.4s ease-out infinite;
+}
+
+.ride-radar span:nth-child(2) {
+  animation-delay: 0.8s;
+}
+
+.ride-radar span:nth-child(3) {
+  animation-delay: 1.6s;
+}
+
+.ride-radar svg {
+  position: relative;
+  box-sizing: content-box;
+  padding: 15px;
+  border-radius: 50%;
+  background: color-mix(in srgb, currentColor 14%, transparent);
+  box-shadow: 0 0 32px color-mix(in srgb, currentColor 35%, transparent);
+}
+
+.driver-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 4px 12px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface-raised);
+  animation: rise 400ms var(--ease);
+}
+
+.driver-card__avatar {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 2px solid rgba(252, 195, 44, 0.55);
+  border-radius: 50%;
+  background: linear-gradient(135deg, #2b3350, #1a2036);
+  font: 700 17px var(--display);
+}
+
+.driver-card__body {
+  display: grid;
+  gap: 2px;
+}
+
+.driver-card__body strong,
+.driver-card__body span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.driver-card__body strong {
+  font-size: 15px;
+}
+
+.driver-card__body span {
+  color: var(--text-dim);
+  font-size: 12px;
+}
+
+/* Commercial vehicles in India carry yellow plates, so the plate reads as the real thing to check. */
+.driver-card__plate {
+  padding: 5px 8px;
+  border-radius: 6px;
+  background: #ffd84d;
+  color: #14120a;
+  font: 700 12px var(--mono);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  box-shadow: inset 0 0 0 1.5px #14120a, 0 0 0 1px rgba(255, 216, 77, 0.4);
+}
+
+.otp {
+  display: flex;
+  grid-column: 1 / -1;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 10px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--line-strong);
+}
+
+.otp > span {
+  color: var(--text-dim);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.otp strong {
+  display: flex;
+  gap: 6px;
+}
+
+.otp i {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 40px;
+  border: 1px solid var(--line-strong);
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.06);
+  font: 600 20px var(--mono);
+  font-style: normal;
+}
+
+.ride-guard {
+  display: grid;
+  gap: 8px;
+  padding: 12px 14px;
+  border: 1px solid;
+  border-radius: var(--radius);
+  font-size: 12.5px;
+  transition: background 400ms, border-color 400ms;
+}
+
+.ride-guard.is-ok {
+  border-color: rgba(46, 242, 200, 0.25);
+  background: rgba(46, 242, 200, 0.06);
+}
+
+.ride-guard.is-risk {
+  border-color: rgba(255, 61, 110, 0.4);
+  background: rgba(255, 61, 110, 0.1);
+}
+
+.ride-guard > span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-dim);
+}
+
+.ride-guard.is-ok svg {
+  color: var(--teal);
+}
+
+.ride-guard.is-risk svg {
+  color: var(--risk);
+}
+
+.ride-guard__bar {
+  height: 4px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.ride-guard__bar i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--teal);
+  transition: width 900ms linear, background 400ms;
+}
+
+.ride-guard.is-risk .ride-guard__bar i {
+  background: var(--risk);
+}
+
+.ride-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.ride-actions .button {
+  flex: 1;
+  padding: 11px 12px;
+}
+
+.ride-alert {
+  position: absolute;
+  top: calc(var(--gutter) * 2 + var(--topbar-height));
+  left: 50%;
+  z-index: 9;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 12px 14px;
+  width: min(500px, calc(100vw - var(--gutter) * 2));
+  padding: 16px;
+  border-color: rgba(255, 61, 110, 0.5);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(180deg, rgba(255, 61, 110, 0.22), rgba(255, 61, 110, 0.06)), var(--surface-strong);
+  transform: translateX(-50%);
+  animation: alert-in 450ms var(--ease), alarm 1.6s ease-in-out infinite;
+}
+
+.ride-alert__icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--risk);
+  color: #fff;
+  box-shadow: 0 0 24px rgba(255, 61, 110, 0.7);
+}
+
+.ride-alert__text strong {
+  display: block;
+  font: 600 16px/1.2 var(--display);
+}
+
+.ride-alert__text span {
+  display: block;
+  margin-top: 3px;
+  color: var(--text-dim);
+  font-size: 13px;
+}
+
+.ride-alert__actions {
+  display: flex;
+  grid-column: 1 / -1;
+  gap: 8px;
+}
+
+.ride-alert__actions .button {
+  flex: 1;
+  padding: 10px 12px;
+  font-size: 13px;
+}

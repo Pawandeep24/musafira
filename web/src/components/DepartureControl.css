@@ -1,0 +1,31 @@
+.departure {
+  display: grid;
+  gap: 12px;
+}
+
+.departure__readout {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.departure__readout.is-night svg {
+  color: var(--violet);
+  filter: drop-shadow(0 0 8px rgba(139, 124, 255, 0.8));
+}
+
+.departure__readout.is-day svg {
+  color: var(--warn);
+  filter: drop-shadow(0 0 8px rgba(255, 196, 87, 0.8));
+}
+
+.departure__time {
+  font: 600 28px/1 var(--display);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.departure__day {
+  color: var(--text-dim);
+  font-size: 13px;
+}

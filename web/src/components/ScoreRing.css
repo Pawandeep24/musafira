@@ -1,0 +1,18 @@
+.score-ring {
+  position: relative;
+  flex: none;
+}
+
+.score-ring svg {
+  display: block;
+}
+
+.score-ring__value {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-family: var(--display);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}

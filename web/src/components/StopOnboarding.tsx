@@ -3,6 +3,14 @@ import type { Language, SafeStopFeature, SafeStopKind } from "../api/types";
 import { CARE_FEATURES, KIND_LABEL, LANGUAGE_LABEL, WASHROOM_FEATURES, type FeatureGroup } from "../lib/safeStops";
 import { STEPS, type Step, type StopOnboardingState } from "../state/useStopOnboarding";
 import { Icon } from "./Icon";
+import { Button, ButtonLink } from "./ui/Button";
+import { Eyebrow } from "./ui/Eyebrow";
+import { IconButton } from "./ui/IconButton";
+import { LinkButton } from "./ui/LinkButton";
+import { Notice } from "./ui/Notice";
+import { Segmented } from "./ui/Segmented";
+import { SheetHeader } from "./ui/SheetHeader";
+import { ToggleChip } from "./ui/ToggleChip";
 
 const STEP_LABEL: Record<Step, string> = {
   place: "Place",
@@ -18,13 +26,7 @@ function Choice<T extends string>({ label, value, options, onChange }: { label: 
   return (
     <div className="onboard__field">
       <span className="onboard__label">{label}</span>
-      <div className="segmented segmented--small" role="radiogroup" aria-label={label}>
-        {options.map(([id, text]) => (
-          <button key={id} role="radio" aria-checked={value === id} className={value === id ? "is-on" : ""} onClick={() => onChange(id)}>
-            {text}
-          </button>
-        ))}
-      </div>
+      <Segmented kind="radio" small label={label} options={options} value={value} onChange={onChange} />
     </div>
   );
 }
@@ -52,9 +54,9 @@ function Features({ group, selected, onToggle }: { group: FeatureGroup; selected
       <h3>{group.title}</h3>
       <div className="report__chips">
         {group.features.map(([id, label]) => (
-          <button key={id} aria-pressed={selected.includes(id)} className={`chip chip--preset ${selected.includes(id) ? "is-on" : ""}`} onClick={() => onToggle(id)}>
+          <ToggleChip key={id} aria-pressed={selected.includes(id)} on={selected.includes(id)} onClick={() => onToggle(id)}>
             {selected.includes(id) && <Icon name="check" size={13} />} {label}
-          </button>
+          </ToggleChip>
         ))}
       </div>
     </section>
@@ -72,9 +74,7 @@ function CopyRow({ label, value }: { label: string; value: string }) {
     <div className="dns-row">
       <span>{label}</span>
       <code>{value}</code>
-      <button className="icon-button" onClick={copy} aria-label={`Copy ${label}`}>
-        <Icon name={copied ? "check" : "copy"} size={14} />
-      </button>
+      <IconButton icon={copied ? "check" : "copy"} iconSize={14} label={`Copy ${label}`} onClick={copy} />
     </div>
   );
 }
@@ -107,9 +107,9 @@ function PlaceStep({ onboarding }: { onboarding: StopOnboardingState }) {
         <h3>What kind of place</h3>
         <div className="report__chips">
           {(Object.keys(KIND_LABEL) as SafeStopKind[]).map((kind) => (
-            <button key={kind} aria-pressed={draft.kind === kind} className={`chip chip--preset ${draft.kind === kind ? "is-on" : ""}`} onClick={() => update({ kind })}>
+            <ToggleChip key={kind} aria-pressed={draft.kind === kind} on={draft.kind === kind} onClick={() => update({ kind })}>
               {KIND_LABEL[kind]}
-            </button>
+            </ToggleChip>
           ))}
         </div>
       </section>
@@ -120,21 +120,17 @@ function PlaceStep({ onboarding }: { onboarding: StopOnboardingState }) {
           <Icon name="pin" size={16} />
           <span>{draft.point ? "Shop marked. Tap the map to move it." : "Tap the map at your shop's entrance."}</span>
         </div>
-        <button className="link-button report__locate" onClick={onboarding.locate} disabled={locating}>
+        <LinkButton className="report__locate" onClick={onboarding.locate} disabled={locating}>
           <Icon name="locate" size={14} /> {locating ? "Finding you…" : "I'm at the shop now"}
-        </button>
+        </LinkButton>
       </section>
 
       <section className="report__step">
         <h3>Open</h3>
         <div className="onboard__hours">
-          <button
-            aria-pressed={allDay}
-            className={`chip chip--preset ${allDay ? "is-on" : ""}`}
-            onClick={() => update({ hours: allDay ? { opens: "08:00", closes: "22:00" } : { allDay: true } })}
-          >
+          <ToggleChip aria-pressed={allDay} on={allDay} onClick={() => update({ hours: allDay ? { opens: "08:00", closes: "22:00" } : { allDay: true } })}>
             {allDay && <Icon name="check" size={13} />} 24 hours
-          </button>
+          </ToggleChip>
           {!allDay && "opens" in draft.hours && (
             <>
               <input type="time" className="onboard__input" aria-label="Opens" value={draft.hours.opens} onChange={(e) => update({ hours: { ...draft.hours, opens: e.target.value } })} />
@@ -150,9 +146,9 @@ function PlaceStep({ onboarding }: { onboarding: StopOnboardingState }) {
         <h3>Staff speak</h3>
         <div className="report__chips">
           {(Object.keys(LANGUAGE_LABEL) as Language[]).map((id) => (
-            <button key={id} aria-pressed={languages.includes(id)} className={`chip chip--preset ${languages.includes(id) ? "is-on" : ""}`} onClick={() => toggleLanguage(id)}>
+            <ToggleChip key={id} aria-pressed={languages.includes(id)} on={languages.includes(id)} onClick={() => toggleLanguage(id)}>
               {LANGUAGE_LABEL[id]}
-            </button>
+            </ToggleChip>
           ))}
         </div>
       </section>
@@ -176,9 +172,7 @@ function WashroomStep({ onboarding }: { onboarding: StopOnboardingState }) {
           <Counter label="Wheelchair friendly" value={counts.accessible} onChange={setCount("accessible")} />
         </div>
         {tooMany && (
-          <div className="notice notice--error">
-            <Icon name="alert" size={15} /> Women-only and for-anyone washrooms can't add up to more than the total.
-          </div>
+          <Notice tone="error">Women-only and for-anyone washrooms can't add up to more than the total.</Notice>
         )}
       </section>
 
@@ -287,9 +281,9 @@ function DomainStep({ onboarding }: { onboarding: StopOnboardingState }) {
           </ul>
         )}
         {picked && (
-          <a className="button button--secondary domain-ideas__buy" href={picked.buyUrl} target="_blank" rel="noreferrer">
+          <ButtonLink variant="secondary" className="domain-ideas__buy" href={picked.buyUrl} target="_blank" rel="noreferrer">
             Get {picked.domain} on GoDaddy <Icon name="chevron" size={14} />
-          </a>
+          </ButtonLink>
         )}
       </section>
 
@@ -332,9 +326,9 @@ function VerifyStep({ onboarding }: { onboarding: StopOnboardingState }) {
           Riders now see it in washrooms near me and as a safe place to stop on their routes. Verified as the owner of <strong>{domain}</strong>
           {stop.registrar && ` (${stop.registrar})`}.
         </p>
-        <a className="button button--primary" href={`/s/${stop.id}`} target="_blank" rel="noreferrer">
+        <ButtonLink variant="primary" href={`/s/${stop.id}`} target="_blank" rel="noreferrer">
           <Icon name="link" size={15} /> Open your stop page
-        </a>
+        </ButtonLink>
       </div>
     );
   }
@@ -362,9 +356,9 @@ function VerifyStep({ onboarding }: { onboarding: StopOnboardingState }) {
         </ul>
       )}
 
-      <button className="button button--primary button--wide" onClick={() => void onboarding.verify()} disabled={verifying} aria-busy={verifying}>
+      <Button variant="primary" wide onClick={() => void onboarding.verify()} disabled={verifying} aria-busy={verifying}>
         <Icon name="shield" size={15} /> {verifying ? "Checking DNS…" : checks ? "Check again" : "Check now"}
-      </button>
+      </Button>
     </>
   );
 }
@@ -376,16 +370,10 @@ export function StopOnboarding({ onboarding }: { onboarding: StopOnboardingState
   const previous = STEPS[index - 1];
   return (
     <aside className="side-sheet glass" aria-label="List your shop as a Safe Stop">
-      <button className="icon-button side-sheet__close" onClick={onboarding.close} aria-label="Close">
-        <Icon name="close" size={16} />
-      </button>
-      <header className="side-sheet__head">
-        <span className="eyebrow">
-          <Icon name="shield" size={13} /> Musafira Safe Stops
-        </span>
-        <h2>{stop ? stop.profile.name : "List your shop"}</h2>
+      <IconButton icon="close" label="Close" className="side-sheet__close" onClick={onboarding.close} />
+      <SheetHeader className="side-sheet__head" before={<Eyebrow icon="shield">Musafira Safe Stops</Eyebrow>} title={stop ? stop.profile.name : "List your shop"}>
         {step === "place" && <p>Riders, especially women riding late, look for a clean washroom and a safe place to pause. Tell them what you offer.</p>}
-      </header>
+      </SheetHeader>
 
       <ol className="stepper">
         {STEPS.map((s, i) => (
@@ -404,32 +392,28 @@ export function StopOnboarding({ onboarding }: { onboarding: StopOnboardingState
       {step === "domain" && <DomainStep onboarding={onboarding} />}
       {step === "verify" && <VerifyStep onboarding={onboarding} />}
 
-      {error && (
-        <div className="notice notice--error">
-          <Icon name="alert" size={15} /> {error}
-        </div>
-      )}
+      {error && <Notice tone="error">{error}</Notice>}
 
       {step === "verify" ? (
-        <button className="link-button side-sheet__edit" onClick={() => onboarding.goTo("place")}>
+        <LinkButton className="side-sheet__edit" onClick={() => onboarding.goTo("place")}>
           Edit answers
-        </button>
+        </LinkButton>
       ) : (
         <div className="side-sheet__nav">
           {previous && (
-            <button className="button button--secondary" onClick={() => onboarding.goTo(previous)}>
+            <Button variant="secondary" onClick={() => onboarding.goTo(previous)}>
               <Icon name="back" size={15} /> Back
-            </button>
+            </Button>
           )}
           {step === "domain" ? (
-            <button className="button button--primary" disabled={!ready || saving} aria-busy={saving} onClick={() => void onboarding.save()}>
+            <Button variant="primary" disabled={!ready || saving} aria-busy={saving} onClick={() => void onboarding.save()}>
               {saving ? "Saving…" : stop ? "Save changes" : "Save and get my code"}
-            </button>
+            </Button>
           ) : (
             next && (
-              <button className="button button--primary" disabled={!ready} onClick={() => onboarding.goTo(next)}>
+              <Button variant="primary" disabled={!ready} onClick={() => onboarding.goTo(next)}>
                 Next <Icon name="chevron" size={15} />
-              </button>
+              </Button>
             )
           )}
         </div>

@@ -1,5 +1,6 @@
 import type { Place } from "../api/types";
 import { Icon } from "./Icon";
+import { Eyebrow } from "./ui/Eyebrow";
 
 export interface DemoTrip {
   readonly title: string;
@@ -49,9 +50,7 @@ export function EmptyState({ cityId, onDemo }: { cityId: string; onDemo(trip: De
       </p>
       {trips.length > 0 && (
         <div className="empty__demos">
-          <span className="eyebrow">
-            <Icon name="sparkle" size={13} /> Try a ride at 11 pm tonight
-          </span>
+          <Eyebrow icon="sparkle">Try a ride at 11 pm tonight</Eyebrow>
           {trips.map((trip) => (
             <button key={trip.title} className="demo" onClick={() => onDemo(trip)}>
               <Icon name="moon" size={16} />

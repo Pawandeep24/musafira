@@ -1,0 +1,76 @@
+.dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  background: rgba(3, 4, 8, 0.55);
+  backdrop-filter: blur(6px);
+  animation: fade-in 200ms;
+}
+
+.dialog {
+  position: relative;
+  display: grid;
+  gap: 12px;
+  width: min(400px, 92vw);
+  padding: 26px;
+  border-radius: var(--radius-xl);
+  background: var(--surface-strong);
+  animation: pop-in 260ms var(--ease);
+}
+
+.dialog h2 {
+  padding-right: 30px;
+  font: 600 22px/1.15 var(--display);
+}
+
+.dialog p {
+  color: var(--text-dim);
+  font-size: 13.5px;
+}
+
+.dialog form {
+  display: grid;
+  gap: 10px;
+}
+
+.dialog input {
+  height: 46px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  outline: none;
+  background: var(--surface-raised);
+}
+
+.dialog input:focus {
+  border-color: var(--accent-line);
+}
+
+.dialog__close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+}
+
+.dialog__divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-faint);
+  font-size: 12px;
+}
+
+.dialog__divider::before,
+.dialog__divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+}
+
+.dialog__error {
+  color: #ff8aa8;
+  font-size: 13px;
+}

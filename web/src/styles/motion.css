@@ -1,0 +1,104 @@
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translate(var(--rise-x, 0), 10px);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes slide-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+}
+
+@keyframes drop-in {
+  from {
+    opacity: 0;
+    transform: translate(var(--drop-x, -50%), -14px);
+  }
+}
+
+@keyframes alert-in {
+  from {
+    opacity: 0;
+    transform: translate(var(--drop-x, -50%), -10px) scale(0.97);
+  }
+}
+
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes sweep {
+  from {
+    background-position: -100% 0;
+  }
+  to {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@keyframes ping {
+  70% {
+    box-shadow: 0 0 0 7px rgba(46, 242, 200, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(46, 242, 200, 0);
+  }
+}
+
+@keyframes radar {
+  0% {
+    opacity: 0.9;
+    transform: scale(0.6);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(2.4);
+  }
+}
+
+@keyframes alarm {
+  50% {
+    box-shadow: var(--shadow), 0 0 0 6px rgba(255, 61, 110, 0.18);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+  }
+}

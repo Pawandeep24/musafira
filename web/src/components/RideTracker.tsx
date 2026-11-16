@@ -3,6 +3,10 @@ import type { Ride, RideStatus } from "../api/types";
 import type { RideBooking } from "../state/useRideBooking";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { Icon } from "./Icon";
+import { Button, ButtonLink } from "./ui/Button";
+import { LinkButton } from "./ui/LinkButton";
+import { Notice } from "./ui/Notice";
+import { SheetHeader } from "./ui/SheetHeader";
 
 const STAGES: readonly { status: RideStatus; label: string }[] = [
   { status: "searching", label: "Finding" },
@@ -53,11 +57,14 @@ export function RideTracker({ booking, ride, onShare }: { booking: RideBooking; 
 
   return (
     <>
-      <header className="ride__head">
-        <span className={`chip chip--mode is-${ride.mode}`}>{live ? "Live · Namma Yatri" : "Demo ride"}</span>
-        <h2 className={`ride__status tone-${tone}`}>{title}</h2>
+      <SheetHeader
+        className="ride__head"
+        before={<span className={`chip chip--mode is-${ride.mode}`}>{live ? "Live · Namma Yatri" : "Demo ride"}</span>}
+        title={title}
+        titleClassName={`ride__status tone-${tone}`}
+      >
         <p>{detail}</p>
-      </header>
+      </SheetHeader>
 
       {stage >= 0 && (
         <ol className="ride-stages" aria-label="Ride progress">
@@ -99,43 +106,43 @@ export function RideTracker({ booking, ride, onShare }: { booking: RideBooking; 
 
       {ongoing && (
         <div className="ride-actions">
-          <button className="button button--ghost" onClick={onShare}>
+          <Button variant="ghost" onClick={onShare}>
             <Icon name="share" size={15} /> Share live trip
-          </button>
-          <a className="button button--sos" href="tel:112">
+          </Button>
+          <ButtonLink variant="sos" href="tel:112">
             <Icon name="phone" size={15} /> Call 112
-          </a>
+          </ButtonLink>
         </div>
       )}
 
       {ride.canDetour && (
-        <button className="button button--ghost button--wide ride__detour" onClick={() => void booking.detour()}>
+        <Button variant="ghost" wide className="ride__detour" onClick={() => void booking.detour()}>
           <Icon name="route" size={15} /> Simulate a wrong turn
-        </button>
+        </Button>
       )}
 
       {booking.error && (
-        <div className="notice notice--error" role="alert">
-          <Icon name="alert" size={15} /> {booking.error}
-        </div>
+        <Notice tone="error" alert>
+          {booking.error}
+        </Notice>
       )}
 
       {ride.canCancel && (
-        <button className="link-button ride__cancel" disabled={booking.busy} onClick={() => (live ? setConfirmCancel(true) : void booking.cancel())}>
+        <LinkButton className="ride__cancel" disabled={booking.busy} onClick={() => (live ? setConfirmCancel(true) : void booking.cancel())}>
           {booking.busy ? "Cancelling…" : ride.status === "searching" ? "Cancel search" : "Cancel ride"}
-        </button>
+        </LinkButton>
       )}
 
       {finished && (
         <div className="ride__footer ride__footer--split">
           {ride.status !== "completed" && (
-            <button className="button button--primary" onClick={booking.requote}>
+            <Button variant="primary" onClick={booking.requote}>
               <Icon name="search" size={15} /> Get fresh fares
-            </button>
+            </Button>
           )}
-          <button className={`button ${ride.status === "completed" ? "button--primary button--wide" : "button--ghost"}`} onClick={booking.close}>
+          <Button variant={ride.status === "completed" ? "primary" : "ghost"} wide={ride.status === "completed"} onClick={booking.close}>
             Done
-          </button>
+          </Button>
         </div>
       )}
 
@@ -208,15 +215,15 @@ export function RideAlert({ ride, onDismiss, onShare }: { ride: Ride; onDismiss(
         </span>
       </div>
       <div className="ride-alert__actions">
-        <button className="button button--ghost" onClick={onDismiss}>
+        <Button variant="ghost" onClick={onDismiss}>
           <Icon name="check" size={14} /> I'm OK
-        </button>
-        <button className="button button--ghost" onClick={onShare}>
+        </Button>
+        <Button variant="ghost" onClick={onShare}>
           <Icon name="share" size={14} /> Share trip
-        </button>
-        <a className="button button--sos" href="tel:112">
+        </Button>
+        <ButtonLink variant="sos" href="tel:112">
           <Icon name="phone" size={14} /> Call 112
-        </a>
+        </ButtonLink>
       </div>
     </div>
   );

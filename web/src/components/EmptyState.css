@@ -1,0 +1,66 @@
+.empty {
+  display: grid;
+  gap: 14px;
+  padding: 6px 2px 2px;
+}
+
+.empty h1 {
+  font: 600 27px/1.12 var(--display);
+  letter-spacing: -0.02em;
+}
+
+.empty h1 em {
+  display: block;
+  font-style: normal;
+  background: var(--accent-text);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.empty p {
+  color: var(--text-dim);
+  font-size: 13.5px;
+}
+
+.empty__demos {
+  display: grid;
+  gap: 8px;
+}
+
+.demo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  background: var(--surface-raised);
+  text-align: left;
+  transition: background 200ms, border-color 200ms, transform 200ms var(--ease);
+}
+
+.demo:hover {
+  background: var(--surface-hover);
+  border-color: var(--selected-line);
+  transform: translateX(3px);
+}
+
+.demo > svg:first-child {
+  color: var(--accent);
+}
+
+.demo > svg:last-child {
+  margin-left: auto;
+  color: var(--text-faint);
+}
+
+.demo strong,
+.demo small {
+  display: block;
+}
+
+.demo small {
+  color: var(--text-dim);
+  font-size: 12px;
+}

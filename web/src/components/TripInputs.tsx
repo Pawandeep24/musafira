@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { api } from "../api/client";
 import type { Place } from "../api/types";
-import { Icon } from "./Icon";
 import { PlaceInput } from "./PlaceInput";
+import { IconButton } from "./ui/IconButton";
 
 interface Props {
   cityId: string;
@@ -41,11 +41,7 @@ export function TripInputs({ cityId, from, to, onFrom, onTo, onSwap }: Props) {
         placeholder="Starting point"
         dotClass="is-origin"
         onChange={onFrom}
-        trailing={
-          <button className={`icon-button ${locating ? "is-busy" : ""}`} onClick={locate} title="Use my location" aria-label="Use my location">
-            <Icon name="locate" size={16} />
-          </button>
-        }
+        trailing={<IconButton icon="locate" label="Use my location" title="Use my location" className={locating ? "is-busy" : undefined} onClick={locate} />}
       />
       <PlaceInput
         cityId={cityId}
@@ -55,9 +51,7 @@ export function TripInputs({ cityId, from, to, onFrom, onTo, onSwap }: Props) {
         dotClass="is-destination"
         onChange={onTo}
       />
-      <button className="trip-inputs__swap icon-button" onClick={onSwap} title="Swap" aria-label="Swap start and destination">
-        <Icon name="swap" size={16} />
-      </button>
+      <IconButton icon="swap" label="Swap start and destination" title="Swap" className="trip-inputs__swap" onClick={onSwap} />
     </div>
   );
 }

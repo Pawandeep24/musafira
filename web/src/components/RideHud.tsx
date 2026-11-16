@@ -5,6 +5,9 @@ import { formatClock, formatDistance } from "../lib/format";
 import { previewMetersAt, type PreviewCamera, type RidePreview } from "../state/ridePreview";
 import { Icon, type IconName } from "./Icon";
 import { SafetyStrip } from "./SafetyStrip";
+import { Button } from "./ui/Button";
+import { IconButton } from "./ui/IconButton";
+import { Segmented } from "./ui/Segmented";
 
 interface Props {
   route: Route;
@@ -20,6 +23,12 @@ interface Props {
 }
 
 const LOOKAHEAD_METERS = 1500;
+
+const SPEEDS: readonly (readonly [number, string])[] = [
+  [1, "1×"],
+  [2, "2×"],
+  [4, "4×"],
+];
 
 const CAMERAS: readonly (readonly [PreviewCamera, string])[] = [
   ["close", "Close"],
@@ -138,11 +147,7 @@ export function RideHud({ route, preview, utcOffsetMinutes, speed, camera, compa
             </span>
           ))}
         </div>
-        {compact && (
-          <button className="icon-button hud__exit" onClick={onExit} aria-label="Exit preview">
-            <Icon name="close" size={16} />
-          </button>
-        )}
+        {compact && <IconButton icon="close" label="Exit preview" className="hud__exit" onClick={onExit} />}
       </div>
 
       {alert && (
@@ -160,35 +165,22 @@ export function RideHud({ route, preview, utcOffsetMinutes, speed, camera, compa
         <SafetyStrip route={route} height={8} progressMeters={meters} />
         <div className="hud__controls">
           <div className="hud__progress">
-            <button
-              className={`icon-button hud__pause ${preview.paused ? "is-paused" : ""}`}
+            <IconButton
+              icon={preview.paused ? "play" : "pause"}
+              label={preview.paused ? "Resume preview" : "Pause preview"}
+              className={preview.paused ? "hud__pause is-paused" : "hud__pause"}
               onClick={onTogglePause}
-              aria-label={preview.paused ? "Resume preview" : "Pause preview"}
-            >
-              <Icon name={preview.paused ? "play" : "pause"} size={16} />
-            </button>
+            />
             <span>
               {formatDistance(meters)} of {formatDistance(total)}
             </span>
           </div>
-          <div className="segmented segmented--small" role="group" aria-label="Speed">
-            {[1, 2, 4].map((m) => (
-              <button key={m} className={speed === m ? "is-on" : ""} onClick={() => onSpeed(m)}>
-                {m}×
-              </button>
-            ))}
-          </div>
-          <div className="segmented segmented--small" role="group" aria-label="Camera">
-            {CAMERAS.map(([id, label]) => (
-              <button key={id} className={camera === id ? "is-on" : ""} aria-pressed={camera === id} onClick={() => onCamera(id)}>
-                {label}
-              </button>
-            ))}
-          </div>
+          <Segmented kind="toggle" small label="Speed" options={SPEEDS} value={speed} onChange={onSpeed} />
+          <Segmented kind="toggle" small label="Camera" options={CAMERAS} value={camera} onChange={onCamera} />
           {!compact && (
-            <button className="button button--ghost" onClick={onExit}>
+            <Button variant="ghost" onClick={onExit}>
               <Icon name="close" size={14} /> Exit preview
-            </button>
+            </Button>
           )}
         </div>
       </div>

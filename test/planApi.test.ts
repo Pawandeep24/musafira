@@ -193,6 +193,13 @@ describe("preferences API", () => {
     const got = (await app.inject({ method: "GET", url: "/api/me/preferences", headers: auth })).json();
     expect(got.preferences).toEqual({ weights: { ...DEFAULT_WEIGHTS, lighting: 7 }, options: DEFAULT_OPTIONS, presetId: "night-solo" });
   });
+
+  it("says when storage isn't configured", async () => {
+    const { app } = await setup();
+    const res = await app.inject({ method: "GET", url: "/api/me/preferences", headers: auth });
+    expect(res.statusCode).toBe(503);
+    expect(res.json().error.code).toBe("NOT_CONFIGURED");
+  });
 });
 
 describe("rider reports API", () => {

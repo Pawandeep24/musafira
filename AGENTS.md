@@ -34,8 +34,8 @@ Run `npm run typecheck && npm test` after every API change, and `npm run web:typ
 - `src/rides/` - the pure ride engine: safety checkpoints, route guard, demo meter fares and simulated driver
 - `src/stops/` - Safe Stop questionnaire and domain proof, washroom ranking for "washrooms near me"
 - `src/planner/` - application services: ports (`RouteProvider`, `TrafficProvider`, `Geocoder`, `TextModel`, `CarRouter`, `RideHailing`, `SafeStopSource`, `DomainLookup`) plus caching and ranking around the engines
-- `src/integrations/<vendor>/` - outbound API clients, one folder per vendor (`valhalla`, `tomtom`, `ors`, `godaddy`, `anthropic`, `nammayatri`, `rdap`, `dns`)
-- `src/routes/` - HTTP handlers; thin, delegate to services or clients
+- `src/integrations/<vendor>/` - outbound API clients, one folder per vendor (`valhalla`, `tomtom`, `ors`, `godaddy`, `anthropic`, `nammayatri`, `rdap`, `dns`); JSON calls go through `fetchJson` in `src/lib/http.ts` (GoDaddy keeps its own for retries and token refresh)
+- `src/routes/` - HTTP handlers, one file per resource with all its methods; thin, delegate to services or clients
 - `src/db/` - Firestore access
 - `src/lib/` - small shared helpers (errors, fetch with schema, TTL cache)
 - `scripts/ingest/` - offline city ingest; raw downloads are cached in `data/raw/` (gitignored), output in `data/cities/` (committed)
@@ -44,7 +44,8 @@ Run `npm run typecheck && npm test` after every API change, and `npm run web:typ
 - `web/src/state/` - React hooks owning app state (planner, safety profile, ride preview clock and camera presets, ride booking, washrooms, Safe Stop onboarding, map theme, mobile sheet height)
 - `web/src/StopPage.tsx` - the public Safe Stop page at `/s/<id>`, chosen in `main.tsx` instead of the map app
 - `web/src/map/` - MapLibre style, deck.gl scene layers, data dot-matrices
-- `web/src/components/` - presentational components; no fetching except place search
+- `web/src/components/` - presentational components, each with its own `.css` beside it; no fetching except place search
+- `web/src/components/ui/` - shared controls (`Button`, `ButtonLink`, `IconButton`, `LinkButton`, `ToggleChip`, `Segmented`, `Notice`, `Eyebrow`, `SheetHeader`) and their styles in `controls.css`
 - `web/src/lib/` - pure helpers (formatting in city time, colours, track maths, route verdict)
 
 ## Where the non-obvious logic lives
@@ -88,7 +89,8 @@ Read the doc header before changing these:
 - Components receive data and callbacks; state lives in `web/src/state/` hooks and `App.tsx` wires them together.
 - Phones (760px and narrower) get their own layout, not a squeezed desktop: one draggable bottom sheet whose height (`--sheet-height`) drives every panel, the grip, the credits and the map padding; map tools on a right-edge rail; the trip folds into a summary once routes show. Keep tap targets at 40px or more, and leave desktop untouched by mobile changes.
 - All times shown to riders are in the city's time zone (`utcOffsetMinutes`), never the browser's. Use `web/src/lib/format.ts`.
-- Styling lives in `web/src/styles/` (tokens in `tokens.css`). Use BEM-like class names (`block__element`, `is-state`); no inline styles except values computed at runtime.
+- Build buttons, chips, segmented controls, notices and panel headers from `web/src/components/ui/` rather than repeating their markup.
+- A component's styles sit beside it (`RideHud.css` next to `RideHud.tsx`); tokens, base, shared panels, motion and the responsive layer live in `web/src/styles/`. `main.tsx` loads `tokens.css`, then `styles/index.css`, which imports every other file once in cascade order; add new files there and keep `responsive.css` last. Use BEM-like class names (`block__element`, `is-state`); no inline styles except values computed at runtime.
 - The map follows the ride hour: the night basemap from 18:30 to 06:00 city time, the day basemap otherwise, until the rider switches it. Over the night basemap the deck.gl canvas is screen-blended, so light colours add glow; over the day basemap it blends normally, and scene colours go through `deepen` (`web/src/lib/colors.ts`) so pastels stay readable. Keep both basemaps low-contrast so safety colours carry the meaning, and keep their layer stacks identical so a switch is a paint-only diff.
 
 ## Design principles

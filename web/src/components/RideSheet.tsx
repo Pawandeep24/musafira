@@ -6,6 +6,13 @@ import { ConfirmDialog } from "./ConfirmDialog";
 import { Icon, type IconName } from "./Icon";
 import { RideTracker } from "./RideTracker";
 import { ScoreRing } from "./ScoreRing";
+import { Button } from "./ui/Button";
+import { Eyebrow } from "./ui/Eyebrow";
+import { IconButton } from "./ui/IconButton";
+import { LinkButton } from "./ui/LinkButton";
+import { Notice } from "./ui/Notice";
+import { SheetHeader } from "./ui/SheetHeader";
+import { ToggleChip } from "./ui/ToggleChip";
 
 interface Props {
   booking: RideBooking;
@@ -41,9 +48,7 @@ export function RideSheet({ booking, cityName, liveOffered, liveBlocker, utcOffs
   return (
     <aside className="ride-panel glass" aria-label="Book this route">
       {!booking.active && (
-        <button className="icon-button ride-panel__close" onClick={booking.close} aria-label="Close">
-          <Icon name="close" size={16} />
-        </button>
+        <IconButton icon="close" label="Close" className="ride-panel__close" onClick={booking.close} />
       )}
       {booking.step === "choose" && (
         <ChooseMode booking={booking} cityName={cityName} liveOffered={liveOffered} {...(liveBlocker ? { liveBlocker } : {})} />
@@ -66,11 +71,9 @@ interface ChooseModeProps {
 function ChooseMode({ booking, cityName, liveOffered, liveBlocker }: ChooseModeProps) {
   return (
     <>
-      <header className="ride__head">
-        <span className="eyebrow">Ride this route</span>
-        <h2>Get an auto that keeps to your safe route</h2>
+      <SheetHeader className="ride__head" before={<Eyebrow>Ride this route</Eyebrow>} title="Get an auto that keeps to your safe route">
         <p>Musafira pins the route with safety checkpoints, then watches the ride and alerts you if it strays.</p>
-      </header>
+      </SheetHeader>
 
       <div className="ride-modes">
         {liveOffered && (
@@ -105,14 +108,14 @@ function ChooseMode({ booking, cityName, liveOffered, liveBlocker }: ChooseModeP
       </div>
 
       {booking.error && (
-        <div className="notice notice--error" role="alert">
-          <Icon name="alert" size={15} /> {booking.error}
-        </div>
+        <Notice tone="error" alert>
+          {booking.error}
+        </Notice>
       )}
       {liveOffered && booking.linked && (
-        <button className="link-button ride__unlink" onClick={booking.unlink}>
+        <LinkButton className="ride__unlink" onClick={booking.unlink}>
           <Icon name="link" size={13} /> Unlink Namma Yatri
-        </button>
+        </LinkButton>
       )}
     </>
   );
@@ -122,13 +125,17 @@ function LinkAccount({ booking }: { booking: RideBooking }) {
   const [code, setCode] = useState("");
   return (
     <>
-      <header className="ride__head">
-        <button className="link-button ride__back" onClick={booking.back}>
-          <Icon name="back" size={14} /> Back
-        </button>
-        <h2>Link your Namma Yatri account</h2>
+      <SheetHeader
+        className="ride__head"
+        before={
+          <LinkButton className="ride__back" onClick={booking.back}>
+            <Icon name="back" size={14} /> Back
+          </LinkButton>
+        }
+        title="Link your Namma Yatri account"
+      >
         <p>A one-time code from the Namma Yatri app lets Musafira book and track this ride for you.</p>
-      </header>
+      </SheetHeader>
 
       <ol className="ride-steps">
         <li>
@@ -166,15 +173,15 @@ function LinkAccount({ booking }: { booking: RideBooking }) {
           aria-label="Namma Yatri code"
           autoFocus
         />
-        <button className="button button--primary" type="submit" disabled={!code || booking.linking} aria-busy={booking.linking}>
+        <Button variant="primary" type="submit" disabled={!code || booking.linking} aria-busy={booking.linking}>
           {booking.linking ? "Linking…" : "Link"}
-        </button>
+        </Button>
       </form>
 
       {booking.error && (
-        <div className="notice notice--error" role="alert">
-          <Icon name="alert" size={15} /> {booking.error}
-        </div>
+        <Notice tone="error" alert>
+          {booking.error}
+        </Notice>
       )}
       <p className="ride__fineprint">
         <Icon name="shield" size={13} /> Your sign-in stays on Musafira's server for 12 hours, only to book and track rides. Unlink anytime.
@@ -193,10 +200,7 @@ function Quoting({ mode }: { mode: RideMode }) {
 
   return (
     <>
-      <header className="ride__head">
-        <span className="eyebrow">{mode === "live" ? "Namma Yatri" : "Demo ride"}</span>
-        <h2>Finding your safe ride</h2>
-      </header>
+      <SheetHeader className="ride__head" before={<Eyebrow>{mode === "live" ? "Namma Yatri" : "Demo ride"}</Eyebrow>} title="Finding your safe ride" />
       <div className="scanning" aria-live="polite">
         {steps.slice(0, step + 1).map((s, i) => (
           <div key={s.text} className={`scanning__step ${i === step ? "is-active" : "is-done"}`}>
@@ -225,18 +229,22 @@ function Compare({ booking, quote, utcOffsetMinutes }: { booking: RideBooking; q
 
   return (
     <>
-      <header className="ride__head">
-        <button className="link-button ride__back" onClick={booking.back}>
-          <Icon name="back" size={14} /> Back
-        </button>
-        <span className={`chip chip--mode is-${quote.mode}`}>{live ? "Live · Namma Yatri" : "Demo · nothing is booked"}</span>
-        <h2>
-          {count > 0 ? `${plural(count, "safety checkpoint")} ${count === 1 ? "keeps" : "keep"} the ride on your route` : `${usualRoute} already follows yours`}
-        </h2>
+      <SheetHeader
+        className="ride__head"
+        before={
+          <>
+            <LinkButton className="ride__back" onClick={booking.back}>
+              <Icon name="back" size={14} /> Back
+            </LinkButton>
+            <span className={`chip chip--mode is-${quote.mode}`}>{live ? "Live · Namma Yatri" : "Demo · nothing is booked"}</span>
+          </>
+        }
+        title={count > 0 ? `${plural(count, "safety checkpoint")} ${count === 1 ? "keeps" : "keep"} the ride on your route` : `${usualRoute} already follows yours`}
+      >
         <p className="ride__trip">
           {pickup} <Icon name="chevron" size={12} /> {drop}
         </p>
-      </header>
+      </SheetHeader>
 
       {count > 0 && (
         <div className="checkpoints">
@@ -267,44 +275,38 @@ function Compare({ booking, quote, utcOffsetMinutes }: { booking: RideBooking; q
 
       {direct && <Delta safe={safe} direct={direct} tier={booking.tier} />}
       {safe.estimates.length === 0 && (
-        <div className="notice notice--info">
-          <Icon name="alert" size={15} /> Namma Yatri couldn't price a ride through the checkpoints right now. You can still book its usual
-          route, and Musafira will watch it.
-        </div>
+        <Notice tone="info">
+          Namma Yatri couldn't price a ride through the checkpoints right now. You can still book its usual route, and Musafira will watch it.
+        </Notice>
       )}
 
       {option && option.estimates.length > 1 && (
         <div className="ride-tiers" role="radiogroup" aria-label="Vehicle">
           {option.estimates.map((e) => (
-            <button
+            <ToggleChip
               key={e.id}
               role="radio"
               aria-checked={e.tier === estimate?.tier}
-              className={`chip chip--preset ${e.tier === estimate?.tier ? "is-on" : ""}`}
+              on={e.tier === estimate?.tier}
               onClick={() => booking.setTier(e.tier)}
             >
               {e.tier} · {rupees(e.fare)}
-            </button>
+            </ToggleChip>
           ))}
         </div>
       )}
 
       {booking.error && (
-        <div className="notice notice--error" role="alert">
-          <Icon name="alert" size={15} /> {booking.error}
-        </div>
+        <Notice tone="error" alert>
+          {booking.error}
+        </Notice>
       )}
 
       <div className="ride__footer">
-        <button
-          className="button button--primary button--wide"
-          disabled={!estimate || booking.busy}
-          aria-busy={booking.busy}
-          onClick={() => (live ? setConfirming(true) : void booking.book())}
-        >
+        <Button variant="primary" wide disabled={!estimate || booking.busy} aria-busy={booking.busy} onClick={() => (live ? setConfirming(true) : void booking.book())}>
           <Icon name={live ? "auto" : "play"} size={16} /> {live ? `Book ${estimate?.tier ?? "ride"}` : booking.busy ? "Starting…" : "Start demo ride"}
           {estimate && <span className="button__meta">{rupees(estimate.fare)}</span>}
-        </button>
+        </Button>
         <p className="ride__fineprint">
           {estimate?.pickupSeconds ? `Driver about ${formatDuration(estimate.pickupSeconds)} away. ` : ""}
           {live

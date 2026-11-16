@@ -3,6 +3,7 @@ import { formatDistance } from "../lib/format";
 import type { SyncState } from "../state/useSafetyProfile";
 import { Icon } from "./Icon";
 import { Range } from "./Range";
+import { ToggleChip } from "./ui/ToggleChip";
 
 interface Props {
   parameters: readonly ParameterInfo[];
@@ -74,9 +75,9 @@ export function SafetyDna({ parameters, presets, maxWeight, profile, sync, signe
 
       <div className="presets">
         {presets.map((preset) => (
-          <button key={preset.id} className={`chip chip--preset ${profile.presetId === preset.id ? "is-on" : ""}`} onClick={() => onPreset(preset)}>
+          <ToggleChip key={preset.id} on={profile.presetId === preset.id} onClick={() => onPreset(preset)}>
             {preset.label}
-          </button>
+          </ToggleChip>
         ))}
       </div>
 

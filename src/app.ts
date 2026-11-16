@@ -27,7 +27,6 @@ import { itineraryRoutes } from "./routes/itinerary.js";
 import { meRoutes } from "./routes/me.js";
 import { placesRoutes } from "./routes/places.js";
 import { planRoutes } from "./routes/plan.js";
-import { preferencesRoutes } from "./routes/preferences.js";
 import { reportRoutes } from "./routes/reports.js";
 import { rideRoutes, SESSION_HEADER } from "./routes/rides.js";
 import { stopRoutes } from "./routes/stops.js";
@@ -105,7 +104,7 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
   const cities = deps.cities ?? createCityRegistry([]);
 
   await app.register(healthRoutes);
-  await app.register(meRoutes({ requireAuth, db: deps.db }), { prefix: "/api" });
+  await app.register(meRoutes({ requireAuth, db: deps.db, preferences: deps.preferences }), { prefix: "/api" });
   await app.register(domainRoutes({ requireAuth, godaddy: deps.godaddy }), { prefix: "/api" });
   await app.register(configRoutes(cities, deps.rides), { prefix: "/api" });
   await app.register(
@@ -116,9 +115,6 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
     prefix: "/api",
   });
   await app.register(itineraryRoutes({ ...(deps.itineraries ? { planner: deps.itineraries } : {}) }), { prefix: "/api" });
-  await app.register(preferencesRoutes({ requireAuth, ...(deps.preferences ? { store: deps.preferences } : {}) }), {
-    prefix: "/api",
-  });
   await app.register(reportRoutes({ requireAuth, ...(deps.reports ? { reports: deps.reports } : {}) }), { prefix: "/api" });
   await app.register(rideRoutes({ ...(deps.rides ? { rides: deps.rides } : {}) }), { prefix: "/api" });
   await app.register(stopRoutes({ requireAuth, ...(deps.safeStops ? { safeStops: deps.safeStops } : {}) }), { prefix: "/api" });

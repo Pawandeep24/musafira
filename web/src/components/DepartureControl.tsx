@@ -3,7 +3,12 @@ import { skyGradient } from "../lib/colors";
 import { cityHour, dayLabel, formatClock, isNightHour } from "../lib/format";
 import type { Departure } from "../state/usePlanner";
 import { Icon } from "./Icon";
+import { Segmented } from "./ui/Segmented";
 
+const MODES: readonly (readonly [Departure["mode"], string])[] = [
+  ["now", "Leave now"],
+  ["at", "Plan a time"],
+];
 const STEP_MINUTES = 15;
 const HORIZON_HOURS = 24;
 const STEPS = (HORIZON_HOURS * 60) / STEP_MINUTES;
@@ -30,14 +35,7 @@ export function DepartureControl({ departure, utcOffsetMinutes, onChange }: Prop
 
   return (
     <div className="departure">
-      <div className="segmented">
-        <button className={departure.mode === "now" ? "is-on" : ""} onClick={() => onChange({ mode: "now" })}>
-          Leave now
-        </button>
-        <button className={departure.mode === "at" ? "is-on" : ""} onClick={() => onChange({ mode: "at", at: base })}>
-          Plan a time
-        </button>
-      </div>
+      <Segmented options={MODES} value={departure.mode} onChange={(mode) => onChange(mode === "now" ? { mode: "now" } : { mode: "at", at: base })} />
 
       <div className={`departure__readout ${night ? "is-night" : "is-day"}`}>
         <Icon name={night ? "moon" : "sun"} size={18} />

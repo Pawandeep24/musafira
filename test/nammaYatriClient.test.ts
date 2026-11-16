@@ -104,9 +104,15 @@ describe("Namma Yatri client", () => {
     expect((error as Error).message).not.toContain("stack trace");
   });
 
+  it("fails generically when Namma Yatri can't be reached", async () => {
+    const fetchImpl = vi.fn(async () => Promise.reject(new TypeError("fetch failed")));
+    const ny = new NammaYatriClient({ baseUrl: BASE, fetchImpl });
+    await expect(ny.recentBookings("rider-token")).rejects.toMatchObject({ service: "Namma Yatri", status: undefined });
+  });
+
   it("reads bookings, the ride on them and the driver's live position", async () => {
     const ride = { id: "ride-1", status: "NEW", driverName: "Manju", vehicleNumber: "KA01AB1234", vehicleModel: "Bajaj RE", vehicleColor: "Green", rideOtp: "4821" };
-    const { ny } = client((path) => {
+    const { ny, fetchImpl } = client((path) => {
       if (path.startsWith("/rideBooking/list")) {
         return json({ list: [{ id: "booking-1", status: "TRIP_ASSIGNED", createdAt: "2026-11-16T10:00:00.123Z", rideList: [ride] }, { id: "bad" }] });
       }
@@ -124,6 +130,11 @@ describe("Namma Yatri client", () => {
     });
     expect(booking!.createdAt.toISOString()).toBe("2026-11-16T10:00:00.123Z");
     await expect(ny.rideProgress("rider-token", "ride-1")).resolves.toMatchObject({ status: "INPROGRESS", position: [77.625, 12.975] });
+    const [, init] = fetchImpl.mock.calls[0]!;
+    expect(init).toMatchObject({ method: "GET" });
+    expect(init!.body).toBeUndefined();
+    expect(headerOf(init!, "Content-Type")).toBeUndefined();
+    expect(headerOf(init!, "token")).toBe("rider-token");
   });
 
   it("cancels a booking at the stage it is in, and a search before any driver", async () => {

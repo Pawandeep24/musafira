@@ -3,6 +3,8 @@ import { api, ApiError } from "./api/client";
 import type { City, PublicSafeStop } from "./api/types";
 import { Icon } from "./components/Icon";
 import { Logo } from "./components/TopBar";
+import { ButtonLink } from "./components/ui/Button";
+import { Eyebrow } from "./components/ui/Eyebrow";
 import { cityTime, formatClock } from "./lib/format";
 import {
   accessLabel,
@@ -78,9 +80,7 @@ export function StopPage({ id }: { id: string }) {
         <Logo size={26} /> Musafira
       </a>
       <article className="stop-card glass">
-        <span className="eyebrow">
-          <Icon name="shield" size={13} /> Musafira Safe Stop
-        </span>
+        <Eyebrow icon="shield">Musafira Safe Stop</Eyebrow>
         <h1>{profile.name}</h1>
         <p className="stop-card__meta">
           {KIND_LABEL[profile.kind]}
@@ -120,9 +120,9 @@ export function StopPage({ id }: { id: string }) {
           </span>
         </p>
 
-        <a className="button button--primary button--wide" href={`/?${new URLSearchParams({ to: `${lon},${lat}`, name: profile.name })}`}>
+        <ButtonLink variant="primary" wide href={`/?${new URLSearchParams({ to: `${lon},${lat}`, name: profile.name })}`}>
           <Icon name="route" size={15} /> Plan a safe ride here
-        </a>
+        </ButtonLink>
         <p className="stop-card__fine">
           Answers come from the shop. Musafira checks who owns the domain, not the premises.
         </p>

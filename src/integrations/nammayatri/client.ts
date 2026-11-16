@@ -20,7 +20,7 @@ import { setTimeout as sleep } from "node:timers/promises";
 import { z } from "zod";
 import type { LngLat } from "../../geo/geometry.js";
 import { AppError } from "../../lib/errors.js";
-import { UpstreamError } from "../../lib/http.js";
+import { fetchJson, UpstreamError } from "../../lib/http.js";
 import type {
   RideBookingInfo,
   RideDriver,
@@ -280,33 +280,22 @@ export class NammaYatriClient implements RideHailing {
     }));
   }
 
-  async #call<T>(path: string, schema: z.ZodType<T>, { method = "GET", token, body }: CallOptions): Promise<T> {
-    let response: Response;
-    try {
-      response = await this.#fetch(`${this.#baseUrl}${path}`, {
-        method,
-        headers: {
-          Accept: "application/json",
-          ...(body === undefined ? {} : { "Content-Type": "application/json" }),
-          ...(token ? { token } : {}),
-        },
-        ...(body === undefined ? {} : { body: JSON.stringify(body) }),
-        signal: AbortSignal.timeout(this.#timeoutMs),
-      });
-    } catch {
-      throw new UpstreamError(SERVICE);
-    }
-    const json: unknown = await response.json().catch(() => undefined);
-    if (response.status === 401) throw signedOut();
-    if (!response.ok) {
-      const error = errorBody.safeParse(json);
-      const message = error.success ? (error.data.errorMessage ?? "") : "";
-      throw new NammaYatriApiError(response.status, error.success ? (error.data.errorCode ?? undefined) : undefined, /too many attempts/i.test(message));
-    }
-    const parsed = schema.safeParse(json);
-    if (!parsed.success) throw new UpstreamError(SERVICE, response.status);
-    return parsed.data;
+  #call<T>(path: string, schema: z.ZodType<T>, { method = "GET", token, body }: CallOptions): Promise<T> {
+    return fetchJson(this.#fetch, SERVICE, `${this.#baseUrl}${path}`, schema, {
+      method,
+      headers: token ? { token } : {},
+      body,
+      timeoutMs: this.#timeoutMs,
+      errorFor: apiError,
+    });
   }
+}
+
+function apiError(status: number, body: unknown): Error {
+  if (status === 401) return signedOut();
+  const error = errorBody.safeParse(body);
+  const message = error.success ? (error.data.errorMessage ?? "") : "";
+  return new NammaYatriApiError(status, error.success ? (error.data.errorCode ?? undefined) : undefined, /too many attempts/i.test(message));
 }
 
 const invalidCode = () =>

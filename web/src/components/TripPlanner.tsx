@@ -1,6 +1,9 @@
 import type { Place, TripAnswers, TripBackBy, TripDays, TripDiet, TripInterest } from "../api/types";
 import { Icon } from "./Icon";
 import { PlaceInput } from "./PlaceInput";
+import { Button } from "./ui/Button";
+import { Eyebrow } from "./ui/Eyebrow";
+import { ToggleChip } from "./ui/ToggleChip";
 
 const MAX_INTERESTS = 3;
 const DAYS: readonly { id: TripDays; label: string }[] = [
@@ -54,15 +57,9 @@ function Choices<T extends string | number>({
   return (
     <div className="trip-planner__chips" role="group" aria-label={label}>
       {options.map(({ id, label: text }) => (
-        <button
-          key={id}
-          aria-pressed={isOn(id)}
-          className={`chip chip--preset ${isOn(id) ? "is-on" : ""}`}
-          disabled={isDisabled(id)}
-          onClick={() => onPick(id)}
-        >
+        <ToggleChip key={id} aria-pressed={isOn(id)} on={isOn(id)} disabled={isDisabled(id)} onClick={() => onPick(id)}>
           {text}
-        </button>
+        </ToggleChip>
       ))}
     </div>
   );
@@ -75,9 +72,7 @@ export function TripPlanner({ cityId, base, answers, planning, onBase, onAnswer,
   return (
     <div className="trip-planner">
       <header className="trip-planner__head">
-        <span className="eyebrow">
-          <Icon name="sparkle" size={13} /> Day out on two wheels
-        </span>
+        <Eyebrow icon="sparkle">Day out on two wheels</Eyebrow>
         <h1>Where are you starting from?</h1>
       </header>
       <PlaceInput cityId={cityId} value={base} placeholder="Your hotel, home or a landmark" dotClass="is-origin" onChange={onBase} />
@@ -107,9 +102,9 @@ export function TripPlanner({ cityId, base, answers, planning, onBase, onAnswer,
         <Choices label="Back by" options={BACK_BY} isOn={(id) => answers.backBy === id} onPick={(backBy) => onAnswer({ backBy })} />
       </section>
 
-      <button className="button button--primary button--wide" onClick={onPlan} disabled={!base || planning} aria-busy={planning}>
+      <Button variant="primary" wide onClick={onPlan} disabled={!base || planning} aria-busy={planning}>
         <Icon name="sparkle" size={16} /> {planning ? "Planning your trip…" : "Plan my trip"}
-      </button>
+      </Button>
       <p className="hint">
         <Icon name="shield" size={13} /> Only real places from the map. Any ride can be safety-checked.
       </p>

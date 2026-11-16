@@ -1,0 +1,27 @@
+.trip-inputs {
+  position: relative;
+  display: grid;
+  gap: 8px;
+  padding-right: 44px;
+}
+
+.trip-inputs__rail {
+  position: absolute;
+  left: 17px;
+  top: 27px;
+  bottom: 27px;
+  width: 2px;
+  background: repeating-linear-gradient(180deg, var(--text-faint) 0 4px, transparent 4px 8px);
+  opacity: 0.6;
+}
+
+.trip-inputs__swap {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.trip-inputs__swap:active {
+  transform: translateY(-50%) rotate(180deg);
+}

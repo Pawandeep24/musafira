@@ -1,6 +1,7 @@
 import { useEffect, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { Icon, type IconName } from "./Icon";
+import { Button } from "./ui/Button";
 
 interface Props {
   icon: IconName;
@@ -32,12 +33,12 @@ export function ConfirmDialog({ icon, tone = "accent", title, children, confirmL
         <h2 id="confirm-title">{title}</h2>
         {children}
         <div className="confirm__actions">
-          <button className="button button--ghost" onClick={onCancel} disabled={busy}>
+          <Button variant="ghost" onClick={onCancel} disabled={busy}>
             {cancelLabel}
-          </button>
-          <button className={`button ${tone === "risk" ? "button--danger" : "button--primary"}`} onClick={onConfirm} disabled={busy} aria-busy={busy} autoFocus>
+          </Button>
+          <Button variant={tone === "risk" ? "danger" : "primary"} onClick={onConfirm} disabled={busy} aria-busy={busy} autoFocus>
             {busy ? busyLabel : confirmLabel}
-          </button>
+          </Button>
         </div>
       </div>
     </div>,

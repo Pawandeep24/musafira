@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type CSSProperties, type FocusEvent } from "react";
+import { useEffect, useMemo, useState, type CSSProperties, type FocusEvent, type ReactNode } from "react";
 import { api } from "./api/client";
 import type { AppConfig, City, ItineraryLeg, LngLat, Place, ReportCategory, ReportWhen, Route, TripReport, Washroom } from "./api/types";
 import { useAuth } from "./auth/useAuth";
@@ -21,6 +21,11 @@ import { TopBar } from "./components/TopBar";
 import { TripInputs } from "./components/TripInputs";
 import { TripPlanner } from "./components/TripPlanner";
 import { TripSummary } from "./components/TripSummary";
+import { Button } from "./components/ui/Button";
+import { IconButton } from "./components/ui/IconButton";
+import { LinkButton } from "./components/ui/LinkButton";
+import { Notice } from "./components/ui/Notice";
+import { Segmented } from "./components/ui/Segmented";
 import { WashroomSheet } from "./components/WashroomSheet";
 import { skyRgb } from "./lib/colors";
 import { cityHour, formatDuration, nextCityHour } from "./lib/format";
@@ -51,6 +56,21 @@ const NO_ROUTES: readonly Route[] = [];
 const NO_CITIES: readonly City[] = [];
 
 type Mode = "ride" | "trip";
+
+const MODES: readonly (readonly [Mode, ReactNode])[] = [
+  [
+    "ride",
+    <>
+      <Icon name="route" size={14} /> Ride
+    </>,
+  ],
+  [
+    "trip",
+    <>
+      <Icon name="sparkle" size={14} /> Day trip
+    </>,
+  ],
+];
 
 interface Rasters {
   lights?: readonly GridDot[];
@@ -435,14 +455,7 @@ export function App() {
       {config && city && (
         <aside className={`panel glass ${busy ? "is-busy" : ""}`}>
           <div className="panel__progress" />
-          <div className="segmented mode-switch" role="tablist" aria-label="Mode">
-            <button role="tab" aria-selected={!tripMode} className={tripMode ? "" : "is-on"} onClick={() => switchMode("ride")}>
-              <Icon name="route" size={14} /> Ride
-            </button>
-            <button role="tab" aria-selected={tripMode} className={tripMode ? "is-on" : ""} onClick={() => switchMode("trip")}>
-              <Icon name="sparkle" size={14} /> Day trip
-            </button>
-          </div>
+          <Segmented kind="tabs" label="Mode" className="mode-switch" options={MODES} value={tripMode ? "trip" : "ride"} onChange={switchMode} />
 
           {tripMode && (
             <>
@@ -459,11 +472,7 @@ export function App() {
                   onPlan={trip.plan}
                 />
               )}
-              {trip.error && (
-                <div className="notice notice--error">
-                  <Icon name="alert" size={15} /> {trip.error}
-                </div>
-              )}
+              {trip.error && <Notice tone="error">{trip.error}</Notice>}
             </>
           )}
 
@@ -476,9 +485,7 @@ export function App() {
                   {mobile && editingTrip && planner.plan && !planner.stale && (
                     <div className="trip-edit">
                       <span>Edit your trip</span>
-                      <button className="link-button" onClick={() => setEditingTrip(false)}>
-                        Done
-                      </button>
+                      <LinkButton onClick={() => setEditingTrip(false)}>Done</LinkButton>
                     </div>
                   )}
                   <TripInputs cityId={city.id} from={planner.from} to={planner.to} onFrom={planner.setFrom} onTo={planner.setTo} onSwap={planner.swap} />
@@ -487,21 +494,12 @@ export function App() {
               )}
 
               {(!planner.plan || outdated) && (
-                <button
-                  className="button button--primary button--wide"
-                  onClick={() => planner.search()}
-                  disabled={!planner.from || !planner.to || planning}
-                  aria-busy={planning}
-                >
+                <Button variant="primary" wide onClick={() => planner.search()} disabled={!planner.from || !planner.to || planning} aria-busy={planning}>
                   <Icon name="search" size={16} /> {planning ? "Finding routes…" : planner.plan ? "Update routes" : "Find safe routes"}
-                </button>
+                </Button>
               )}
 
-              {planner.error && (
-                <div className="notice notice--error">
-                  <Icon name="alert" size={15} /> {planner.error}
-                </div>
-              )}
+              {planner.error && <Notice tone="error">{planner.error}</Notice>}
 
               {!planner.plan && planner.status === "planning" && <Scanning />}
               {!planner.plan && planner.status !== "planning" && <EmptyState cityId={city.id} onDemo={runDemo} />}
@@ -529,14 +527,14 @@ export function App() {
 
               {selected && !outdated && (
                 <div className={`panel__footer ${rideable ? "panel__footer--split" : ""}`}>
-                  <button className={`button ${rideable ? "button--secondary" : "button--primary button--wide"}`} onClick={beginPreview}>
+                  <Button variant={rideable ? "secondary" : "primary"} wide={!rideable} onClick={beginPreview}>
                     <Icon name="play" size={15} /> {rideable ? "Preview" : "Preview the ride"}
                     <span className="button__meta">{formatDuration(selected.durationSeconds)}</span>
-                  </button>
+                  </Button>
                   {rideable && (
-                    <button className="button button--primary" onClick={openRide} aria-expanded={rides.open}>
+                    <Button variant="primary" onClick={openRide} aria-expanded={rides.open}>
                       <Icon name="auto" size={16} /> Book this route
-                    </button>
+                    </Button>
                   )}
                 </div>
               )}
@@ -547,9 +545,7 @@ export function App() {
 
       {config && safety.profile && dnaOpen && (
         <aside className="dna-panel glass">
-          <button className="icon-button dna-panel__close" onClick={() => setDnaOpen(false)} aria-label="Close safety DNA">
-            <Icon name="close" size={16} />
-          </button>
+          <IconButton icon="close" label="Close safety DNA" className="dna-panel__close" onClick={() => setDnaOpen(false)} />
           <SafetyDna
             parameters={config.parameters}
             presets={config.presets}
@@ -566,14 +562,10 @@ export function App() {
               {auth.user ? (
                 <>
                   <span>Signed in as {auth.user.email ?? auth.user.displayName}</span>
-                  <button className="link-button" onClick={() => void auth.signOut()}>
-                    Sign out
-                  </button>
+                  <LinkButton onClick={() => void auth.signOut()}>Sign out</LinkButton>
                 </>
               ) : (
-                <button className="link-button" onClick={() => setAuthPurpose("sync")}>
-                  Sign in to keep these on every device
-                </button>
+                <LinkButton onClick={() => setAuthPurpose("sync")}>Sign in to keep these on every device</LinkButton>
               )}
             </div>
           )}

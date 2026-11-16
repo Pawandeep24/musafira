@@ -7,7 +7,7 @@
  *   ["fn", {}, "text", "GoDaddy.com, LLC"]
  */
 import { z } from "zod";
-import { UpstreamError } from "../../lib/http.js";
+import { fetchJson, UpstreamError } from "../../lib/http.js";
 
 const SERVICE = "Domain registry";
 
@@ -40,20 +40,15 @@ export class RdapClient {
   }
 
   async registrar(domain: string): Promise<string | undefined> {
-    let response: Response;
-    try {
-      response = await this.#fetch(`${this.#baseUrl}/domain/${encodeURIComponent(domain)}`, {
-        headers: { Accept: "application/rdap+json, application/json" },
-        signal: AbortSignal.timeout(this.#timeoutMs),
-      });
-    } catch {
-      throw new UpstreamError(SERVICE);
-    }
-    if (response.status === 404) return undefined;
-    if (!response.ok) throw new UpstreamError(SERVICE, response.status);
-    const parsed = rdapDomain.safeParse(await response.json().catch(() => undefined));
-    if (!parsed.success) throw new UpstreamError(SERVICE, response.status);
-    const registrar = parsed.data.entities.find((entity) => entity.roles.includes("registrar"));
+    const reply = await fetchJson(this.#fetch, SERVICE, `${this.#baseUrl}/domain/${encodeURIComponent(domain)}`, rdapDomain, {
+      headers: { Accept: "application/rdap+json, application/json" },
+      timeoutMs: this.#timeoutMs,
+    }).catch((error: unknown) => {
+      if (error instanceof UpstreamError && error.status === 404) return undefined;
+      throw error;
+    });
+    if (!reply) return undefined;
+    const registrar = reply.entities.find((entity) => entity.roles.includes("registrar"));
     const name = registrar?.vcardArray?.[1].find((entry) => entry[0] === "fn")?.[3];
     return typeof name === "string" && name.trim() ? name.trim() : "Unknown registrar";
   }
