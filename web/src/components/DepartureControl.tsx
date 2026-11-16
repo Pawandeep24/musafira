@@ -52,7 +52,7 @@ export function DepartureControl({ departure, utcOffsetMinutes, onChange }: Prop
           min={0}
           max={STEPS}
           value={step}
-          style={{ background: skyGradient(cityHour(base, utcOffsetMinutes), HORIZON_HOURS) }}
+          style={{ backgroundImage: skyGradient(cityHour(base, utcOffsetMinutes), HORIZON_HOURS) }}
           onChange={(e) => onChange({ mode: "at", at: new Date(base.getTime() + Number(e.target.value) * STEP_MINUTES * 60_000) })}
           aria-label="Departure time"
         />

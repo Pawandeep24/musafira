@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import type { Route, Segment, Stretch } from "../api/types";
 import { CATEGORY_LABEL, safetyCss } from "../lib/colors";
 import { formatClock, formatDistance } from "../lib/format";
-import { previewMetersAt, type RidePreview } from "../state/ridePreview";
+import { previewMetersAt, type PreviewCamera, type RidePreview } from "../state/ridePreview";
 import { Icon, type IconName } from "./Icon";
 import { SafetyStrip } from "./SafetyStrip";
 
@@ -11,11 +11,21 @@ interface Props {
   preview: RidePreview;
   utcOffsetMinutes: number;
   speed: number;
+  camera: PreviewCamera;
+  compact: boolean;
   onSpeed(multiplier: number): void;
+  onCamera(camera: PreviewCamera): void;
+  onTogglePause(): void;
   onExit(): void;
 }
 
 const LOOKAHEAD_METERS = 1500;
+
+const CAMERAS: readonly (readonly [PreviewCamera, string])[] = [
+  ["close", "Close"],
+  ["street", "Street"],
+  ["wide", "Wide"],
+];
 
 function mood(score: number | null): string {
   if (score === null) return "No data here";
@@ -98,7 +108,7 @@ function nextAlert(route: Route, meters: number, offset: number): Alert | null {
   return null;
 }
 
-export function RideHud({ route, preview, utcOffsetMinutes, speed, onSpeed, onExit }: Props) {
+export function RideHud({ route, preview, utcOffsetMinutes, speed, camera, compact, onSpeed, onCamera, onTogglePause, onExit }: Props) {
   const [meters, setMeters] = useState(0);
   useEffect(() => {
     const timer = setInterval(() => setMeters(previewMetersAt(preview, performance.now())), 100);
@@ -128,6 +138,11 @@ export function RideHud({ route, preview, utcOffsetMinutes, speed, onSpeed, onEx
             </span>
           ))}
         </div>
+        {compact && (
+          <button className="icon-button hud__exit" onClick={onExit} aria-label="Exit preview">
+            <Icon name="close" size={16} />
+          </button>
+        )}
       </div>
 
       {alert && (
@@ -141,21 +156,40 @@ export function RideHud({ route, preview, utcOffsetMinutes, speed, onSpeed, onEx
       )}
 
       <div className="hud__footer glass">
+        {preview.paused && <div className="hud__paused">Paused · move the map to look around</div>}
         <SafetyStrip route={route} height={8} progressMeters={meters} />
         <div className="hud__controls">
-          <span>
-            {formatDistance(meters)} of {formatDistance(total)}
-          </span>
-          <div className="segmented segmented--small">
+          <div className="hud__progress">
+            <button
+              className={`icon-button hud__pause ${preview.paused ? "is-paused" : ""}`}
+              onClick={onTogglePause}
+              aria-label={preview.paused ? "Resume preview" : "Pause preview"}
+            >
+              <Icon name={preview.paused ? "play" : "pause"} size={16} />
+            </button>
+            <span>
+              {formatDistance(meters)} of {formatDistance(total)}
+            </span>
+          </div>
+          <div className="segmented segmented--small" role="group" aria-label="Speed">
             {[1, 2, 4].map((m) => (
               <button key={m} className={speed === m ? "is-on" : ""} onClick={() => onSpeed(m)}>
                 {m}×
               </button>
             ))}
           </div>
-          <button className="button button--ghost" onClick={onExit}>
-            <Icon name="close" size={14} /> Exit preview
-          </button>
+          <div className="segmented segmented--small" role="group" aria-label="Camera">
+            {CAMERAS.map(([id, label]) => (
+              <button key={id} className={camera === id ? "is-on" : ""} aria-pressed={camera === id} onClick={() => onCamera(id)}>
+                {label}
+              </button>
+            ))}
+          </div>
+          {!compact && (
+            <button className="button button--ghost" onClick={onExit}>
+              <Icon name="close" size={14} /> Exit preview
+            </button>
+          )}
         </div>
       </div>
     </div>

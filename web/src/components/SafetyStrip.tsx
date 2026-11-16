@@ -1,7 +1,7 @@
 import type { Route } from "../api/types";
 import { safetyCss } from "../lib/colors";
 
-/** The whole ride as one bar: colour per 100 m, rose brackets for dark stretches, ticks for open safety stops. */
+/** The whole ride as one bar: colour per 100 m, rose brackets for dark stretches. */
 export function SafetyStrip({ route, height = 10, progressMeters }: { route: Route; height?: number; progressMeters?: number }) {
   const total = route.segments.at(-1)?.endMeters ?? 1;
   const x = (meters: number) => (meters / total) * 100;
@@ -24,11 +24,6 @@ export function SafetyStrip({ route, height = 10, progressMeters }: { route: Rou
           rx={1}
         />
       ))}
-      {route.stops
-        .filter((s) => s.open && s.kinds.includes("safety"))
-        .map((s) => (
-          <rect key={s.id} x={x(s.alongMeters) - 0.15} y={height + 2} width={0.3} height={4} fill="rgba(255,255,255,0.85)" />
-        ))}
       {progressMeters !== undefined && <rect x={x(progressMeters) - 0.4} y={0} width={0.8} height={height + 6} fill="#fff" />}
     </svg>
   );

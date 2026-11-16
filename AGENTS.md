@@ -41,7 +41,7 @@ Run `npm run typecheck && npm test` after every API change, and `npm run web:typ
 - `scripts/ingest/` - offline city ingest; raw downloads are cached in `data/raw/` (gitignored), output in `data/cities/` (committed)
 - `test/` - tests mirror the behaviour under test, not the file layout
 - `web/src/api/` - DTO types and the fetch client (mirror `src/routes/planResponse.ts`)
-- `web/src/state/` - React hooks owning app state (planner, safety profile, ride preview clock, ride booking, washrooms, Safe Stop onboarding)
+- `web/src/state/` - React hooks owning app state (planner, safety profile, ride preview clock and camera presets, ride booking, washrooms, Safe Stop onboarding, map theme, mobile sheet height)
 - `web/src/StopPage.tsx` - the public Safe Stop page at `/s/<id>`, chosen in `main.tsx` instead of the map app
 - `web/src/map/` - MapLibre style, deck.gl scene layers, data dot-matrices
 - `web/src/components/` - presentational components; no fetching except place search
@@ -78,15 +78,18 @@ Read the doc header before changing these:
 - `scripts/ingest/osmWashrooms.ts` - which OSM toilet tags become washroom facts
 - `scripts/ingest/nightLights.ts`, `scripts/ingest/cellTowers.ts` - source formats and grid construction
 - `web/src/map/sceneLayers.ts` - layer stack and animation model
-- `web/src/state/ridePreview.ts` - ride preview as a re-timeable clock
+- `web/src/state/ridePreview.ts` - ride preview as a re-timeable clock: the same on-screen pace in every camera preset, pause and resume
+- `web/src/map/MapView.tsx` - preview camera: follows the rider, eases to a preset, keeps the rider's own pinch or scroll zoom, lets go while paused and flies back on resume
 - `web/src/state/useRideBooking.ts` - booking steps, session and ride kept in sessionStorage, polling and off-route alert
+- `web/src/state/useSheet.ts` - mobile sheet detents, drag and flick snapping, drag height written to CSS outside React
 
 ## Frontend
 
 - Components receive data and callbacks; state lives in `web/src/state/` hooks and `App.tsx` wires them together.
+- Phones (760px and narrower) get their own layout, not a squeezed desktop: one draggable bottom sheet whose height (`--sheet-height`) drives every panel, the grip, the credits and the map padding; map tools on a right-edge rail; the trip folds into a summary once routes show. Keep tap targets at 40px or more, and leave desktop untouched by mobile changes.
 - All times shown to riders are in the city's time zone (`utcOffsetMinutes`), never the browser's. Use `web/src/lib/format.ts`.
 - Styling lives in `web/src/styles/` (tokens in `tokens.css`). Use BEM-like class names (`block__element`, `is-state`); no inline styles except values computed at runtime.
-- The deck.gl canvas is screen-blended over a dark basemap, so light colours add glow. Keep the basemap dark.
+- The map follows the ride hour: the night basemap from 18:30 to 06:00 city time, the day basemap otherwise, until the rider switches it. Over the night basemap the deck.gl canvas is screen-blended, so light colours add glow; over the day basemap it blends normally, and scene colours go through `deepen` (`web/src/lib/colors.ts`) so pastels stay readable. Keep both basemaps low-contrast so safety colours carry the meaning, and keep their layer stacks identical so a switch is a paint-only diff.
 
 ## Design principles
 

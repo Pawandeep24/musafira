@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { City } from "../api/types";
 
 const MAP_CREDITS = [
@@ -43,11 +44,13 @@ export function Legend({ showRoute, showLights, showSignal }: { showRoute: boole
   );
 }
 
-export function Attribution({ city }: { city?: City }) {
+export function Attribution({ city, compact }: { city?: City; compact: boolean }) {
+  const [expanded, setExpanded] = useState(false);
   const credits = [...(city?.sources ?? []).map((s) => ({ name: s.attribution, url: s.url })), ...MAP_CREDITS];
+  const shown = compact && !expanded ? credits.slice(0, 1) : credits;
   return (
-    <div className="attribution">
-      {credits.map((c, i) => (
+    <div className={`attribution ${compact && expanded ? "is-expanded" : ""}`}>
+      {shown.map((c, i) => (
         <span key={c.name}>
           {i > 0 && " · "}
           <a href={c.url} target="_blank" rel="noreferrer">
@@ -55,6 +58,11 @@ export function Attribution({ city }: { city?: City }) {
           </a>
         </span>
       ))}
+      {compact && credits.length > 1 && (
+        <button className="attribution__more" onClick={() => setExpanded((v) => !v)} aria-expanded={expanded} aria-label={expanded ? "Fewer credits" : "All credits"}>
+          {expanded ? "×" : "i"}
+        </button>
+      )}
     </div>
   );
 }

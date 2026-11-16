@@ -1,10 +1,14 @@
+import { useEffect, useRef, useState } from "react";
 import type { City } from "../api/types";
 import type { AuthState } from "../auth/useAuth";
+import type { MapTheme } from "../state/useMapTheme";
 import { Icon } from "./Icon";
 
 interface Props {
   cities: readonly City[];
   cityId?: string;
+  compact: boolean;
+  theme: MapTheme;
   showLights: boolean;
   showSignal: boolean;
   dnaOpen: boolean;
@@ -12,6 +16,7 @@ interface Props {
   washrooms: boolean;
   auth: AuthState;
   onCity(id: string): void;
+  onToggleTheme(): void;
   onToggleLights(): void;
   onToggleSignal(): void;
   onToggleDna(): void;
@@ -46,63 +51,116 @@ export function Logo({ size = 30 }: { size?: number }) {
 export function TopBar(props: Props) {
   const { auth } = props;
   const initial = (auth.user?.displayName ?? auth.user?.email ?? "?").slice(0, 1).toUpperCase();
-  return (
-    <header className="topbar">
-      <div className="brand glass">
-        <Logo />
-        <div>
-          <strong>Musafira</strong>
-          <span>Safer routes for the hour you ride</span>
-        </div>
-      </div>
+  const [layersOpen, setLayersOpen] = useState(false);
+  const layersRef = useRef<HTMLDivElement>(null);
 
-      <div className="segmented glass topbar__cities" role="tablist" aria-label="City">
-        {props.cities.map((city) => (
-          <button key={city.id} role="tab" aria-selected={city.id === props.cityId} className={city.id === props.cityId ? "is-on" : ""} onClick={() => props.onCity(city.id)}>
-            {city.name}
-          </button>
-        ))}
-      </div>
+  useEffect(() => {
+    if (!layersOpen) return;
+    const closeOutside = (e: PointerEvent) => {
+      if (!layersRef.current?.contains(e.target as Node)) setLayersOpen(false);
+    };
+    addEventListener("pointerdown", closeOutside);
+    return () => removeEventListener("pointerdown", closeOutside);
+  }, [layersOpen]);
 
-      <div className="topbar__actions">
-        <button className={`pill glass ${props.showLights ? "is-on" : ""}`} onClick={props.onToggleLights} aria-pressed={props.showLights} title="NASA night-time light from space">
-          <Icon name="lighting" size={15} /> <span>Night lights</span>
-        </button>
-        <button className={`pill glass ${props.showSignal ? "is-on" : ""}`} onClick={props.onToggleSignal} aria-pressed={props.showSignal} title="Mobile tower density">
-          <Icon name="signal" size={15} /> <span>Signal</span>
-        </button>
-        <button className={`pill glass ${props.dnaOpen ? "is-on" : ""}`} onClick={props.onToggleDna} aria-pressed={props.dnaOpen}>
-          <Icon name="sliders" size={15} /> <span>Safety DNA</span>
-        </button>
+  const layers = (
+    <>
+      <button
+        className="pill pill--icon glass"
+        onClick={props.onToggleTheme}
+        aria-label={props.theme === "day" ? "Switch to night map" : "Switch to day map"}
+        title={`${props.theme === "day" ? "Day" : "Night"} map, following your ride time. Tap to switch.`}
+      >
+        <Icon name={props.theme === "day" ? "sun" : "moon"} size={16} /> <span>{props.theme === "day" ? "Day map" : "Night map"}</span>
+      </button>
+      <button className={`pill glass ${props.showLights ? "is-on" : ""}`} onClick={props.onToggleLights} aria-pressed={props.showLights} title="NASA night-time light from space">
+        <Icon name="lighting" size={15} /> <span>Night lights</span>
+      </button>
+      <button className={`pill glass ${props.showSignal ? "is-on" : ""}`} onClick={props.onToggleSignal} aria-pressed={props.showSignal} title="Mobile tower density">
+        <Icon name="signal" size={15} /> <span>Signal</span>
+      </button>
+    </>
+  );
+  const tools = (
+    <>
+      <button className={`pill glass ${props.dnaOpen ? "is-on" : ""}`} onClick={props.onToggleDna} aria-pressed={props.dnaOpen} aria-label="Safety DNA">
+        <Icon name="sliders" size={15} /> <span>Safety DNA</span>
+      </button>
+      <button
+        className={`pill glass ${props.washrooms ? "is-on" : ""}`}
+        onClick={props.onToggleWashrooms}
+        aria-pressed={props.washrooms}
+        aria-label="Washrooms"
+        title="Open washrooms near you, women-friendly first"
+      >
+        <Icon name="droplet" size={15} /> <span>Washrooms</span>
+      </button>
+      {auth.available && (
         <button
-          className={`pill glass ${props.washrooms ? "is-on" : ""}`}
-          onClick={props.onToggleWashrooms}
-          aria-pressed={props.washrooms}
-          title="Open washrooms near you, women-friendly first"
+          className={`pill glass ${props.reporting ? "is-on" : ""}`}
+          onClick={props.onToggleReport}
+          aria-pressed={props.reporting}
+          aria-label="Report"
+          title="Tell other riders what you saw on the road"
         >
-          <Icon name="droplet" size={15} /> <span>Washrooms</span>
+          <Icon name="flag" size={15} /> <span>Report</span>
         </button>
-        {auth.available && (
-          <button
-            className={`pill glass ${props.reporting ? "is-on" : ""}`}
-            onClick={props.onToggleReport}
-            aria-pressed={props.reporting}
-            title="Tell other riders what you saw on the road"
-          >
-            <Icon name="flag" size={15} /> <span>Report</span>
-          </button>
-        )}
-        {auth.available &&
-          (auth.user ? (
-            <button className="avatar" onClick={props.onToggleDna} title={auth.user.email ?? "Account"}>
-              {auth.user.photoURL ? <img src={auth.user.photoURL} alt="" referrerPolicy="no-referrer" /> : initial}
-            </button>
-          ) : (
-            <button className="pill glass" onClick={props.onSignIn}>
-              <Icon name="user" size={15} /> <span>Sign in</span>
+      )}
+    </>
+  );
+  const account =
+    auth.available &&
+    (auth.user ? (
+      <button className="avatar" onClick={props.onToggleDna} title={auth.user.email ?? "Account"}>
+        {auth.user.photoURL ? <img src={auth.user.photoURL} alt="" referrerPolicy="no-referrer" /> : initial}
+      </button>
+    ) : (
+      <button className="pill glass" onClick={props.onSignIn} aria-label="Sign in">
+        <Icon name="user" size={15} /> <span>Sign in</span>
+      </button>
+    ));
+
+  return (
+    <>
+      <header className="topbar">
+        <div className="brand glass">
+          <Logo />
+          <div>
+            <strong>Musafira</strong>
+            <span>Safer routes for the hour you ride</span>
+          </div>
+        </div>
+
+        <div className="segmented glass topbar__cities" role="tablist" aria-label="City">
+          {props.cities.map((city) => (
+            <button key={city.id} role="tab" aria-selected={city.id === props.cityId} className={city.id === props.cityId ? "is-on" : ""} onClick={() => props.onCity(city.id)}>
+              {city.name}
             </button>
           ))}
-      </div>
-    </header>
+        </div>
+
+        <div className="topbar__actions">
+          {!props.compact && layers}
+          {!props.compact && tools}
+          {account}
+        </div>
+      </header>
+
+      {props.compact && (
+        <nav className="map-rail" aria-label="Map tools">
+          <div className="map-rail__layers" ref={layersRef}>
+            <button className={`pill glass ${layersOpen ? "is-on" : ""}`} onClick={() => setLayersOpen((v) => !v)} aria-expanded={layersOpen} aria-label="Map layers">
+              <Icon name="layers" size={17} />
+            </button>
+            {layersOpen && (
+              <div className="layers-menu glass" role="group" aria-label="Map layers">
+                {layers}
+              </div>
+            )}
+          </div>
+          {tools}
+        </nav>
+      )}
+    </>
   );
 }

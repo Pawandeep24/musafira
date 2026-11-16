@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type CSSProperties, type FocusEvent } from "react";
 import { api } from "./api/client";
 import type { AppConfig, City, ItineraryLeg, LngLat, Place, ReportCategory, ReportWhen, Route, TripReport, Washroom } from "./api/types";
 import { useAuth } from "./auth/useAuth";
@@ -20,6 +20,7 @@ import { StopOnboarding } from "./components/StopOnboarding";
 import { TopBar } from "./components/TopBar";
 import { TripInputs } from "./components/TripInputs";
 import { TripPlanner } from "./components/TripPlanner";
+import { TripSummary } from "./components/TripSummary";
 import { WashroomSheet } from "./components/WashroomSheet";
 import { skyRgb } from "./lib/colors";
 import { cityHour, formatDuration, nextCityHour } from "./lib/format";
@@ -30,12 +31,14 @@ import { routeVerdict } from "./lib/verdict";
 import { gridDots, nightLightDot, signalDot, type GridDot } from "./map/gridDots";
 import { MapView, type Insets } from "./map/MapView";
 import type { RideScene, TripScene } from "./map/sceneLayers";
-import { PREVIEW_SECONDS, retimePreview, startPreview, type RidePreview } from "./state/ridePreview";
+import { previewMetersPerSecond, retimePreview, startPreview, togglePreviewPause, type PreviewCamera, type RidePreview } from "./state/ridePreview";
 import { useItinerary } from "./state/useItinerary";
+import { useMapTheme } from "./state/useMapTheme";
 import { usePlanner } from "./state/usePlanner";
 import { useReport } from "./state/useReport";
 import { RIDE_POLL_MS, useRideBooking } from "./state/useRideBooking";
 import { useSafetyProfile } from "./state/useSafetyProfile";
+import { useSheet } from "./state/useSheet";
 import { useStopOnboarding } from "./state/useStopOnboarding";
 import { useWashrooms } from "./state/useWashrooms";
 
@@ -81,9 +84,12 @@ export function App() {
   const [authPurpose, setAuthPurpose] = useState<AuthPurpose>();
   const [preview, setPreview] = useState<RidePreview>();
   const [speed, setSpeed] = useState(1);
+  const [camera, setCamera] = useState<PreviewCamera>("street");
   const [toast, setToast] = useState<string>();
   const [mode, setMode] = useState<Mode>("ride");
+  const [editingTrip, setEditingTrip] = useState(false);
   const mobile = useMediaQuery("(max-width: 760px)");
+  const sheet = useSheet();
 
   const auth = useAuth();
   const safety = useSafetyProfile(config?.defaults, auth);
@@ -189,7 +195,6 @@ export function App() {
     listing.close();
   };
 
-  const routeMeters = selected?.segments.at(-1)?.endMeters ?? 0;
   const beginPreview = () => {
     if (!selected) return;
     setSpeed(1);
@@ -197,7 +202,7 @@ export function App() {
     report.close();
     closeSheets();
     if (!rides.active) rides.close();
-    setPreview(startPreview(selected.id, routeMeters, performance.now()));
+    setPreview(startPreview(selected.id, previewMetersPerSecond(camera, 1), performance.now()));
   };
 
   const openRide = () => {
@@ -273,7 +278,11 @@ export function App() {
   };
   const changeSpeed = (multiplier: number) => {
     setSpeed(multiplier);
-    setPreview((p) => p && retimePreview(p, (routeMeters / PREVIEW_SECONDS) * multiplier, performance.now()));
+    setPreview((p) => p && retimePreview(p, previewMetersPerSecond(camera, multiplier), performance.now()));
+  };
+  const changeCamera = (next: PreviewCamera) => {
+    setCamera(next);
+    setPreview((p) => p && retimePreview(p, previewMetersPerSecond(next, speed), performance.now()));
   };
 
   const switchCity = (id: string) => {
@@ -317,12 +326,43 @@ export function App() {
   const liveOffered = Boolean(city?.rides.live);
   const liveBlocker = liveOffered && !planDepartsNow ? "Live rides leave now. Set departure to Now and update routes to book one." : undefined;
 
+  const activeSheet =
+    !mobile || preview
+      ? undefined
+      : dnaOpen
+        ? "dna"
+        : report.open
+          ? "report"
+          : washrooms.open
+            ? "washrooms"
+            : listing.open
+              ? "listing"
+              : rideSheetOpen
+                ? "ride"
+                : config && city
+                  ? "planner"
+                  : undefined;
+  const sheetKey = `${activeSheet}:${planner.plan?.searchId}`;
+  const [shownSheetKey, setShownSheetKey] = useState(sheetKey);
+  if (sheetKey !== shownSheetKey) {
+    setShownSheetKey(sheetKey);
+    setEditingTrip(false);
+    sheet.setDetent(activeSheet === "dna" ? "full" : "half");
+  }
+  const foldedTrip =
+    mobile && planner.plan && !planner.stale && !editingTrip && planner.from && planner.to ? { from: planner.from, to: planner.to } : undefined;
+  const expandForTyping = (e: FocusEvent) => {
+    const typing = e.target instanceof Element && e.target.matches("input:not([type=range]):not([type=checkbox]):not([type=radio]), textarea");
+    if (activeSheet && typing && e.target.closest(".panel, .dna-panel, .report-panel, .side-sheet, .ride-panel")) sheet.setDetent("full");
+  };
+
   const insets: Insets = mobile
-    ? { top: 110, right: 30, bottom: Math.round(innerHeight * (rideSheetOpen || sheetOpen ? 0.64 : 0.54)), left: 30 }
+    ? { top: 80, right: 64, bottom: sheet.height + 12, left: 20 }
     : { top: 120, right: dnaOpen || report.open || rideSheetOpen || sheetOpen ? 460 : 120, bottom: 120, left: 500 };
 
   const skyHour = planner.departure.mode === "at" ? cityHour(planner.departure.at, offset) : cityHour(new Date(), offset);
   const [r, g, b] = skyRgb(skyHour);
+  const mapTheme = useMapTheme(skyHour);
   const planning = planner.status === "planning";
   const busy = tripMode ? trip.status === "planning" : planning || planner.status === "rescoring";
   const outdated = planner.stale || planning;
@@ -339,7 +379,10 @@ export function App() {
 
   return (
     <div
-      className={`app ${preview ? "is-previewing" : ""} ${dnaOpen ? "has-dna" : ""} ${report.open ? "is-reporting" : ""} ${rideSheetOpen ? "is-booking" : ""} ${sheetOpen ? "has-sheet" : ""} ${tapPoint ? "is-picking" : ""}`}
+      ref={sheet.rootRef}
+      className={`app ${mapTheme.theme === "day" ? "is-day" : ""} ${preview ? "is-previewing" : ""} ${dnaOpen ? "has-dna" : ""} ${report.open ? "is-reporting" : ""} ${rideSheetOpen ? "is-booking" : ""} ${sheetOpen ? "has-sheet" : ""} ${tapPoint ? "is-picking" : ""} ${sheet.dragging ? "is-dragging-sheet" : ""} ${activeSheet && sheet.detent === "full" ? "is-sheet-full" : ""}`}
+      {...(mobile ? { style: { "--sheet-height": `${sheet.height}px` } as CSSProperties } : {})}
+      onFocus={expandForTyping}
     >
       <MapView
         {...(city ? { city } : {})}
@@ -356,6 +399,8 @@ export function App() {
         {...(showLights && rasters.lights ? { lights: rasters.lights } : {})}
         {...(showSignal && rasters.signal ? { signal: rasters.signal } : {})}
         {...(preview ? { preview } : {})}
+        previewCamera={camera}
+        theme={mapTheme.theme}
         insets={insets}
         onSelectRoute={(id) => !tapPoint && planner.setSelectedId(id)}
         onPickPoint={pickPoint}
@@ -368,6 +413,8 @@ export function App() {
         <TopBar
           cities={config.cities}
           {...(cityId ? { cityId } : {})}
+          compact={mobile}
+          theme={mapTheme.theme}
           showLights={showLights}
           showSignal={showSignal}
           dnaOpen={dnaOpen}
@@ -375,6 +422,7 @@ export function App() {
           washrooms={washrooms.open}
           auth={auth}
           onCity={switchCity}
+          onToggleTheme={mapTheme.toggle}
           onToggleLights={() => setShowLights((v) => !v)}
           onToggleSignal={() => setShowSignal((v) => !v)}
           onToggleDna={toggleDna}
@@ -421,8 +469,22 @@ export function App() {
 
           {!tripMode && (
             <>
-              <TripInputs cityId={city.id} from={planner.from} to={planner.to} onFrom={planner.setFrom} onTo={planner.setTo} onSwap={planner.swap} />
-              <DepartureControl departure={planner.departure} utcOffsetMinutes={offset} onChange={planner.setDeparture} />
+              {foldedTrip ? (
+                <TripSummary from={foldedTrip.from} to={foldedTrip.to} departure={planner.departure} utcOffsetMinutes={offset} onEdit={() => setEditingTrip(true)} />
+              ) : (
+                <>
+                  {mobile && editingTrip && planner.plan && !planner.stale && (
+                    <div className="trip-edit">
+                      <span>Edit your trip</span>
+                      <button className="link-button" onClick={() => setEditingTrip(false)}>
+                        Done
+                      </button>
+                    </div>
+                  )}
+                  <TripInputs cityId={city.id} from={planner.from} to={planner.to} onFrom={planner.setFrom} onTo={planner.setTo} onSwap={planner.swap} />
+                  <DepartureControl departure={planner.departure} utcOffsetMinutes={offset} onChange={planner.setDeparture} />
+                </>
+              )}
 
               {(!planner.plan || outdated) && (
                 <button
@@ -452,9 +514,11 @@ export function App() {
                     </p>
                   )}
                   <RouteCards
+                    key={planner.plan.searchId}
                     routes={routes}
                     {...(planner.selectedId ? { selectedId: planner.selectedId } : {})}
                     utcOffsetMinutes={offset}
+                    compact={mobile}
                     onSelect={planner.setSelectedId}
                   />
                   {selected && safety.profile && (
@@ -548,12 +612,27 @@ export function App() {
       {rides.alertVisible && rides.ride && <RideAlert ride={rides.ride} onDismiss={rides.dismissAlert} onShare={() => void shareRide()} />}
 
       {preview && selected && (
-        <RideHud route={selected} preview={preview} utcOffsetMinutes={offset} speed={speed} onSpeed={changeSpeed} onExit={() => setPreview(undefined)} />
+        <RideHud
+          route={selected}
+          preview={preview}
+          utcOffsetMinutes={offset}
+          speed={speed}
+          camera={camera}
+          compact={mobile}
+          onSpeed={changeSpeed}
+          onCamera={changeCamera}
+          onTogglePause={() => setPreview((p) => p && togglePreviewPause(p, performance.now()))}
+          onExit={() => setPreview(undefined)}
+        />
+      )}
+
+      {activeSheet && (
+        <button key={activeSheet} className="sheet-grip" aria-label={sheet.detent === "full" ? "Shrink panel" : "Expand panel"} {...sheet.grip} />
       )}
 
       <div className="bottom-bar">
         <Legend showRoute={Boolean(selected)} showLights={showLights && Boolean(rasters.lights)} showSignal={showSignal && Boolean(rasters.signal)} />
-        <Attribution {...(city ? { city } : {})} />
+        <Attribution {...(city ? { city } : {})} compact={mobile} />
       </div>
 
       {toast && (

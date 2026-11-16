@@ -20,14 +20,20 @@
  *
  * Layers are recreated every frame (deck.gl diffs them cheaply by id); only the
  * animated ones change their data, the rest keep stable data references.
+ *
+ * Colours are picked to glow on the night basemap. On the day basemap every colour
+ * goes through `deepen` (same hue, darker in OKLab), the route casing and marker rims
+ * turn white, the booked ride turns deep blue and route ghosts get stronger. Colour
+ * accessors carry the theme in `updateTriggers` so a switch recolours without new data.
  */
 import type { Layer, PickingInfo } from "@deck.gl/core";
 import { ArcLayer, ColumnLayer, PathLayer, ScatterplotLayer, TextLayer } from "@deck.gl/layers";
 import type { ItineraryLeg, ItineraryStop, LngLat, Route, Segment, Stop, Stretch, TripReport, Washroom } from "../api/types";
-import { CATEGORY_RGB, safetyRgba, type Rgba } from "../lib/colors";
+import { CATEGORY_RGB, deepen, safetyRgb, type Rgb, type Rgba } from "../lib/colors";
 import { REPORT_META, TONE_RGB } from "../lib/reports";
 import { SOURCE_RGB } from "../lib/safeStops";
 import { pointAt, sliceTrack, type Track } from "../lib/track";
+import type { MapTheme } from "../state/useMapTheme";
 import type { GridDot } from "./gridDots";
 
 export interface TripScene {
@@ -63,6 +69,7 @@ export interface SceneInput {
   readonly lights?: readonly GridDot[];
   readonly signal?: readonly GridDot[];
   readonly previewMeters?: number;
+  readonly theme: MapTheme;
   readonly timeMs: number;
   readonly metersPerPixel: number;
   readonly reportsRise: number;
@@ -77,8 +84,15 @@ const EAT_RGB = [255, 196, 87] as const;
 const SEE_RGB = [46, 242, 200] as const;
 const LEG_RGB = [168, 140, 255] as const;
 const DARK_LEG_RGB = [255, 61, 110] as const;
-const RIDE_RGB = [236, 244, 255] as const;
 const CHECKPOINT_RGB = [139, 124, 255] as const;
+const GHOST_RGB = [150, 140, 255] as const;
+const GHOST_HIGHLIGHT_RGB = [190, 180, 255] as const;
+const RIDE_ALTERNATIVE_RGB = [150, 160, 200] as const;
+const DARK_STRETCH_RGB = [255, 61, 110] as const;
+const DEAD_ZONE_RGB = [170, 120, 255] as const;
+const ORIGIN_RGB = [168, 140, 255] as const;
+const DESTINATION_RGB = [46, 242, 200] as const;
+const MARKED_RGB = [255, 196, 87] as const;
 const DRIVER_RGB = [46, 242, 200] as const;
 const OFF_ROUTE_RGB = [255, 61, 110] as const;
 const EATERY_KINDS: ReadonlySet<string> = new Set(["restaurant", "cafe", "fast_food"]);
@@ -87,6 +101,20 @@ const PILLAR_RADIUS_PX = 6;
 const PILLAR_BASE_PX = 34;
 const PILLAR_PER_REPORT_PX = 12;
 const MAX_PILLAR_REPORTS = 5;
+
+interface Ink {
+  readonly theme: MapTheme;
+  readonly tint: (rgb: Rgb) => Rgb;
+  readonly casing: Rgba;
+  readonly edge: Rgba;
+  readonly ride: Rgb;
+  readonly ghostAlpha: number;
+}
+
+const INK: Record<MapTheme, Ink> = {
+  night: { theme: "night", tint: (rgb) => rgb, casing: [4, 6, 12, 230], edge: [6, 8, 15, 255], ride: [236, 244, 255], ghostAlpha: 90 },
+  day: { theme: "day", tint: deepen, casing: [255, 255, 255, 235], edge: [255, 255, 255, 255], ride: [49, 70, 210], ghostAlpha: 150 },
+};
 
 const COMET_PERIOD_MS = 6500;
 const COMET_PIECES = 16;
@@ -104,7 +132,7 @@ function cometPieces(track: Track, head: number): { path: LngLat[]; color: Rgba;
   }).filter((piece) => piece.path.length > 1);
 }
 
-function dotLayers(id: string, dots: readonly GridDot[] | undefined, dimmed: boolean) {
+function dotLayers(id: string, dots: readonly GridDot[] | undefined, dimmed: boolean, ink: Ink) {
   if (!dots) return [];
   const dim = dimmed ? 0.4 : 1;
   const layer = (suffix: string, grow: number, alphaScale: number, minPixels: number, maxPixels: number) =>
@@ -113,11 +141,11 @@ function dotLayers(id: string, dots: readonly GridDot[] | undefined, dimmed: boo
       data: dots,
       getPosition: (d) => d.position,
       getRadius: (d) => d.radius * grow,
-      getFillColor: (d) => [d.color[0], d.color[1], d.color[2], d.color[3] * alphaScale * dim],
+      getFillColor: (d) => [...ink.tint([d.color[0], d.color[1], d.color[2]]), d.color[3] * alphaScale * dim],
       radiusUnits: "meters",
       radiusMinPixels: minPixels,
       radiusMaxPixels: maxPixels,
-      updateTriggers: { getFillColor: dim },
+      updateTriggers: { getFillColor: `${dim}:${ink.theme}` },
     });
   return [layer("bloom", 2.4, 0.07, 0, 22), layer("core", 1, 1, 1, 8)];
 }
@@ -156,9 +184,10 @@ function stretchLayer(id: string, stretches: readonly Stretch[], rgb: readonly [
   });
 }
 
-function beacon(id: string, point: LngLat | undefined, rgb: readonly [number, number, number], timeMs: number) {
+function beacon(id: string, point: LngLat | undefined, rgb: Rgb, timeMs: number, ink: Ink) {
   if (!point) return [];
   const phase = (timeMs % 2200) / 2200;
+  const color = ink.tint(rgb);
   return [
     new ScatterplotLayer<LngLat>({
       id: `${id}-ring`,
@@ -168,7 +197,7 @@ function beacon(id: string, point: LngLat | undefined, rgb: readonly [number, nu
       radiusUnits: "pixels",
       filled: false,
       stroked: true,
-      getLineColor: [...rgb, Math.round(200 * (1 - phase))],
+      getLineColor: [...color, Math.round(200 * (1 - phase))],
       lineWidthUnits: "pixels",
       getLineWidth: 2,
       updateTriggers: { getRadius: phase, getLineColor: phase },
@@ -179,29 +208,30 @@ function beacon(id: string, point: LngLat | undefined, rgb: readonly [number, nu
       getPosition: (p) => p,
       getRadius: 7,
       radiusUnits: "pixels",
-      getFillColor: [...rgb, 255],
+      getFillColor: [...color, 255],
       stroked: true,
-      getLineColor: [6, 8, 15, 255],
+      getLineColor: ink.edge,
       lineWidthUnits: "pixels",
       getLineWidth: 3,
     }),
   ];
 }
 
-function tripLayers(trip: TripScene, timeMs: number, onHover: SceneInput["onHoverTripStop"]): Layer[] {
+function tripLayers(trip: TripScene, timeMs: number, onHover: SceneInput["onHoverTripStop"], ink: Ink): Layer[] {
   const glow = pulse(timeMs, 1800);
-  const stopRgb = (s: ItineraryStop) => (EATERY_KINDS.has(s.kind) ? EAT_RGB : SEE_RGB);
+  const stopRgb = (s: ItineraryStop) => ink.tint(EATERY_KINDS.has(s.kind) ? EAT_RGB : SEE_RGB);
   return [
     new ArcLayer<ItineraryLeg>({
       id: "trip-legs",
       data: trip.legs,
       getSourcePosition: (l) => l.from,
       getTargetPosition: (l) => l.to,
-      getSourceColor: (l) => [...(l.dark ? DARK_LEG_RGB : LEG_RGB), 230],
-      getTargetColor: (l) => [...(l.dark ? DARK_LEG_RGB : SEE_RGB), 230],
+      getSourceColor: (l) => [...ink.tint(l.dark ? DARK_LEG_RGB : LEG_RGB), 230],
+      getTargetColor: (l) => [...ink.tint(l.dark ? DARK_LEG_RGB : SEE_RGB), 230],
       getHeight: 0.35,
       getWidth: 3,
       widthUnits: "pixels",
+      updateTriggers: { getSourceColor: ink.theme, getTargetColor: ink.theme },
     }),
     new ScatterplotLayer<ItineraryStop>({
       id: "trip-stop-halos",
@@ -210,7 +240,7 @@ function tripLayers(trip: TripScene, timeMs: number, onHover: SceneInput["onHove
       getRadius: 19 + 5 * glow,
       radiusUnits: "pixels",
       getFillColor: (s) => [...stopRgb(s), 50],
-      updateTriggers: { getRadius: glow },
+      updateTriggers: { getRadius: glow, getFillColor: ink.theme },
     }),
     new ScatterplotLayer<ItineraryStop>({
       id: "trip-stops",
@@ -220,11 +250,12 @@ function tripLayers(trip: TripScene, timeMs: number, onHover: SceneInput["onHove
       radiusUnits: "pixels",
       getFillColor: (s) => [...stopRgb(s), 255],
       stroked: true,
-      getLineColor: [6, 8, 15, 255],
+      getLineColor: ink.edge,
       lineWidthUnits: "pixels",
       getLineWidth: 2,
       pickable: true,
       onHover,
+      updateTriggers: { getFillColor: ink.theme },
     }),
     new TextLayer<ItineraryStop>({
       id: "trip-stop-numbers",
@@ -232,16 +263,16 @@ function tripLayers(trip: TripScene, timeMs: number, onHover: SceneInput["onHove
       getPosition: (s) => s.point,
       getText: (_, { index }) => String(index + 1),
       getSize: 12,
-      getColor: [6, 8, 15, 255],
+      getColor: ink.edge,
       fontFamily: "Inter, system-ui, sans-serif",
       fontWeight: 700,
       characterSet: "0123456789",
     }),
-    ...beacon("trip-base", trip.base, LEG_RGB, timeMs),
+    ...beacon("trip-base", trip.base, LEG_RGB, timeMs, ink),
   ];
 }
 
-function rideLayers(ride: RideScene, timeMs: number): Layer[] {
+function rideLayers(ride: RideScene, timeMs: number, ink: Ink): Layer[] {
   const glow = pulse(timeMs, 1800);
   const line = (id: string, path: LngLat[] | undefined, color: Rgba, width: number) =>
     new PathLayer<LngLat[]>({
@@ -254,17 +285,18 @@ function rideLayers(ride: RideScene, timeMs: number): Layer[] {
       capRounded: true,
       jointRounded: true,
     });
+  const checkpoint = ink.tint(CHECKPOINT_RGB);
   return [
-    line("ride-alternative", ride.alternative, [150, 160, 200, 110], 4),
-    line("ride-glow", ride.path, [...RIDE_RGB, 45], 16),
-    line("ride-path", ride.path, [...RIDE_RGB, 235], 3),
+    line("ride-alternative", ride.alternative, [...ink.tint(RIDE_ALTERNATIVE_RGB), 110], 4),
+    line("ride-glow", ride.path, [...ink.ride, 45], 16),
+    line("ride-path", ride.path, [...ink.ride, 235], 3),
     new ScatterplotLayer<LngLat>({
       id: "checkpoint-halos",
       data: ride.checkpoints,
       getPosition: (p) => p,
       getRadius: 17 + 6 * glow,
       radiusUnits: "pixels",
-      getFillColor: [...CHECKPOINT_RGB, 55],
+      getFillColor: [...checkpoint, 55],
       updateTriggers: { getRadius: glow },
     }),
     new ScatterplotLayer<LngLat>({
@@ -273,7 +305,7 @@ function rideLayers(ride: RideScene, timeMs: number): Layer[] {
       getPosition: (p) => p,
       getRadius: 11,
       radiusUnits: "pixels",
-      getFillColor: [...CHECKPOINT_RGB, 255],
+      getFillColor: [...checkpoint, 255],
       stroked: true,
       getLineColor: [255, 255, 255, 255],
       lineWidthUnits: "pixels",
@@ -295,35 +327,37 @@ function rideLayers(ride: RideScene, timeMs: number): Layer[] {
 
 export function sceneLayers(input: SceneInput): Layer[] {
   const { selected, tracks, timeMs } = input;
+  const ink = INK[input.theme];
   const track = selected ? tracks.get(selected.id) : undefined;
   const others = input.routes.filter((r) => r.id !== selected?.id);
-  const scoreKey = selected ? `${selected.id}:${selected.score}:${selected.segments.length}` : "";
+  const scoreKey = selected ? `${selected.id}:${selected.score}:${selected.segments.length}:${ink.theme}` : ink.theme;
   const visibleStops = selected?.stops.filter((s) => s.kinds.includes("safety") || s.open) ?? [];
   const openStops = visibleStops.filter((s) => s.open);
   const affectsSelected = (r: TripReport) => Boolean(selected && r.routeIds.includes(selected.id));
   const reportRgba = (r: TripReport, bright: number, dim: number): Rgba => [
-    ...TONE_RGB[REPORT_META[r.category].tone],
+    ...ink.tint(TONE_RGB[REPORT_META[r.category].tone]),
     affectsSelected(r) ? bright : dim,
   ];
+  const reportKey = `${selected?.id}:${ink.theme}`;
   const rise = 1 - (1 - Math.min(1, Math.max(0, input.reportsRise))) ** 3;
 
   const layers: (Layer | null)[] = [
     ...(input.previewMeters === undefined
-      ? [...dotLayers("night-lights", input.lights, Boolean(selected)), ...dotLayers("signal", input.signal, Boolean(selected))]
+      ? [...dotLayers("night-lights", input.lights, Boolean(selected), ink), ...dotLayers("signal", input.signal, Boolean(selected), ink)]
       : []),
 
     new PathLayer<Route>({
       id: "routes-ghost",
       data: others,
       getPath: (r) => tracks.get(r.id)?.points.slice() ?? [],
-      getColor: [150, 140, 255, 90],
+      getColor: [...ink.tint(GHOST_RGB), ink.ghostAlpha],
       getWidth: 6,
       widthUnits: "pixels",
       capRounded: true,
       jointRounded: true,
       pickable: true,
       autoHighlight: true,
-      highlightColor: [190, 180, 255, 160],
+      highlightColor: [...ink.tint(GHOST_HIGHLIGHT_RGB), 200],
       onClick: ({ object }) => object && input.onSelectRoute(object.id),
     }),
 
@@ -333,7 +367,7 @@ export function sceneLayers(input: SceneInput): Layer[] {
             id: "route-casing",
             data: [track?.points.slice() ?? []],
             getPath: (p) => p,
-            getColor: [4, 6, 12, 230],
+            getColor: ink.casing,
             getWidth: 11,
             widthUnits: "pixels",
             capRounded: true,
@@ -343,7 +377,7 @@ export function sceneLayers(input: SceneInput): Layer[] {
             id: "route-glow",
             data: selected.segments,
             getPath: (s) => s.path,
-            getColor: (s) => safetyRgba(s.score, 55),
+            getColor: (s) => [...ink.tint(safetyRgb(s.score)), 55],
             getWidth: 26,
             widthUnits: "pixels",
             capRounded: true,
@@ -354,15 +388,15 @@ export function sceneLayers(input: SceneInput): Layer[] {
             id: "route-core",
             data: selected.segments,
             getPath: (s) => s.path,
-            getColor: (s) => safetyRgba(s.score),
+            getColor: (s) => [...ink.tint(safetyRgb(s.score)), 255],
             getWidth: 6,
             widthUnits: "pixels",
             capRounded: true,
             jointRounded: true,
             updateTriggers: { getColor: scoreKey },
           }),
-          stretchLayer("dark-stretches", selected.darkStretches, [255, 61, 110], Math.round(60 + 120 * pulse(timeMs, 1400)), 30),
-          stretchLayer("dead-zones", selected.deadZones, [170, 120, 255], Math.round(50 + 110 * pulse(timeMs + 500, 1800)), 22),
+          stretchLayer("dark-stretches", selected.darkStretches, ink.tint(DARK_STRETCH_RGB), Math.round(60 + 120 * pulse(timeMs, 1400)), 30),
+          stretchLayer("dead-zones", selected.deadZones, ink.tint(DEAD_ZONE_RGB), Math.round(50 + 110 * pulse(timeMs + 500, 1800)), 22),
         ]
       : []),
 
@@ -387,7 +421,8 @@ export function sceneLayers(input: SceneInput): Layer[] {
       getPosition: (s) => s.point,
       getRadius: 13,
       radiusUnits: "pixels",
-      getFillColor: (s) => [...CATEGORY_RGB[s.category], 40],
+      getFillColor: (s) => [...ink.tint(CATEGORY_RGB[s.category]), 40],
+      updateTriggers: { getFillColor: ink.theme },
     }),
     new ScatterplotLayer<Stop>({
       id: "stops",
@@ -395,13 +430,14 @@ export function sceneLayers(input: SceneInput): Layer[] {
       getPosition: (s) => s.point,
       getRadius: (s) => (s.open ? 6 : 4),
       radiusUnits: "pixels",
-      getFillColor: (s) => (s.open ? [...CATEGORY_RGB[s.category], 240] : [60, 68, 92, 220]),
+      getFillColor: (s) => (s.open ? [...ink.tint(CATEGORY_RGB[s.category]), 240] : [60, 68, 92, 220]),
       stroked: true,
       getLineColor: (s) => (s.open ? [255, 255, 255, 220] : [130, 140, 170, 160]),
       lineWidthUnits: "pixels",
       getLineWidth: 1.5,
       pickable: true,
       onHover: input.onHoverStop,
+      updateTriggers: { getFillColor: ink.theme },
     }),
 
     new ScatterplotLayer<TripReport>({
@@ -411,7 +447,7 @@ export function sceneLayers(input: SceneInput): Layer[] {
       getRadius: (r) => (affectsSelected(r) ? 18 : 11),
       radiusUnits: "pixels",
       getFillColor: (r) => reportRgba(r, 70, 25),
-      updateTriggers: { getRadius: selected?.id, getFillColor: selected?.id },
+      updateTriggers: { getRadius: selected?.id, getFillColor: reportKey },
     }),
     new ColumnLayer<TripReport>({
       id: "report-pillars",
@@ -425,7 +461,7 @@ export function sceneLayers(input: SceneInput): Layer[] {
       getFillColor: (r) => reportRgba(r, 240, 90),
       pickable: true,
       onHover: input.onHoverReport,
-      updateTriggers: { getFillColor: selected?.id },
+      updateTriggers: { getFillColor: reportKey },
     }),
 
     new ScatterplotLayer<Washroom>({
@@ -434,7 +470,8 @@ export function sceneLayers(input: SceneInput): Layer[] {
       getPosition: (w) => w.point,
       getRadius: (w) => (w.source === "safeStop" ? 20 : 13),
       radiusUnits: "pixels",
-      getFillColor: (w) => [...SOURCE_RGB[w.source], 45],
+      getFillColor: (w) => [...ink.tint(SOURCE_RGB[w.source]), 45],
+      updateTriggers: { getFillColor: ink.theme },
     }),
     new ScatterplotLayer<Washroom>({
       id: "washrooms",
@@ -442,26 +479,27 @@ export function sceneLayers(input: SceneInput): Layer[] {
       getPosition: (w) => w.point,
       getRadius: (w) => (w.source === "safeStop" ? 9 : 6),
       radiusUnits: "pixels",
-      getFillColor: (w) => [...SOURCE_RGB[w.source], 245],
+      getFillColor: (w) => [...ink.tint(SOURCE_RGB[w.source]), 245],
       stroked: true,
       getLineColor: [255, 255, 255, 230],
       lineWidthUnits: "pixels",
       getLineWidth: (w) => (w.source === "safeStop" ? 2.5 : 1.5),
       pickable: true,
       onHover: input.onHoverWashroom,
+      updateTriggers: { getFillColor: ink.theme },
     }),
 
-    ...(input.ride ? rideLayers(input.ride, timeMs) : []),
-    ...(input.trip ? tripLayers(input.trip, timeMs, input.onHoverTripStop) : []),
-    ...beacon("origin", input.from, [168, 140, 255], timeMs),
-    ...beacon("destination", input.to, [46, 242, 200], timeMs + 1100),
-    ...beacon("marked-spot", input.markedPoint, [255, 196, 87], timeMs + 500),
+    ...(input.ride ? rideLayers(input.ride, timeMs, ink) : []),
+    ...(input.trip ? tripLayers(input.trip, timeMs, input.onHoverTripStop, ink) : []),
+    ...beacon("origin", input.from, ORIGIN_RGB, timeMs, ink),
+    ...beacon("destination", input.to, DESTINATION_RGB, timeMs + 1100, ink),
+    ...beacon("marked-spot", input.markedPoint, MARKED_RGB, timeMs + 500, ink),
   ];
 
   if (track && input.previewMeters !== undefined) {
     const position = pointAt(track, input.previewMeters);
     const segment = selected?.segments.find((s) => s.endMeters >= input.previewMeters!);
-    const rgb = safetyRgba(segment?.score ?? null);
+    const rgb = ink.tint(safetyRgb(segment?.score ?? null));
     layers.push(
       new PathLayer<LngLat[]>({
         id: "preview-trail",
@@ -472,13 +510,13 @@ export function sceneLayers(input: SceneInput): Layer[] {
         widthUnits: "pixels",
         capRounded: true,
       }),
-      puck("puck", position, [rgb[0], rgb[1], rgb[2]], timeMs),
+      puck("puck", position, rgb, timeMs),
     );
   }
 
   if (input.ride && input.rideDriver) {
     const off = input.ride.offRoute;
-    layers.push(puck("driver", input.rideDriver, off ? OFF_ROUTE_RGB : DRIVER_RGB, timeMs, off ? 700 : 1600));
+    layers.push(puck("driver", input.rideDriver, ink.tint(off ? OFF_ROUTE_RGB : DRIVER_RGB), timeMs, off ? 700 : 1600));
   }
 
   return layers.filter((layer): layer is Layer => layer !== null);

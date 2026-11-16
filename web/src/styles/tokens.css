@@ -47,6 +47,7 @@
   --dna-width: 380px;
   --gutter: 16px;
   --topbar-height: 58px;
+  --safe-top: env(safe-area-inset-top, 0px);
   --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
 
   color-scheme: dark;

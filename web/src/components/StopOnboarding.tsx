@@ -257,6 +257,7 @@ function CareStep({ onboarding }: { onboarding: StopOnboardingState }) {
 
 function DomainStep({ onboarding }: { onboarding: StopOnboardingState }) {
   const { draft, update, ideas, loading } = onboarding;
+  const picked = ideas?.find((idea) => idea.domain === draft.domain && idea.available !== false);
   return (
     <>
       <p className="onboard__intro">
@@ -270,21 +271,25 @@ function DomainStep({ onboarding }: { onboarding: StopOnboardingState }) {
         {ideas && ideas.length > 0 && (
           <ul className="domain-ideas">
             {ideas.map((idea) => (
-              <li key={idea.domain} className={draft.domain === idea.domain ? "is-on" : ""}>
-                <button className="domain-ideas__pick" onClick={() => update({ domain: idea.domain })}>
-                  <code>{idea.domain}</code>
+              <li key={idea.domain}>
+                <button
+                  className={`domain-ideas__pick ${draft.domain === idea.domain ? "is-on" : ""}`}
+                  aria-pressed={draft.domain === idea.domain}
+                  onClick={() => update({ domain: idea.domain })}
+                >
+                  <code title={idea.domain}>{idea.domain}</code>
                   <span className={`domain-ideas__state is-${idea.available === null ? "unknown" : idea.available ? "free" : "taken"}`}>
                     {idea.available === null ? "Unknown" : idea.available ? "Available" : "Taken"}
                   </span>
                 </button>
-                {idea.available !== false && (
-                  <a className="link-button" href={idea.buyUrl} target="_blank" rel="noreferrer">
-                    Get it on GoDaddy
-                  </a>
-                )}
               </li>
             ))}
           </ul>
+        )}
+        {picked && (
+          <a className="button button--secondary domain-ideas__buy" href={picked.buyUrl} target="_blank" rel="noreferrer">
+            Get {picked.domain} on GoDaddy <Icon name="chevron" size={14} />
+          </a>
         )}
       </section>
 
@@ -379,7 +384,7 @@ export function StopOnboarding({ onboarding }: { onboarding: StopOnboardingState
           <Icon name="shield" size={13} /> Musafira Safe Stops
         </span>
         <h2>{stop ? stop.profile.name : "List your shop"}</h2>
-        <p>Riders, especially women riding late, look for a clean washroom and a safe place to pause. Tell them what you offer.</p>
+        {step === "place" && <p>Riders, especially women riding late, look for a clean washroom and a safe place to pause. Tell them what you offer.</p>}
       </header>
 
       <ol className="stepper">

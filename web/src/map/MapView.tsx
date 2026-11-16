@@ -1,3 +1,16 @@
+/**
+ * The MapLibre map with the deck.gl scene on top, redrawn every animation frame.
+ *
+ * Ride preview camera: each frame jumps to the rider's point, turning the bearing
+ * smoothly towards the road 170 m ahead. On a preset change (Close, Street, Wide) the
+ * zoom and pitch ease 8% of the way per frame until they reach it; after that the
+ * rider's own pinch or scroll zoom is kept, clamped to 13..19. Presets ease inside the
+ * frame loop because every `jumpTo` would cancel a MapLibre `easeTo`. Zoom gestures
+ * anchor on the rider while following so the camera doesn't jump back each frame.
+ * Paused, the camera stops following and gestures are free to look around; a preset
+ * picked meanwhile eases in place, and resuming flies back to the rider during the
+ * clock's resume lead-in.
+ */
 import type { PickingInfo } from "@deck.gl/core";
 import { MapboxOverlay } from "@deck.gl/mapbox";
 import { LngLatBounds, Map as MapLibreMap, setWorkerUrl, type IControl } from "maplibre-gl";
@@ -10,9 +23,10 @@ import { formatClock, formatDistance } from "../lib/format";
 import { reportAge, reportSummary } from "../lib/reports";
 import { SOURCE_LABEL, washroomName } from "../lib/safeStops";
 import { bearing, pointAt, trackOf, type Track } from "../lib/track";
-import { PREVIEW_LEAD_IN_MS, previewMetersAt, type RidePreview } from "../state/ridePreview";
+import { PREVIEW_CAMERAS, PREVIEW_LEAD_IN_MS, previewMetersAt, RESUME_LEAD_IN_MS, type PreviewCamera, type RidePreview } from "../state/ridePreview";
+import type { MapTheme } from "../state/useMapTheme";
 import type { GridDot } from "./gridDots";
-import { midnightStyle } from "./mapStyle";
+import { BASEMAPS } from "./mapStyle";
 import { sceneLayers, type RideScene, type TripScene } from "./sceneLayers";
 
 export interface Insets {
@@ -37,6 +51,8 @@ interface Props {
   lights?: readonly GridDot[];
   signal?: readonly GridDot[];
   preview?: RidePreview;
+  previewCamera: PreviewCamera;
+  theme: MapTheme;
   insets: Insets;
   onSelectRoute(id: string): void;
   onPickPoint(point: LngLat): void;
@@ -49,7 +65,9 @@ type Hover = { x: number; y: number } & ({ stop: Stop } | { report: TripReport }
 // MapLibre derives its worker path from import.meta.url, which bundling breaks.
 setWorkerUrl(workerUrl);
 
-const RIDE_CAMERA = { zoom: 16.4, pitch: 66 } as const;
+const PREVIEW_MIN_ZOOM = 13;
+const PREVIEW_MAX_ZOOM = 19;
+const CAMERA_EASE = 0.08;
 const NO_PADDING = { top: 0, right: 0, bottom: 0, left: 0 };
 // Web Mercator ground resolution at zoom 0 for MapLibre's 512 px tiles.
 const EQUATOR_METERS_PER_PIXEL = 78_271.517;
@@ -88,7 +106,7 @@ export function MapView(props: Props) {
     const center = latest.current.city?.center ?? [73.8567, 18.5204];
     const map = new MapLibreMap({
       container: container.current!,
-      style: midnightStyle,
+      style: BASEMAPS[latest.current.theme],
       center,
       zoom: 10.4,
       pitch: 0,
@@ -105,6 +123,11 @@ export function MapView(props: Props) {
     map.on("click", (e) => latest.current.onTapPoint?.([e.lngLat.lng, e.lngLat.lat]));
 
     let smoothBearing = map.getBearing();
+    let framedCamera: PreviewCamera | undefined;
+    let settling = false;
+    map.on("zoomstart", (e) => {
+      if (e.originalEvent) settling = false;
+    });
     let frame = 0;
     const tick = (now: number) => {
       const p = latest.current;
@@ -116,13 +139,25 @@ export function MapView(props: Props) {
         previewMeters = previewMetersAt(p.preview, now);
         if (previewMeters >= track.total) {
           p.onPreviewEnd();
-        } else if (now >= p.preview.startedAt) {
+        } else if (p.preview.paused || now < p.preview.startedAt) {
+          smoothBearing = map.getBearing();
+        } else {
           const here = pointAt(track, previewMeters);
           smoothBearing = lerpAngle(smoothBearing, bearing(here, pointAt(track, previewMeters + 170)), 0.05);
-          map.jumpTo({ ...RIDE_CAMERA, center: here, bearing: smoothBearing, padding: ridePadding(map) });
+          const goal = PREVIEW_CAMERAS[p.previewCamera];
+          if (p.previewCamera !== framedCamera) {
+            framedCamera = p.previewCamera;
+            settling = true;
+          }
+          const zoom = map.getZoom();
+          const nextZoom = settling ? zoom + (goal.zoom - zoom) * CAMERA_EASE : Math.min(PREVIEW_MAX_ZOOM, Math.max(PREVIEW_MIN_ZOOM, zoom));
+          if (Math.abs(goal.zoom - nextZoom) < 0.01) settling = false;
+          const pitch = map.getPitch() + (goal.pitch - map.getPitch()) * CAMERA_EASE;
+          map.jumpTo({ zoom: nextZoom, pitch, center: here, bearing: smoothBearing, padding: ridePadding(map) });
         }
       } else {
         smoothBearing = map.getBearing();
+        framedCamera = undefined;
       }
 
       const metersPerPixel = (EQUATOR_METERS_PER_PIXEL * Math.cos((map.getCenter().lat * Math.PI) / 180)) / 2 ** map.getZoom();
@@ -145,6 +180,7 @@ export function MapView(props: Props) {
           ...(p.lights ? { lights: p.lights } : {}),
           ...(p.signal ? { signal: p.signal } : {}),
           ...(previewMeters !== undefined ? { previewMeters } : {}),
+          theme: p.theme,
           timeMs: now,
           onSelectRoute: (id) => latest.current.onSelectRoute(id),
           onHoverStop: (info: PickingInfo<Stop>) => setHover(info.object ? { stop: info.object, x: info.x, y: info.y } : null),
@@ -197,7 +233,7 @@ export function MapView(props: Props) {
     const track = props.preview ? tracks.get(props.preview.routeId) : undefined;
     if (!map || !track) return;
     map.flyTo({
-      ...RIDE_CAMERA,
+      ...PREVIEW_CAMERAS[props.previewCamera],
       center: track.points[0]!,
       bearing: bearing(track.points[0]!, pointAt(track, 170)),
       padding: ridePadding(map),
@@ -205,6 +241,49 @@ export function MapView(props: Props) {
       essential: true,
     });
   }, [props.preview?.routeId]);
+
+  const paused = props.preview?.paused ?? false;
+  const wasPaused = useRef(false);
+  useEffect(() => {
+    const map = mapRef.current;
+    const preview = latest.current.preview;
+    const resumed = wasPaused.current && !paused;
+    wasPaused.current = paused;
+    const track = preview ? tracks.get(preview.routeId) : undefined;
+    if (!map || !preview || !track || !resumed) return;
+    const here = pointAt(track, preview.fromMeters);
+    map.flyTo({
+      ...PREVIEW_CAMERAS[latest.current.previewCamera],
+      center: here,
+      bearing: bearing(here, pointAt(track, preview.fromMeters + 170)),
+      padding: ridePadding(map),
+      duration: RESUME_LEAD_IN_MS,
+      essential: true,
+    });
+  }, [paused]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (map && latest.current.preview?.paused) map.easeTo({ ...PREVIEW_CAMERAS[props.previewCamera], duration: 600 });
+  }, [props.previewCamera]);
+
+  const following = props.preview !== undefined && !paused;
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const around = following ? { around: "center" as const } : undefined;
+    map.scrollZoom.disable();
+    map.scrollZoom.enable(around);
+    map.touchZoomRotate.enable(around);
+  }, [following]);
+
+  const shownTheme = useRef(props.theme);
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || shownTheme.current === props.theme) return;
+    shownTheme.current = props.theme;
+    map.setStyle(BASEMAPS[props.theme], { diff: true });
+  }, [props.theme]);
 
   const [driverLon, driverLat] = props.ride?.driver ?? [];
   useEffect(() => {
@@ -247,7 +326,7 @@ export function MapView(props: Props) {
   const offset = props.city?.utcOffsetMinutes ?? 330;
   const selectedId = props.selectedId ?? props.routes[0]?.id;
   return (
-    <div className="map-root">
+    <div className={`map-root ${props.theme === "day" ? "is-day" : ""}`}>
       <div ref={container} className="map-canvas" />
       {hover && "report" in hover && (
         <div className="map-tooltip glass" style={{ left: hover.x + 14, top: hover.y + 14 }}>

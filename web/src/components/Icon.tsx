@@ -14,6 +14,7 @@ const PATHS = {
   swap: "M7 4v16M7 4L3 8M7 4l4 4M17 20V4M17 20l-4-4M17 20l4-4",
   locate: "M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM12 2v3M12 19v3M2 12h3M19 12h3",
   play: "M7 4l13 8-13 8V4z",
+  pause: "M8 5v14M16 5v14",
   stop: "M6 6h12v12H6z",
   close: "M6 6l12 12M18 6L6 18",
   layers: "M12 3l9 5-9 5-9-5 9-5zM3 13l9 5 9-5M3 17.5l9 5 9-5",

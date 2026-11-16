@@ -9,12 +9,13 @@ interface Props {
   routes: readonly Route[];
   selectedId?: string;
   utcOffsetMinutes: number;
+  compact: boolean;
   onSelect(id: string): void;
 }
 
 const LABEL_TEXT = { safest: "Safest", fastest: "Fastest" } as const;
 
-export function RouteCards({ routes, selectedId, utcOffsetMinutes, onSelect }: Props) {
+export function RouteCards({ routes, selectedId, utcOffsetMinutes, compact, onSelect }: Props) {
   const fastest = Math.min(...routes.map((r) => r.durationSeconds));
   return (
     <div className="route-cards">
@@ -28,7 +29,7 @@ export function RouteCards({ routes, selectedId, utcOffsetMinutes, onSelect }: P
             className={`route-card ${route.id === selectedId ? "is-selected" : ""}`}
             onClick={() => onSelect(route.id)}
           >
-            <ScoreRing score={route.score} size={58} />
+            <ScoreRing score={route.score} size={compact ? 46 : 58} stroke={compact ? 5 : 6} />
             <div className="route-card__body">
               <div className="route-card__top">
                 <span className="route-card__eta">{formatDuration(route.durationSeconds)}</span>
