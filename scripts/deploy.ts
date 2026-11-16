@@ -87,8 +87,9 @@ function bundle(): string {
     throw new Error(`package-lock.json has non-public download URLs for ${badTarballs.join(", ")}; the host's install would fail`);
   }
   rmSync(join(ROOT, "dist"), { recursive: true, force: true });
-  execFileSync("npm", ["run", "build"], { cwd: ROOT, stdio: "inherit" });
-  execFileSync("npm", ["run", "web:build"], { cwd: ROOT, stdio: "inherit" });
+  const build = { cwd: ROOT, stdio: "inherit", env: { ...process.env, NODE_ENV: "production" } } as const;
+  execFileSync("npm", ["run", "build"], build);
+  execFileSync("npm", ["run", "web:build"], build);
 
   const stage = mkdtempSync(join(tmpdir(), "musafira-deploy-"));
   for (const path of BUNDLED) cpSync(join(ROOT, path), join(stage, path), { recursive: true });
