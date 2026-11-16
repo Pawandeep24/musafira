@@ -94,7 +94,7 @@ Read the doc header before changing these:
 - A new component is two files side by side in `web/src/components/`: `Name.tsx` and `Name.css` (`RideHud.tsx`, `RideHud.css`). Register the stylesheet with one `@import` in `styles/index.css`, placed in cascade order before `responsive.css`, which stays last. Components never import CSS themselves; `main.tsx` loads `tokens.css`, then `styles/index.css`.
 - Styles shared by several components go in `web/src/styles/`. Breakpoint overrides go in `responsive.css` and reduced-motion overrides in `motion.css`, never in a component's own file, so they come last in the cascade.
 - Use BEM-like class names (`block__element`, `is-state`); no inline styles except values computed at runtime.
-- The map follows the ride hour: the night basemap from 18:30 to 06:00 city time, the day basemap otherwise, until the rider switches it. Over the night basemap the deck.gl canvas is screen-blended, so light colours add glow; over the day basemap it blends normally, and scene colours go through `deepen` (`web/src/lib/colors.ts`) so pastels stay readable. Keep both basemaps low-contrast so safety colours carry the meaning, and keep their layer stacks identical so a switch is a paint-only diff.
+- The map opens on the night basemap and switches only when the rider uses the day/night toggle, never with the ride hour or the departure slider. Over the night basemap the deck.gl canvas is screen-blended, so light colours add glow; over the day basemap it blends normally, and scene colours go through `deepen` (`web/src/lib/colors.ts`) so pastels stay readable. Keep both basemaps low-contrast so safety colours carry the meaning, and keep their layer stacks identical so a switch is a paint-only diff.
 
 ## Design principles
 

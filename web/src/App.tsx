@@ -384,7 +384,7 @@ export function App() {
 
   const skyHour = planner.departure.mode === "at" ? cityHour(planner.departure.at, offset) : cityHour(new Date(), offset);
   const [r, g, b] = skyRgb(skyHour);
-  const mapTheme = useMapTheme(skyHour);
+  const mapTheme = useMapTheme();
   const planning = planner.status === "planning";
   const busy = tripMode ? trip.status === "planning" : planning || planner.status === "rescoring";
   const outdated = planner.stale || planning;
