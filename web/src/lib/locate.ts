@@ -1,4 +1,4 @@
-import type { LngLat } from "../api/types";
+import type { LngLat } from "@/api/types";
 
 export function locateRider(onPoint: (point: LngLat) => void, onError: (message: string) => void) {
   if (!navigator.geolocation) return onError("Location isn't available in this browser. Tap the map instead.");

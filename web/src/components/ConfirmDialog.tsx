@@ -1,7 +1,7 @@
 import { useEffect, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { Icon, type IconName } from "./Icon";
-import { Button } from "./ui/Button";
+import { Icon, type IconName } from "@/components/Icon";
+import { Button } from "@/components/ui/Button";
 
 interface Props {
   icon: IconName;

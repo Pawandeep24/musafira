@@ -1,6 +1,6 @@
-import type { ReportCategory, ReportWhen } from "../api/types";
-import type { IconName } from "../components/Icon";
-import { cityTime } from "./format";
+import type { ReportCategory, ReportWhen } from "@/api/types";
+import type { IconName } from "@/components/Icon";
+import { cityTime } from "@/lib/format";
 
 export type ReportTone = "ok" | "warn" | "risk";
 

@@ -1,10 +1,10 @@
 import type { FastifyPluginAsync } from "fastify";
 import { z } from "zod";
-import type { CityRegistry } from "../city/cityRegistry.js";
-import type { LngLat } from "../geo/geometry.js";
-import { AppError, badRequest } from "../lib/errors.js";
-import type { PlaceSuggester } from "../planner/placeSuggester.js";
-import type { Geocoder } from "../planner/ports.js";
+import type { CityRegistry } from "#src/city/cityRegistry.js";
+import type { LngLat } from "#src/geo/geometry.js";
+import { AppError, badRequest } from "#src/lib/errors.js";
+import type { PlaceSuggester } from "#src/planner/placeSuggester.js";
+import type { Geocoder } from "#src/planner/ports.js";
 
 interface Deps {
   cities: CityRegistry;

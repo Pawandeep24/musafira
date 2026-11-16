@@ -1,8 +1,8 @@
 import type { FastifyPluginAsync, preHandlerAsyncHookHandler } from "fastify";
 import { z } from "zod";
-import type { GoDaddyClient } from "../integrations/godaddy/client.js";
-import { checkDomainAvailability } from "../integrations/godaddy/domains.js";
-import { AppError } from "../lib/errors.js";
+import type { GoDaddyClient } from "#src/integrations/godaddy/client.js";
+import { checkDomainAvailability } from "#src/integrations/godaddy/domains.js";
+import { AppError } from "#src/lib/errors.js";
 
 interface Deps {
   requireAuth: preHandlerAsyncHookHandler;

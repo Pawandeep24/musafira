@@ -1,9 +1,9 @@
-import type { Place, TripAnswers, TripBackBy, TripDays, TripDiet, TripInterest } from "../api/types";
-import { Icon } from "./Icon";
-import { PlaceInput } from "./PlaceInput";
-import { Button } from "./ui/Button";
-import { Eyebrow } from "./ui/Eyebrow";
-import { ToggleChip } from "./ui/ToggleChip";
+import type { Place, TripAnswers, TripBackBy, TripDays, TripDiet, TripInterest } from "@/api/types";
+import { Icon } from "@/components/Icon";
+import { PlaceInput } from "@/components/PlaceInput";
+import { Button } from "@/components/ui/Button";
+import { Eyebrow } from "@/components/ui/Eyebrow";
+import { ToggleChip } from "@/components/ui/ToggleChip";
 
 const MAX_INTERESTS = 3;
 const DAYS: readonly { id: TripDays; label: string }[] = [

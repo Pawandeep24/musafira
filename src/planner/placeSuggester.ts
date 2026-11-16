@@ -6,11 +6,11 @@
  * and the remote quota small. Remote answers are cached per city and query; a failing remote
  * degrades to local results.
  */
-import type { CityIndex } from "../city/cityIndex.js";
-import { isSamePlace, startsLike } from "../city/placeSearch.js";
-import type { LngLat } from "../geo/geometry.js";
-import { TtlCache } from "../lib/ttlCache.js";
-import type { Geocoder, Place } from "./ports.js";
+import type { CityIndex } from "#src/city/cityIndex.js";
+import { isSamePlace, startsLike } from "#src/city/placeSearch.js";
+import type { LngLat } from "#src/geo/geometry.js";
+import { TtlCache } from "#src/lib/ttlCache.js";
+import type { Geocoder, Place } from "#src/planner/ports.js";
 
 const LIMIT = 8;
 const ENOUGH_LOCAL = 4;

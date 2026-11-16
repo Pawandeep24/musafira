@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { distanceToPathMeters, haversineMeters, type LngLat } from "../src/geo/geometry.js";
-import { measurePath } from "../src/geo/path.js";
-import { planCheckpoints, type RoutedPath } from "../src/rides/checkpoints.js";
-import { canDetour, demoSnapshot, meterFare } from "../src/rides/demoRide.js";
-import { guardRide } from "../src/rides/guard.js";
-import { MIDDLE_LON, NIGHT, NOON, ROUTE_EAST, ROUTE_LAT, ROUTE_WEST, straightRoute } from "./fixtures.js";
+import { distanceToPathMeters, haversineMeters, type LngLat } from "#src/geo/geometry.js";
+import { measurePath } from "#src/geo/path.js";
+import { planCheckpoints, type RoutedPath } from "#src/rides/checkpoints.js";
+import { canDetour, demoSnapshot, meterFare } from "#src/rides/demoRide.js";
+import { guardRide } from "#src/rides/guard.js";
+import { MIDDLE_LON, NIGHT, NOON, ROUTE_EAST, ROUTE_LAT, ROUTE_WEST, straightRoute } from "#test/fixtures.js";
 
 const safeShape = straightRoute().shape;
 const north = (lat: number, meters: number) => lat + meters / 111_320;

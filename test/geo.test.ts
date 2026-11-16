@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { distanceToPathMeters, haversineMeters } from "../src/geo/geometry.js";
-import { measurePath, samplePositions } from "../src/geo/path.js";
-import { decodePolyline } from "../src/geo/polyline.js";
-import { encodePolyline } from "./fixtures.js";
+import { distanceToPathMeters, haversineMeters } from "#src/geo/geometry.js";
+import { measurePath, samplePositions } from "#src/geo/path.js";
+import { decodePolyline } from "#src/geo/polyline.js";
+import { encodePolyline } from "#test/fixtures.js";
 
 describe("geo", () => {
   it("decodes Google's reference polyline at precision 5", () => {

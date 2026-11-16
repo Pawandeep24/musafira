@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
-import type { CityIndex } from "../src/city/cityIndex.js";
-import { createHoursEvaluator } from "../src/city/openingHours.js";
-import { analyzeRoute } from "../src/safety/analyze.js";
-import type { CommunityReport, ReportCategory } from "../src/safety/community.js";
-import { DEFAULT_OPTIONS, DEFAULT_WEIGHTS, type Weights } from "../src/safety/parameters.js";
-import { scoreRoute } from "../src/safety/scoring.js";
-import type { Measurement } from "../src/safety/types.js";
-import { grid, MIDDLE_LON, NIGHT, NOON, poi, ROUTE_EAST, ROUTE_LAT, ROUTE_WEST, straightRoute, testCity } from "./fixtures.js";
+import type { CityIndex } from "#src/city/cityIndex.js";
+import { createHoursEvaluator } from "#src/city/openingHours.js";
+import { analyzeRoute } from "#src/safety/analyze.js";
+import type { CommunityReport, ReportCategory } from "#src/safety/community.js";
+import { DEFAULT_OPTIONS, DEFAULT_WEIGHTS, type Weights } from "#src/safety/parameters.js";
+import { scoreRoute } from "#src/safety/scoring.js";
+import type { Measurement } from "#src/safety/types.js";
+import { grid, MIDDLE_LON, NIGHT, NOON, poi, ROUTE_EAST, ROUTE_LAT, ROUTE_WEST, straightRoute, testCity } from "#test/fixtures.js";
 
 const analyse = (city: CityIndex, departAt: Date, reports: readonly CommunityReport[] = []) =>
   analyzeRoute({ route: straightRoute(), departAt, city, hours: createHoursEvaluator(city.data.center, 330), traffic: [], reports });

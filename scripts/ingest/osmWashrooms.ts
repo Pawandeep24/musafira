@@ -9,9 +9,9 @@
  *   pads          toilets:menstrual_products=yes|limited (OSM uses these only for free products)
  * A missing tag stays undefined, so the app can say "not recorded" instead of guessing.
  */
-import type { Washroom } from "../../src/city/cityData.js";
-import type { BBox } from "../../src/geo/geometry.js";
-import { fetchOverpass } from "./osmPois.js";
+import type { Washroom } from "#src/city/cityData.js";
+import type { BBox } from "#src/geo/geometry.js";
+import { fetchOverpass } from "#scripts/ingest/osmPois.js";
 
 const yesNo = (value: string | undefined, yes = "yes", no = "no") => (value === yes ? true : value === no ? false : undefined);
 const flag = <K extends string>(key: K, value: boolean | undefined) => (value === undefined ? {} : ({ [key]: value } as Record<K, boolean>));

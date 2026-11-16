@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import type { NamedPlace } from "../src/city/cityData.js";
-import type { LngLat } from "../src/geo/geometry.js";
-import { toNamedPlaces } from "../scripts/ingest/osmPlaces.js";
-import type { OverpassElement } from "../scripts/ingest/osmPois.js";
-import { testCity } from "./fixtures.js";
+import type { NamedPlace } from "#src/city/cityData.js";
+import type { LngLat } from "#src/geo/geometry.js";
+import { toNamedPlaces } from "#scripts/ingest/osmPlaces.js";
+import type { OverpassElement } from "#scripts/ingest/osmPois.js";
+import { testCity } from "#test/fixtures.js";
 
 const place = (id: string, name: string, [lon, lat]: LngLat, kind: NamedPlace["kind"] = "residence", aka?: string[]): NamedPlace => ({
   id,

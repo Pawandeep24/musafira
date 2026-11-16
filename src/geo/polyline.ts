@@ -1,4 +1,4 @@
-import type { LngLat } from "./geometry.js";
+import type { LngLat } from "#src/geo/geometry.js";
 
 /** Decodes a Google-format encoded polyline. Valhalla uses precision 6, Google uses 5. */
 export function decodePolyline(encoded: string, precision = 6): LngLat[] {

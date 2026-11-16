@@ -1,6 +1,6 @@
 import { FieldValue, Timestamp, type Firestore } from "firebase-admin/firestore";
 import { z } from "zod";
-import { REPORT_CATEGORIES, type CommunityReport } from "../safety/community.js";
+import { REPORT_CATEGORIES, type CommunityReport } from "#src/safety/community.js";
 
 export interface StoredReport extends CommunityReport {
   readonly cityId: string;

@@ -1,4 +1,4 @@
-import type { Language, SafeStopFeature, SafeStopHours, SafeStopKind, SafeStopProfile, Washroom, WashroomFacts } from "../api/types";
+import type { Language, SafeStopFeature, SafeStopHours, SafeStopKind, SafeStopProfile, Washroom, WashroomFacts } from "@/api/types";
 
 export const KIND_LABEL: Record<SafeStopKind, string> = {
   cafe: "Café or tea stall",

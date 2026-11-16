@@ -1,15 +1,15 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { cityDataSchema, type DataSource, type Grid } from "../../src/city/cityData.js";
-import { loadEnv } from "../../src/config/env.js";
-import { cachedJson } from "./cache.js";
-import { buildCellDensityGrid } from "./cellTowers.js";
-import { CITY_DEFINITIONS } from "./cities.js";
-import { cropNightLights } from "./nightLights.js";
-import { fetchOsmPlaceElements, toNamedPlaces } from "./osmPlaces.js";
-import { fetchOsmPois } from "./osmPois.js";
-import { toSights } from "./osmSights.js";
-import { fetchOsmWashrooms } from "./osmWashrooms.js";
+import { cityDataSchema, type DataSource, type Grid } from "#src/city/cityData.js";
+import { loadEnv } from "#src/config/env.js";
+import { cachedJson } from "#scripts/ingest/cache.js";
+import { buildCellDensityGrid } from "#scripts/ingest/cellTowers.js";
+import { CITY_DEFINITIONS } from "#scripts/ingest/cities.js";
+import { cropNightLights } from "#scripts/ingest/nightLights.js";
+import { fetchOsmPlaceElements, toNamedPlaces } from "#scripts/ingest/osmPlaces.js";
+import { fetchOsmPois } from "#scripts/ingest/osmPois.js";
+import { toSights } from "#scripts/ingest/osmSights.js";
+import { fetchOsmWashrooms } from "#scripts/ingest/osmWashrooms.js";
 
 const OUT_DIR = join(import.meta.dirname, "../../data/cities");
 

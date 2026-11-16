@@ -1,10 +1,10 @@
 import type { FastifyPluginAsync } from "fastify";
 import { z } from "zod";
-import { AppError, badRequest } from "../lib/errors.js";
-import type { RoutePlanner } from "../planner/routePlanner.js";
-import { DEFAULT_OPTIONS, DEFAULT_WEIGHTS, optionsSchema, weightsSchema } from "../safety/parameters.js";
-import { toPlanResponse } from "./planResponse.js";
-import { lngLatSchema } from "./schemas.js";
+import { AppError, badRequest } from "#src/lib/errors.js";
+import type { RoutePlanner } from "#src/planner/routePlanner.js";
+import { DEFAULT_OPTIONS, DEFAULT_WEIGHTS, optionsSchema, weightsSchema } from "#src/safety/parameters.js";
+import { toPlanResponse } from "#src/routes/planResponse.js";
+import { lngLatSchema } from "#src/routes/schemas.js";
 
 const MAX_PAST_MS = 60 * 60_000;
 const MAX_FUTURE_MS = 14 * 24 * 60 * 60_000;

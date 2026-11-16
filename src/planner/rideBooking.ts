@@ -25,13 +25,13 @@
  * unlinking ends their tracking too.
  */
 import { randomBytes, randomUUID } from "node:crypto";
-import type { CityIndex } from "../city/cityIndex.js";
-import { haversineMeters, type LngLat } from "../geo/geometry.js";
-import { measurePath, type MeasuredPath } from "../geo/path.js";
-import { AppError } from "../lib/errors.js";
-import { UpstreamError } from "../lib/http.js";
-import { TtlCache } from "../lib/ttlCache.js";
-import { measureCoverage, planCheckpoints, type Checkpoint } from "../rides/checkpoints.js";
+import type { CityIndex } from "#src/city/cityIndex.js";
+import { haversineMeters, type LngLat } from "#src/geo/geometry.js";
+import { measurePath, type MeasuredPath } from "#src/geo/path.js";
+import { AppError } from "#src/lib/errors.js";
+import { UpstreamError } from "#src/lib/http.js";
+import { TtlCache } from "#src/lib/ttlCache.js";
+import { measureCoverage, planCheckpoints, type Checkpoint } from "#src/rides/checkpoints.js";
 import {
   canDetour,
   demoSnapshot,
@@ -40,13 +40,13 @@ import {
   SHOWN_PICKUP_SECONDS,
   type DemoRide,
   type RideStatus,
-} from "../rides/demoRide.js";
-import { guardRide, type GuardState } from "../rides/guard.js";
-import type { ScoringOptions, Weights } from "../safety/parameters.js";
-import { scoreRoute } from "../safety/scoring.js";
-import type { CandidateRoute, RouteAnalysis } from "../safety/types.js";
-import type { CarRouter, RideDriver, RideEstimate, RideHailing, RideSearch } from "./ports.js";
-import type { RoutePlanner, StoredRoute } from "./routePlanner.js";
+} from "#src/rides/demoRide.js";
+import { guardRide, type GuardState } from "#src/rides/guard.js";
+import type { ScoringOptions, Weights } from "#src/safety/parameters.js";
+import { scoreRoute } from "#src/safety/scoring.js";
+import type { CandidateRoute, RouteAnalysis } from "#src/safety/types.js";
+import type { CarRouter, RideDriver, RideEstimate, RideHailing, RideSearch } from "#src/planner/ports.js";
+import type { RoutePlanner, StoredRoute } from "#src/planner/routePlanner.js";
 
 const LIVE_CITIES: ReadonlySet<string> = new Set(["bengaluru"]);
 const LIVE_WINDOW_MS = 15 * 60_000;

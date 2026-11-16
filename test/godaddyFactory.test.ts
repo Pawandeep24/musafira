@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import { loadEnv } from "../src/config/env.js";
-import { createGoDaddyClient } from "../src/integrations/godaddy/factory.js";
+import { loadEnv } from "#src/config/env.js";
+import { createGoDaddyClient } from "#src/integrations/godaddy/factory.js";
 
 const credentials = {
   GODADDY_OTE_API_KEY: "ote-key",

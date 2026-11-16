@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
-import { api, ApiError } from "../api/client";
-import type { Itinerary, Place, TripAnswers } from "../api/types";
+import { api, ApiError } from "@/api/client";
+import type { Itinerary, Place, TripAnswers } from "@/api/types";
 
 export type ItineraryStatus = "idle" | "planning" | "ready" | "error";
 

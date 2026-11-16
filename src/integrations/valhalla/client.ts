@@ -15,13 +15,13 @@
  * VALHALLA_URL at a self-hosted instance for anything beyond demos.
  */
 import { z } from "zod";
-import { haversineMeters, type LngLat } from "../../geo/geometry.js";
-import { measurePath } from "../../geo/path.js";
-import { decodePolyline } from "../../geo/polyline.js";
-import { AppError } from "../../lib/errors.js";
-import { fetchJson, UpstreamError } from "../../lib/http.js";
-import type { CarRouter, RouteProvider } from "../../planner/ports.js";
-import type { CandidateRoute, RoadSpan } from "../../safety/types.js";
+import { haversineMeters, type LngLat } from "#src/geo/geometry.js";
+import { measurePath } from "#src/geo/path.js";
+import { decodePolyline } from "#src/geo/polyline.js";
+import { AppError } from "#src/lib/errors.js";
+import { fetchJson, UpstreamError } from "#src/lib/http.js";
+import type { CarRouter, RouteProvider } from "#src/planner/ports.js";
+import type { CandidateRoute, RoadSpan } from "#src/safety/types.js";
 
 const SERVICE = "Routing service";
 const MATCH_SPACING_METERS = 20;

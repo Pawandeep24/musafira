@@ -10,13 +10,13 @@
  * decayed to almost nothing by then.
  */
 import { createHash } from "node:crypto";
-import type { CityRegistry } from "../city/cityRegistry.js";
-import type { ReportStore } from "../db/reportStore.js";
-import type { LngLat } from "../geo/geometry.js";
-import { AppError } from "../lib/errors.js";
-import { TtlCache } from "../lib/ttlCache.js";
-import { observedAtFor, spotOf, type CommunityReport, type ReportCategory, type ReportWhen } from "../safety/community.js";
-import type { ReportSource } from "./ports.js";
+import type { CityRegistry } from "#src/city/cityRegistry.js";
+import type { ReportStore } from "#src/db/reportStore.js";
+import type { LngLat } from "#src/geo/geometry.js";
+import { AppError } from "#src/lib/errors.js";
+import { TtlCache } from "#src/lib/ttlCache.js";
+import { observedAtFor, spotOf, type CommunityReport, type ReportCategory, type ReportWhen } from "#src/safety/community.js";
+import type { ReportSource } from "#src/planner/ports.js";
 
 const HOUR_MS = 3_600_000;
 const DAY_MS = 24 * HOUR_MS;

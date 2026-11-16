@@ -1,4 +1,4 @@
-import type { GoDaddyClient } from "./client.js";
+import type { GoDaddyClient } from "#src/integrations/godaddy/client.js";
 
 export interface DomainAvailability {
   available: boolean;

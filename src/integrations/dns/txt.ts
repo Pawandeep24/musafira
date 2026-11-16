@@ -8,7 +8,7 @@
  * its first label: `_musafira.sharmachai.in` → `sharmachai.in`.
  */
 import { Resolver } from "node:dns/promises";
-import { UpstreamError } from "../../lib/http.js";
+import { UpstreamError } from "#src/lib/http.js";
 
 const NO_RECORDS = new Set(["ENOTFOUND", "ENODATA"]);
 const MAX_NAMESERVERS = 2;

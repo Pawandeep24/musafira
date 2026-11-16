@@ -7,7 +7,7 @@
  *   ["fn", {}, "text", "GoDaddy.com, LLC"]
  */
 import { z } from "zod";
-import { fetchJson, UpstreamError } from "../../lib/http.js";
+import { fetchJson, UpstreamError } from "#src/lib/http.js";
 
 const SERVICE = "Domain registry";
 

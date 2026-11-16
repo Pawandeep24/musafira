@@ -1,5 +1,5 @@
 import type { StyleSpecification } from "maplibre-gl";
-import type { MapTheme } from "../state/useMapTheme";
+import type { MapTheme } from "@/state/useMapTheme";
 
 const NAME = ["coalesce", ["get", "name:en"], ["get", "name:latin"], ["get", "name"]] as const;
 const FONT_REGULAR = ["Noto Sans Regular"];

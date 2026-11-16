@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { api } from "../api/client";
-import type { AppConfig, ParameterId, Preferences, Preset, ScoringOptions } from "../api/types";
-import type { AuthState } from "../auth/useAuth";
+import { api } from "@/api/client";
+import type { AppConfig, ParameterId, Preferences, Preset, ScoringOptions } from "@/api/types";
+import type { AuthState } from "@/auth/useAuth";
 
 const STORAGE_KEY = "musafira.profile.v1";
 const REMOTE_SAVE_DELAY_MS = 800;

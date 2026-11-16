@@ -1,4 +1,4 @@
-import type { Ride } from "../api/types";
+import type { Ride } from "@/api/types";
 
 export type ShareResult = "shared" | "copied" | "failed";
 

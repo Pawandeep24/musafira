@@ -1,8 +1,8 @@
 import { z } from "zod";
-import type { PlaceKind } from "../../city/cityData.js";
-import type { BBox, LngLat } from "../../geo/geometry.js";
-import { fetchJson } from "../../lib/http.js";
-import type { Geocoder, Place } from "../../planner/ports.js";
+import type { PlaceKind } from "#src/city/cityData.js";
+import type { BBox, LngLat } from "#src/geo/geometry.js";
+import { fetchJson } from "#src/lib/http.js";
+import type { Geocoder, Place } from "#src/planner/ports.js";
 
 const BASE_URL = "https://api.heigit.org/pelias/v1";
 const LAYERS = "venue,address,street,neighbourhood,locality";

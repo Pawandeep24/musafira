@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { api } from "../api/client";
-import type { Place } from "../api/types";
-import { PlaceInput } from "./PlaceInput";
-import { IconButton } from "./ui/IconButton";
+import { api } from "@/api/client";
+import type { Place } from "@/api/types";
+import { PlaceInput } from "@/components/PlaceInput";
+import { IconButton } from "@/components/ui/IconButton";
 
 interface Props {
   cityId: string;

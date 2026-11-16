@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { City } from "../api/types";
+import type { City } from "@/api/types";
 
 const MAP_CREDITS = [
   { name: "OpenFreeMap", url: "https://openfreemap.org" },

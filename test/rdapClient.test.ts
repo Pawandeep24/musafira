@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import { RdapClient } from "../src/integrations/rdap/client.js";
-import { UpstreamError } from "../src/lib/http.js";
+import { RdapClient } from "#src/integrations/rdap/client.js";
+import { UpstreamError } from "#src/lib/http.js";
 
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status });
 const registrarEntity = (name: string) => ({ roles: ["registrar"], vcardArray: ["vcard", [["version", {}, "text", "4.0"], ["fn", {}, "text", name]]] });

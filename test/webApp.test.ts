@@ -2,8 +2,8 @@ import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { buildApp } from "../src/app.js";
-import { loadEnv } from "../src/config/env.js";
+import { buildApp } from "#src/app.js";
+import { loadEnv } from "#src/config/env.js";
 
 const env = loadEnv({ NODE_ENV: "test", LOG_LEVEL: "silent" });
 const verifier = { verify: async () => Promise.reject(new Error("no auth in this test")) };

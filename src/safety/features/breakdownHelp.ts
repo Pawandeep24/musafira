@@ -1,6 +1,6 @@
-import { proximity } from "../curves.js";
-import type { FeatureExtractor } from "../types.js";
-import { hoursQuality, midMeters, nearestAlong, openStopPositions } from "./along.js";
+import { proximity } from "#src/safety/curves.js";
+import type { FeatureExtractor } from "#src/safety/types.js";
+import { hoursQuality, midMeters, nearestAlong, openStopPositions } from "#src/safety/features/along.js";
 
 const HALF_SCORE_AT_METERS = 2000;
 

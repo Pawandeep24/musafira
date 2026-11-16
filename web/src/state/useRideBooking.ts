@@ -11,8 +11,8 @@
  * on route, so only a new departure from the route raises it again.
  */
 import { useEffect, useRef, useState } from "react";
-import { api, ApiError } from "../api/client";
-import type { Ride, RideEstimate, RideMode, RideOption, RideOptionKind, RideQuote, RideStatus, ScoringOptions, Weights } from "../api/types";
+import { api, ApiError } from "@/api/client";
+import type { Ride, RideEstimate, RideMode, RideOption, RideOptionKind, RideQuote, RideStatus, ScoringOptions, Weights } from "@/api/types";
 
 const SESSION_KEY = "musafira.nySession";
 const RIDE_KEY = "musafira.ride";

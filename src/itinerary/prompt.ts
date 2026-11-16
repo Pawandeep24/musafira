@@ -14,9 +14,9 @@
  * Anything else is dropped, so the model cannot add a place we don't have. The model never returns
  * times, routes or ratings; the scheduler computes times and gaps are filled from our ranking.
  */
-import type { TextRequest } from "../planner/ports.js";
-import type { Candidate } from "./candidates.js";
-import { dayCount, isMeal, type Slot, type TripRequest } from "./trip.js";
+import type { TextRequest } from "#src/planner/ports.js";
+import type { Candidate } from "#src/itinerary/candidates.js";
+import { dayCount, isMeal, type Slot, type TripRequest } from "#src/itinerary/trip.js";
 
 export interface Pick {
   readonly day: number;

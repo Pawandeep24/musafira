@@ -17,10 +17,10 @@
  * dark-stretch penalty either. The reported-stretch penalty has no slider and
  * always applies: harassment reports are not something a rider opts out of.
  */
-import { openStopPositions } from "./features/along.js";
-import { MAX_WEIGHT, PARAMETER_IDS, type ParameterId, type ScoringOptions, type Weights } from "./parameters.js";
-import { findStretches, longestGap } from "./stretches.js";
-import type { Measurement, RouteAnalysis, RouteScore, Stretch } from "./types.js";
+import { openStopPositions } from "#src/safety/features/along.js";
+import { MAX_WEIGHT, PARAMETER_IDS, type ParameterId, type ScoringOptions, type Weights } from "#src/safety/parameters.js";
+import { findStretches, longestGap } from "#src/safety/stretches.js";
+import type { Measurement, RouteAnalysis, RouteScore, Stretch } from "#src/safety/types.js";
 
 const MEAN_SHARE = 0.6;
 const WORST_SHARE_OF_LENGTH = 0.1;

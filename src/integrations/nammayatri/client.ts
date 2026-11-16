@@ -18,9 +18,9 @@
  */
 import { setTimeout as sleep } from "node:timers/promises";
 import { z } from "zod";
-import type { LngLat } from "../../geo/geometry.js";
-import { AppError } from "../../lib/errors.js";
-import { fetchJson, UpstreamError } from "../../lib/http.js";
+import type { LngLat } from "#src/geo/geometry.js";
+import { AppError } from "#src/lib/errors.js";
+import { fetchJson, UpstreamError } from "#src/lib/http.js";
 import type {
   RideBookingInfo,
   RideDriver,
@@ -30,7 +30,7 @@ import type {
   RideProgress,
   RideSearch,
   RideTrip,
-} from "../../planner/ports.js";
+} from "#src/planner/ports.js";
 
 const SERVICE = "Namma Yatri";
 const SHARE_URL = "https://www.nammayatri.in/u?vp=shareRide&rideId=";

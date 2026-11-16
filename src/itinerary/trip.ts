@@ -1,4 +1,4 @@
-import type { LngLat } from "../geo/geometry.js";
+import type { LngLat } from "#src/geo/geometry.js";
 
 export const TRIP_DAYS = [0.5, 1, 2, 3] as const;
 export const INTERESTS = ["food", "heritage", "temples", "nature", "markets", "cafes"] as const;

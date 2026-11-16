@@ -46,6 +46,7 @@ Run `npm run typecheck && npm test` after every API change, and `npm run web:typ
 - `web/src/map/` - MapLibre style, deck.gl scene layers, data dot-matrices
 - `web/src/components/` - presentational components, each with its own `.css` beside it; no fetching except place search
 - `web/src/components/ui/` - shared controls (`Button`, `ButtonLink`, `IconButton`, `LinkButton`, `ToggleChip`, `Segmented`, `Notice`, `Eyebrow`, `SheetHeader`) and their styles in `controls.css`
+- `web/src/styles/` - tokens, base, shared panels (`side-sheet.css`, `dialog.css`), motion and the responsive layer; `index.css` imports every stylesheet once in cascade order
 - `web/src/lib/` - pure helpers (formatting in city time, colours, track maths, route verdict)
 
 ## Where the non-obvious logic lives
@@ -89,8 +90,10 @@ Read the doc header before changing these:
 - Components receive data and callbacks; state lives in `web/src/state/` hooks and `App.tsx` wires them together.
 - Phones (760px and narrower) get their own layout, not a squeezed desktop: one draggable bottom sheet whose height (`--sheet-height`) drives every panel, the grip, the credits and the map padding; map tools on a right-edge rail; the trip folds into a summary once routes show. Keep tap targets at 40px or more, and leave desktop untouched by mobile changes.
 - All times shown to riders are in the city's time zone (`utcOffsetMinutes`), never the browser's. Use `web/src/lib/format.ts`.
-- Build buttons, chips, segmented controls, notices and panel headers from `web/src/components/ui/` rather than repeating their markup.
-- A component's styles sit beside it (`RideHud.css` next to `RideHud.tsx`); tokens, base, shared panels, motion and the responsive layer live in `web/src/styles/`. `main.tsx` loads `tokens.css`, then `styles/index.css`, which imports every other file once in cascade order; add new files there and keep `responsive.css` last. Use BEM-like class names (`block__element`, `is-state`); no inline styles except values computed at runtime.
+- Build buttons, chips, segmented controls, notices and panel headers from `web/src/components/ui/` rather than repeating their markup. When another control's markup repeats a third time, add it to `ui/` with its styles in `controls.css` and list it under Structure.
+- A new component is two files side by side in `web/src/components/`: `Name.tsx` and `Name.css` (`RideHud.tsx`, `RideHud.css`). Register the stylesheet with one `@import` in `styles/index.css`, placed in cascade order before `responsive.css`, which stays last. Components never import CSS themselves; `main.tsx` loads `tokens.css`, then `styles/index.css`.
+- Styles shared by several components go in `web/src/styles/`. Breakpoint overrides go in `responsive.css` and reduced-motion overrides in `motion.css`, never in a component's own file, so they come last in the cascade.
+- Use BEM-like class names (`block__element`, `is-state`); no inline styles except values computed at runtime.
 - The map follows the ride hour: the night basemap from 18:30 to 06:00 city time, the day basemap otherwise, until the rider switches it. Over the night basemap the deck.gl canvas is screen-blended, so light colours add glow; over the day basemap it blends normally, and scene colours go through `deepen` (`web/src/lib/colors.ts`) so pastels stay readable. Keep both basemaps low-contrast so safety colours carry the meaning, and keep their layer stacks identical so a switch is a paint-only diff.
 
 ## Design principles
@@ -107,7 +110,9 @@ Apply SOLID and common patterns where they remove real duplication or coupling, 
 ## TypeScript
 
 - Strict mode is on. No `any`; use `unknown` and narrow.
-- ESM with `.js` extensions in relative imports.
+- Import project files by their path from the source root, never with `./` or `../`. The API, tests and scripts use `#src/...`, `#test/...` and `#scripts/...` with a `.js` extension; the web app uses `@/...` without one, in CSS `@import`s too. Packages keep their bare names.
+- The API's `#` paths come from `imports` in `package.json`. Tools that read the sources (`tsc`, Vitest, and the npm scripts, which run `tsx --conditions=musafira-source`) resolve `#src/*` to `src/`; plain `node dist/server.js` resolves it to `dist/`. Run one-off files with `tsx --conditions=musafira-source`, since a bare `tsx` loads `dist/`.
+- No unused imports: `noUnusedLocals` is on in both tsconfigs, so the typecheck fails on one. Delete an import together with its last use.
 - Prefer small pure functions and `readonly`/`const`. Avoid classes unless they hold state or implement an interface.
 
 ## Security

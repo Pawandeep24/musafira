@@ -16,19 +16,19 @@
  * not logged. Traffic is snapshotted at plan time, which keeps rescoring deterministic.
  */
 import { randomUUID } from "node:crypto";
-import type { CityIndex } from "../city/cityIndex.js";
-import type { CityRegistry } from "../city/cityRegistry.js";
-import { createHoursEvaluator, type HoursEvaluator } from "../city/openingHours.js";
-import { bboxAround, type LngLat } from "../geo/geometry.js";
-import { measurePath, samplePositions } from "../geo/path.js";
-import { AppError } from "../lib/errors.js";
-import { TtlCache } from "../lib/ttlCache.js";
-import { analyzeRoute } from "../safety/analyze.js";
-import { spotsWithin, type SpotReport } from "../safety/community.js";
-import type { ScoringOptions, Weights } from "../safety/parameters.js";
-import { scoreRoute } from "../safety/scoring.js";
-import type { CandidateRoute, RouteAnalysis, RouteScore, TrafficSample } from "../safety/types.js";
-import type { ReportSource, RouteProvider, SafeStopSource, TrafficProvider, TrafficReading } from "./ports.js";
+import type { CityIndex } from "#src/city/cityIndex.js";
+import type { CityRegistry } from "#src/city/cityRegistry.js";
+import { createHoursEvaluator, type HoursEvaluator } from "#src/city/openingHours.js";
+import { bboxAround, type LngLat } from "#src/geo/geometry.js";
+import { measurePath, samplePositions } from "#src/geo/path.js";
+import { AppError } from "#src/lib/errors.js";
+import { TtlCache } from "#src/lib/ttlCache.js";
+import { analyzeRoute } from "#src/safety/analyze.js";
+import { spotsWithin, type SpotReport } from "#src/safety/community.js";
+import type { ScoringOptions, Weights } from "#src/safety/parameters.js";
+import { scoreRoute } from "#src/safety/scoring.js";
+import type { CandidateRoute, RouteAnalysis, RouteScore, TrafficSample } from "#src/safety/types.js";
+import type { ReportSource, RouteProvider, SafeStopSource, TrafficProvider, TrafficReading } from "#src/planner/ports.js";
 
 const LIVE_WINDOW_MS = 15 * 60_000;
 const TRAFFIC_SPACING_METERS = 2000;

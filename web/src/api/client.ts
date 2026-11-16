@@ -20,7 +20,7 @@ import type {
   VerifyChecks,
   WashroomsNear,
   Weights,
-} from "./types";
+} from "@/api/types";
 
 const SESSION_HEADER = "x-ny-session";
 

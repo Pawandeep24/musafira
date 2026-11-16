@@ -1,4 +1,4 @@
-import type { BBox, LngLat } from "../../src/geo/geometry.js";
+import type { BBox, LngLat } from "#src/geo/geometry.js";
 
 export interface CityDefinition {
   readonly id: string;

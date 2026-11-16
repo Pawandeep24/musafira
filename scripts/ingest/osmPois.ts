@@ -1,7 +1,7 @@
 import { z } from "zod";
-import type { Poi, PoiCategory } from "../../src/city/cityData.js";
-import type { BBox } from "../../src/geo/geometry.js";
-import { USER_AGENT } from "./cache.js";
+import type { Poi, PoiCategory } from "#src/city/cityData.js";
+import type { BBox } from "#src/geo/geometry.js";
+import { USER_AGENT } from "#scripts/ingest/cache.js";
 
 const OVERPASS_URL = "https://overpass-api.de/api/interpreter";
 

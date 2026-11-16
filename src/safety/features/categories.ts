@@ -1,4 +1,4 @@
-import type { PoiCategory } from "../../city/cityData.js";
+import type { PoiCategory } from "#src/city/cityData.js";
 
 export const STOREFRONTS: ReadonlySet<PoiCategory> = new Set([
   "shop",

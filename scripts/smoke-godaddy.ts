@@ -1,7 +1,7 @@
-import { loadEnv } from "../src/config/env.js";
-import { GoDaddyApiError } from "../src/integrations/godaddy/client.js";
-import { checkDomainAvailability } from "../src/integrations/godaddy/domains.js";
-import { createGoDaddyClient } from "../src/integrations/godaddy/factory.js";
+import { loadEnv } from "#src/config/env.js";
+import { GoDaddyApiError } from "#src/integrations/godaddy/client.js";
+import { checkDomainAvailability } from "#src/integrations/godaddy/domains.js";
+import { createGoDaddyClient } from "#src/integrations/godaddy/factory.js";
 
 const env = loadEnv();
 const domain = process.argv[2] ?? "my-hackathon-idea-2026.com";

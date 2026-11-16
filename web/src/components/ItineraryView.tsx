@@ -1,9 +1,9 @@
-import type { Itinerary, ItineraryLeg, ItineraryStop, SightKind, TripSlot } from "../api/types";
-import { cityTime, formatClock, formatDistance, formatDuration } from "../lib/format";
-import { Icon, type IconName } from "./Icon";
-import { LinkButton } from "./ui/LinkButton";
-import { Notice } from "./ui/Notice";
-import { Segmented } from "./ui/Segmented";
+import type { Itinerary, ItineraryLeg, ItineraryStop, SightKind, TripSlot } from "@/api/types";
+import { cityTime, formatClock, formatDistance, formatDuration } from "@/lib/format";
+import { Icon, type IconName } from "@/components/Icon";
+import { LinkButton } from "@/components/ui/LinkButton";
+import { Notice } from "@/components/ui/Notice";
+import { Segmented } from "@/components/ui/Segmented";
 
 const FREE_TIME_MINUTES = 30;
 const SLOT_LABEL: Record<TripSlot, string> = {

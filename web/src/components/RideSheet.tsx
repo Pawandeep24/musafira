@@ -1,18 +1,18 @@
 import { useEffect, useState } from "react";
-import type { RideEstimate, RideMode, RideOption, RideQuote } from "../api/types";
-import { formatClock, formatDistance, formatDuration } from "../lib/format";
-import type { RideBooking } from "../state/useRideBooking";
-import { ConfirmDialog } from "./ConfirmDialog";
-import { Icon, type IconName } from "./Icon";
-import { RideTracker } from "./RideTracker";
-import { ScoreRing } from "./ScoreRing";
-import { Button } from "./ui/Button";
-import { Eyebrow } from "./ui/Eyebrow";
-import { IconButton } from "./ui/IconButton";
-import { LinkButton } from "./ui/LinkButton";
-import { Notice } from "./ui/Notice";
-import { SheetHeader } from "./ui/SheetHeader";
-import { ToggleChip } from "./ui/ToggleChip";
+import type { RideEstimate, RideMode, RideOption, RideQuote } from "@/api/types";
+import { formatClock, formatDistance, formatDuration } from "@/lib/format";
+import type { RideBooking } from "@/state/useRideBooking";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { Icon, type IconName } from "@/components/Icon";
+import { RideTracker } from "@/components/RideTracker";
+import { ScoreRing } from "@/components/ScoreRing";
+import { Button } from "@/components/ui/Button";
+import { Eyebrow } from "@/components/ui/Eyebrow";
+import { IconButton } from "@/components/ui/IconButton";
+import { LinkButton } from "@/components/ui/LinkButton";
+import { Notice } from "@/components/ui/Notice";
+import { SheetHeader } from "@/components/ui/SheetHeader";
+import { ToggleChip } from "@/components/ui/ToggleChip";
 
 interface Props {
   booking: RideBooking;

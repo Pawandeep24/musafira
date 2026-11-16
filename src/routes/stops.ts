@@ -1,10 +1,10 @@
 import type { FastifyPluginAsync, preHandlerAsyncHookHandler } from "fastify";
 import { z } from "zod";
-import type { OpenState } from "../city/openingHours.js";
-import { AppError } from "../lib/errors.js";
-import type { SafeStops } from "../planner/safeStops.js";
-import { safeStopProfileSchema, verifyRecord, type SafeStop } from "../stops/safeStop.js";
-import type { RankedWashroom } from "../stops/washrooms.js";
+import type { OpenState } from "#src/city/openingHours.js";
+import { AppError } from "#src/lib/errors.js";
+import type { SafeStops } from "#src/planner/safeStops.js";
+import { safeStopProfileSchema, verifyRecord, type SafeStop } from "#src/stops/safeStop.js";
+import type { RankedWashroom } from "#src/stops/washrooms.js";
 
 const idParams = z.object({ id: z.string().regex(/^[A-Za-z0-9_-]{6,40}$/) });
 const ideasBody = z.object({ name: z.string().trim().min(2).max(60), cityId: z.string().max(40) }).strict();

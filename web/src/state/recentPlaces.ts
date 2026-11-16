@@ -1,4 +1,4 @@
-import type { Place } from "../api/types";
+import type { Place } from "@/api/types";
 
 const MAX_RECENT = 5;
 const storageKey = (cityId: string) => `musafira.recentPlaces.${cityId}`;

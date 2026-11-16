@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { api, ApiError } from "../api/client";
-import type { LngLat, WashroomsNear } from "../api/types";
-import { locateRider } from "../lib/locate";
-import type { WashroomFilter } from "../lib/safeStops";
+import { api, ApiError } from "@/api/client";
+import type { LngLat, WashroomsNear } from "@/api/types";
+import { locateRider } from "@/lib/locate";
+import type { WashroomFilter } from "@/lib/safeStops";
 
 type Status = "idle" | "locating" | "loading";
 

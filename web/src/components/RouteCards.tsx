@@ -1,9 +1,9 @@
-import type { Route } from "../api/types";
-import { formatClock, formatDistance, formatDuration } from "../lib/format";
-import { REPORT_META } from "../lib/reports";
-import { Icon } from "./Icon";
-import { SafetyStrip } from "./SafetyStrip";
-import { ScoreRing } from "./ScoreRing";
+import type { Route } from "@/api/types";
+import { formatClock, formatDistance, formatDuration } from "@/lib/format";
+import { REPORT_META } from "@/lib/reports";
+import { Icon } from "@/components/Icon";
+import { SafetyStrip } from "@/components/SafetyStrip";
+import { ScoreRing } from "@/components/ScoreRing";
 
 interface Props {
   routes: readonly Route[];

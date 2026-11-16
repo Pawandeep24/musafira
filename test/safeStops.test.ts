@@ -1,15 +1,15 @@
 import { describe, expect, it } from "vitest";
-import type { Poi } from "../src/city/cityData.js";
-import { createHoursEvaluator } from "../src/city/openingHours.js";
-import type { LngLat } from "../src/geo/geometry.js";
-import { RdapClient } from "../src/integrations/rdap/client.js";
-import { UpstreamError } from "../src/lib/http.js";
-import { analyzeRoute } from "../src/safety/analyze.js";
-import { DEFAULT_OPTIONS, DEFAULT_WEIGHTS } from "../src/safety/parameters.js";
-import { scoreRoute } from "../src/safety/scoring.js";
-import { domainIdeas, osmHours, safeStopProfileSchema, type SafeStop } from "../src/stops/safeStop.js";
-import { fuelStation, publicWashroom, rankWashrooms, safeStopWashroom } from "../src/stops/washrooms.js";
-import { MIDDLE_LON, NIGHT, poi, ROUTE_EAST, ROUTE_LAT, ROUTE_WEST, safeStopAnswers, straightRoute, testCity } from "./fixtures.js";
+import type { Poi } from "#src/city/cityData.js";
+import { createHoursEvaluator } from "#src/city/openingHours.js";
+import type { LngLat } from "#src/geo/geometry.js";
+import { RdapClient } from "#src/integrations/rdap/client.js";
+import { UpstreamError } from "#src/lib/http.js";
+import { analyzeRoute } from "#src/safety/analyze.js";
+import { DEFAULT_OPTIONS, DEFAULT_WEIGHTS } from "#src/safety/parameters.js";
+import { scoreRoute } from "#src/safety/scoring.js";
+import { domainIdeas, osmHours, safeStopProfileSchema, type SafeStop } from "#src/stops/safeStop.js";
+import { fuelStation, publicWashroom, rankWashrooms, safeStopWashroom } from "#src/stops/washrooms.js";
+import { MIDDLE_LON, NIGHT, poi, ROUTE_EAST, ROUTE_LAT, ROUTE_WEST, safeStopAnswers, straightRoute, testCity } from "#test/fixtures.js";
 
 const METERS_PER_DEGREE_LON = 105_500;
 const east = (meters: number): LngLat => [MIDDLE_LON + meters / METERS_PER_DEGREE_LON, ROUTE_LAT];

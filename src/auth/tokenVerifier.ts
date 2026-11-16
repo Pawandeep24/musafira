@@ -1,6 +1,6 @@
 import { getAuth } from "firebase-admin/auth";
 import type { App } from "firebase-admin/app";
-import { unauthorized } from "../lib/errors.js";
+import { unauthorized } from "#src/lib/errors.js";
 
 /** The identity we expose to the rest of the app - decoupled from Firebase's types. */
 export interface AuthUser {

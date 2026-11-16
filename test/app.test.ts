@@ -1,9 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
-import { buildApp } from "../src/app.js";
-import type { TokenVerifier } from "../src/auth/tokenVerifier.js";
-import { loadEnv } from "../src/config/env.js";
-import { GoDaddyApiError, type GoDaddyClient } from "../src/integrations/godaddy/client.js";
-import { unauthorized } from "../src/lib/errors.js";
+import { buildApp } from "#src/app.js";
+import type { TokenVerifier } from "#src/auth/tokenVerifier.js";
+import { loadEnv } from "#src/config/env.js";
+import { GoDaddyApiError, type GoDaddyClient } from "#src/integrations/godaddy/client.js";
+import { unauthorized } from "#src/lib/errors.js";
 
 const env = loadEnv({ NODE_ENV: "test", LOG_LEVEL: "silent" });
 

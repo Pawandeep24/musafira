@@ -1,5 +1,5 @@
-import type { Grid, LngLat } from "../api/types";
-import type { Rgba } from "../lib/colors";
+import type { Grid, LngLat } from "@/api/types";
+import type { Rgba } from "@/lib/colors";
 
 export interface GridDot {
   readonly position: LngLat;

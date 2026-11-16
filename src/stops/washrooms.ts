@@ -15,10 +15,10 @@
  * Ties go to the nearer place. Every fact is returned so the client can filter without
  * another request.
  */
-import type { Poi, Washroom } from "../city/cityData.js";
-import type { HoursSubject, OpenState } from "../city/openingHours.js";
-import { haversineMeters, type LngLat } from "../geo/geometry.js";
-import { osmHours, type SafeStop } from "./safeStop.js";
+import type { Poi, Washroom } from "#src/city/cityData.js";
+import type { HoursSubject, OpenState } from "#src/city/openingHours.js";
+import { haversineMeters, type LngLat } from "#src/geo/geometry.js";
+import { osmHours, type SafeStop } from "#src/stops/safeStop.js";
 
 const RADIUS_METERS = 4000;
 const DETOUR = 1.3;

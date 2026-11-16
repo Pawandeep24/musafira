@@ -1,5 +1,5 @@
-import { saturate } from "../curves.js";
-import type { FeatureExtractor, Measurement } from "../types.js";
+import { saturate } from "#src/safety/curves.js";
+import type { FeatureExtractor, Measurement } from "#src/safety/types.js";
 
 const ROAD_LIGHTING: Readonly<Record<string, number>> = {
   trunk: 0.85,

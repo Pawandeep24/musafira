@@ -1,8 +1,8 @@
-import type { Poi } from "../city/cityData.js";
-import type { Place } from "../city/placeSearch.js";
-import type { BBox, LngLat } from "../geo/geometry.js";
-import type { CommunityReport } from "../safety/community.js";
-import type { CandidateRoute, RoadSpan } from "../safety/types.js";
+import type { Poi } from "#src/city/cityData.js";
+import type { Place } from "#src/city/placeSearch.js";
+import type { BBox, LngLat } from "#src/geo/geometry.js";
+import type { CommunityReport } from "#src/safety/community.js";
+import type { CandidateRoute, RoadSpan } from "#src/safety/types.js";
 
 export type { Place };
 

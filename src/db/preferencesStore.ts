@@ -1,6 +1,6 @@
 import { FieldValue, type Firestore } from "firebase-admin/firestore";
 import { z } from "zod";
-import { optionsSchema, weightsSchema, type ScoringOptions, type Weights } from "../safety/parameters.js";
+import { optionsSchema, weightsSchema, type ScoringOptions, type Weights } from "#src/safety/parameters.js";
 
 export interface Preferences {
   readonly weights: Weights;

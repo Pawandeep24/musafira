@@ -13,9 +13,9 @@ import { pipeline } from "node:stream/promises";
 import type { ReadableStream as WebReadableStream } from "node:stream/web";
 import h5wasm from "h5wasm/node";
 import { z } from "zod";
-import type { Grid } from "../../src/city/cityData.js";
-import type { BBox } from "../../src/geo/geometry.js";
-import { RAW_DIR, USER_AGENT } from "./cache.js";
+import type { Grid } from "#src/city/cityData.js";
+import type { BBox } from "#src/geo/geometry.js";
+import { RAW_DIR, USER_AGENT } from "#scripts/ingest/cache.js";
 
 const DATA_FIELDS = "HDFEOS/GRIDS/VIIRS_Grid_DNB_2d/Data Fields";
 const RADIANCE = `${DATA_FIELDS}/AllAngle_Composite_Snow_Free`;

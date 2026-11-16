@@ -12,10 +12,10 @@
  * morning stop and the walk starts there (breakfast near the first sight), otherwise at the base.
  * Empty days get two sights in each sight slot; a day the AI planned only gets its missing slots.
  */
-import { haversineMeters, type LngLat } from "../geo/geometry.js";
-import type { Candidate, EateryKind } from "./candidates.js";
-import type { Pick } from "./prompt.js";
-import { isMeal, type Slot } from "./trip.js";
+import { haversineMeters, type LngLat } from "#src/geo/geometry.js";
+import type { Candidate, EateryKind } from "#src/itinerary/candidates.js";
+import type { Pick } from "#src/itinerary/prompt.js";
+import { isMeal, type Slot } from "#src/itinerary/trip.js";
 
 const NEAR_WEIGHT = 1;
 const PREFERRED_BONUS = 0.8;

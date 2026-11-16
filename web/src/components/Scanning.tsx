@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Icon, type IconName } from "./Icon";
+import { Icon, type IconName } from "@/components/Icon";
 
 const STEPS: readonly { icon: IconName; text: string }[] = [
   { icon: "roadType", text: "Finding two-wheeler routes" },

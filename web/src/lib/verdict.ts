@@ -1,5 +1,5 @@
-import type { ParameterInfo, Route } from "../api/types";
-import { formatDistance } from "./format";
+import type { ParameterInfo, Route } from "@/api/types";
+import { formatDistance } from "@/lib/format";
 
 const RISKY_SCORE = 30;
 

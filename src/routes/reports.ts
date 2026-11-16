@@ -1,9 +1,9 @@
 import type { FastifyPluginAsync, preHandlerAsyncHookHandler } from "fastify";
 import { z } from "zod";
-import { AppError } from "../lib/errors.js";
-import type { CommunityReports } from "../planner/communityReports.js";
-import { REPORT_CATEGORIES, REPORT_WHEN } from "../safety/community.js";
-import { lngLatSchema } from "./schemas.js";
+import { AppError } from "#src/lib/errors.js";
+import type { CommunityReports } from "#src/planner/communityReports.js";
+import { REPORT_CATEGORIES, REPORT_WHEN } from "#src/safety/community.js";
+import { lngLatSchema } from "#src/routes/schemas.js";
 
 const reportBody = z
   .object({

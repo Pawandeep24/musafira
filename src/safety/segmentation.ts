@@ -1,6 +1,6 @@
-import type { LngLat } from "../geo/geometry.js";
-import { measurePath } from "../geo/path.js";
-import type { CandidateRoute, RoadSpan } from "./types.js";
+import type { LngLat } from "#src/geo/geometry.js";
+import { measurePath } from "#src/geo/path.js";
+import type { CandidateRoute, RoadSpan } from "#src/safety/types.js";
 
 export interface RawSegment {
   readonly index: number;

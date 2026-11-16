@@ -1,8 +1,8 @@
-import type { NearbyPoi } from "../city/cityIndex.js";
-import type { PoiCategory } from "../city/cityData.js";
-import type { LngLat } from "../geo/geometry.js";
-import type { RouteReport } from "./community.js";
-import type { ParameterId } from "./parameters.js";
+import type { NearbyPoi } from "#src/city/cityIndex.js";
+import type { PoiCategory } from "#src/city/cityData.js";
+import type { LngLat } from "#src/geo/geometry.js";
+import type { RouteReport } from "#src/safety/community.js";
+import type { ParameterId } from "#src/safety/parameters.js";
 
 /** A feature value in 0..1, "missing" when data is absent, "n/a" when it does not apply (e.g. lighting by day). */
 export type Measurement = number | "missing" | "n/a";

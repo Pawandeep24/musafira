@@ -1,12 +1,12 @@
 import { useState } from "react";
-import type { Ride, RideStatus } from "../api/types";
-import type { RideBooking } from "../state/useRideBooking";
-import { ConfirmDialog } from "./ConfirmDialog";
-import { Icon } from "./Icon";
-import { Button, ButtonLink } from "./ui/Button";
-import { LinkButton } from "./ui/LinkButton";
-import { Notice } from "./ui/Notice";
-import { SheetHeader } from "./ui/SheetHeader";
+import type { Ride, RideStatus } from "@/api/types";
+import type { RideBooking } from "@/state/useRideBooking";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { Icon } from "@/components/Icon";
+import { Button, ButtonLink } from "@/components/ui/Button";
+import { LinkButton } from "@/components/ui/LinkButton";
+import { Notice } from "@/components/ui/Notice";
+import { SheetHeader } from "@/components/ui/SheetHeader";
 
 const STAGES: readonly { status: RideStatus; label: string }[] = [
   { status: "searching", label: "Finding" },

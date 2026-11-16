@@ -12,10 +12,10 @@
  * One place mapped twice (Aga Khan Palace as a monument and an attraction) merges by name within
  * MERGE_METERS, keeping the famous one, then the first by KIND_ORDER.
  */
-import type { Sight, SightKind } from "../../src/city/cityData.js";
-import { foldText } from "../../src/city/placeSearch.js";
-import { haversineMeters } from "../../src/geo/geometry.js";
-import type { OverpassElement } from "./osmPois.js";
+import type { Sight, SightKind } from "#src/city/cityData.js";
+import { foldText } from "#src/city/placeSearch.js";
+import { haversineMeters } from "#src/geo/geometry.js";
+import type { OverpassElement } from "#scripts/ingest/osmPois.js";
 
 const MERGE_METERS = 500;
 const KIND_ORDER: readonly SightKind[] = ["heritage", "museum", "worship", "nature", "market", "attraction"];

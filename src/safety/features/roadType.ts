@@ -1,4 +1,4 @@
-import type { FeatureExtractor, Measurement } from "../types.js";
+import type { FeatureExtractor, Measurement } from "#src/safety/types.js";
 
 const ROAD_SAFETY: Readonly<Record<string, number>> = {
   primary: 1,

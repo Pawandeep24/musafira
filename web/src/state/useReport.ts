@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { api, ApiError } from "../api/client";
-import type { LngLat, ReportCategory, ReportWhen } from "../api/types";
-import type { AuthState } from "../auth/useAuth";
-import { locateRider } from "../lib/locate";
+import { api, ApiError } from "@/api/client";
+import type { LngLat, ReportCategory, ReportWhen } from "@/api/types";
+import type { AuthState } from "@/auth/useAuth";
+import { locateRider } from "@/lib/locate";
 
 type Status = "idle" | "locating" | "sending";
 

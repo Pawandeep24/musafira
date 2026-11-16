@@ -7,8 +7,8 @@
  * absorbs single GPS jumps between tall buildings; one position back on the route clears it.
  * Progress is the latest position projected onto the route, as a share of its length.
  */
-import type { LngLat } from "../geo/geometry.js";
-import { nearestOnPath, type MeasuredPath } from "../geo/path.js";
+import type { LngLat } from "#src/geo/geometry.js";
+import { nearestOnPath, type MeasuredPath } from "#src/geo/path.js";
 
 export const OFF_ROUTE_METERS = 100;
 export const OFF_ROUTE_POINTS = 3;

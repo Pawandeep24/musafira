@@ -1,13 +1,13 @@
 import { useState } from "react";
-import type { LngLat, ReportCategory, ReportWhen } from "../api/types";
-import { REPORT_META, REPORT_WHEN } from "../lib/reports";
-import { Icon } from "./Icon";
-import { Button } from "./ui/Button";
-import { IconButton } from "./ui/IconButton";
-import { LinkButton } from "./ui/LinkButton";
-import { Notice } from "./ui/Notice";
-import { SheetHeader } from "./ui/SheetHeader";
-import { ToggleChip } from "./ui/ToggleChip";
+import type { LngLat, ReportCategory, ReportWhen } from "@/api/types";
+import { REPORT_META, REPORT_WHEN } from "@/lib/reports";
+import { Icon } from "@/components/Icon";
+import { Button } from "@/components/ui/Button";
+import { IconButton } from "@/components/ui/IconButton";
+import { LinkButton } from "@/components/ui/LinkButton";
+import { Notice } from "@/components/ui/Notice";
+import { SheetHeader } from "@/components/ui/SheetHeader";
+import { ToggleChip } from "@/components/ui/ToggleChip";
 
 const PROBLEMS: readonly ReportCategory[] = ["poorlyLit", "deserted", "harassment", "loitering", "badRoad", "waterlogged", "noSignal"];
 const GOOD_SIGNS: readonly ReportCategory[] = ["wellLit", "busy", "policeNearby"];

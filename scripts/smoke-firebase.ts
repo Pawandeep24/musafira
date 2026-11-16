@@ -1,9 +1,9 @@
 import { getAuth } from "firebase-admin/auth";
-import { buildApp } from "../src/app.js";
-import { getFirebaseApp } from "../src/auth/firebaseApp.js";
-import { FirebaseTokenVerifier } from "../src/auth/tokenVerifier.js";
-import { loadEnv } from "../src/config/env.js";
-import { getDb } from "../src/db/firestore.js";
+import { buildApp } from "#src/app.js";
+import { getFirebaseApp } from "#src/auth/firebaseApp.js";
+import { FirebaseTokenVerifier } from "#src/auth/tokenVerifier.js";
+import { loadEnv } from "#src/config/env.js";
+import { getDb } from "#src/db/firestore.js";
 
 const env = loadEnv();
 if (!env.FIREBASE_WEB_API_KEY) {

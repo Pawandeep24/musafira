@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
-import type { Poi } from "../src/city/cityData.js";
-import { createHoursEvaluator } from "../src/city/openingHours.js";
+import type { Poi } from "#src/city/cityData.js";
+import { createHoursEvaluator } from "#src/city/openingHours.js";
 
 const evaluator = () => createHoursEvaluator([73.8567, 18.5204], 330);
 const place = (cat: Poi["cat"], hours?: string): Poi => ({ id: "p", lon: 73.85, lat: 18.52, cat, ...(hours ? { hours } : {}) });

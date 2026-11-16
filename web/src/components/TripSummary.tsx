@@ -1,7 +1,7 @@
-import type { Place } from "../api/types";
-import { cityHour, dayLabel, formatClock, isNightHour } from "../lib/format";
-import type { Departure } from "../state/usePlanner";
-import { Icon } from "./Icon";
+import type { Place } from "@/api/types";
+import { cityHour, dayLabel, formatClock, isNightHour } from "@/lib/format";
+import type { Departure } from "@/state/usePlanner";
+import { Icon } from "@/components/Icon";
 
 interface Props {
   from: Place;

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { isNightHour } from "../lib/format";
+import { isNightHour } from "@/lib/format";
 
 export type MapTheme = "day" | "night";
 

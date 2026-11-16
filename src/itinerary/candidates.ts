@@ -17,12 +17,12 @@
  * mapped twice (same name once folded and doubled letters collapsed, within DUPLICATE_METERS) is
  * offered once.
  */
-import type { CityIndex } from "../city/cityIndex.js";
-import type { PoiCategory, SightKind } from "../city/cityData.js";
-import type { HoursSubject } from "../city/openingHours.js";
-import { foldText } from "../city/placeSearch.js";
-import { haversineMeters, type LngLat } from "../geo/geometry.js";
-import type { Interest, TripDays, TripRequest } from "./trip.js";
+import type { CityIndex } from "#src/city/cityIndex.js";
+import type { PoiCategory, SightKind } from "#src/city/cityData.js";
+import type { HoursSubject } from "#src/city/openingHours.js";
+import { foldText } from "#src/city/placeSearch.js";
+import { haversineMeters, type LngLat } from "#src/geo/geometry.js";
+import type { Interest, TripDays, TripRequest } from "#src/itinerary/trip.js";
 
 export type CandidateType = "eat" | "see";
 export type EateryKind = Extract<PoiCategory, "restaurant" | "cafe" | "fast_food">;

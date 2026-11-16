@@ -1,7 +1,7 @@
 import type { FastifyPluginAsync, preHandlerAsyncHookHandler } from "fastify";
 import { FieldValue, type Firestore } from "firebase-admin/firestore";
-import { preferencesSchema, type PreferencesStore } from "../db/preferencesStore.js";
-import { AppError } from "../lib/errors.js";
+import { preferencesSchema, type PreferencesStore } from "#src/db/preferencesStore.js";
+import { AppError } from "#src/lib/errors.js";
 
 interface Deps {
   requireAuth: preHandlerAsyncHookHandler;

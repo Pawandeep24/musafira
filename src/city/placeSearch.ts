@@ -20,8 +20,8 @@
  * STREET_MERGE_METERS) collapse into the best ranked one, since OSM maps a society as a compound plus
  * each tower and a street as many ways.
  */
-import { haversineMeters, type LngLat } from "../geo/geometry.js";
-import type { CityData, PlaceKind } from "./cityData.js";
+import { haversineMeters, type LngLat } from "#src/geo/geometry.js";
+import type { CityData, PlaceKind } from "#src/city/cityData.js";
 
 export interface Place {
   readonly id: string;

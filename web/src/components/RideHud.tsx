@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
-import type { Route, Segment, Stretch } from "../api/types";
-import { CATEGORY_LABEL, safetyCss } from "../lib/colors";
-import { formatClock, formatDistance } from "../lib/format";
-import { previewMetersAt, type PreviewCamera, type RidePreview } from "../state/ridePreview";
-import { Icon, type IconName } from "./Icon";
-import { SafetyStrip } from "./SafetyStrip";
-import { Button } from "./ui/Button";
-import { IconButton } from "./ui/IconButton";
-import { Segmented } from "./ui/Segmented";
+import type { Route, Segment, Stretch } from "@/api/types";
+import { CATEGORY_LABEL, safetyCss } from "@/lib/colors";
+import { formatClock, formatDistance } from "@/lib/format";
+import { previewMetersAt, type PreviewCamera, type RidePreview } from "@/state/ridePreview";
+import { Icon, type IconName } from "@/components/Icon";
+import { SafetyStrip } from "@/components/SafetyStrip";
+import { Button } from "@/components/ui/Button";
+import { IconButton } from "@/components/ui/IconButton";
+import { Segmented } from "@/components/ui/Segmented";
 
 interface Props {
   route: Route;

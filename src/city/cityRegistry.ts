@@ -1,8 +1,8 @@
 import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
-import type { LngLat } from "../geo/geometry.js";
-import { cityDataSchema } from "./cityData.js";
-import { CityIndex } from "./cityIndex.js";
+import type { LngLat } from "#src/geo/geometry.js";
+import { cityDataSchema } from "#src/city/cityData.js";
+import { CityIndex } from "#src/city/cityIndex.js";
 
 export interface CityRegistry {
   readonly cities: readonly CityIndex[];

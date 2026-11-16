@@ -1,16 +1,16 @@
 import { useState } from "react";
-import type { Language, SafeStopFeature, SafeStopKind } from "../api/types";
-import { CARE_FEATURES, KIND_LABEL, LANGUAGE_LABEL, WASHROOM_FEATURES, type FeatureGroup } from "../lib/safeStops";
-import { STEPS, type Step, type StopOnboardingState } from "../state/useStopOnboarding";
-import { Icon } from "./Icon";
-import { Button, ButtonLink } from "./ui/Button";
-import { Eyebrow } from "./ui/Eyebrow";
-import { IconButton } from "./ui/IconButton";
-import { LinkButton } from "./ui/LinkButton";
-import { Notice } from "./ui/Notice";
-import { Segmented } from "./ui/Segmented";
-import { SheetHeader } from "./ui/SheetHeader";
-import { ToggleChip } from "./ui/ToggleChip";
+import type { Language, SafeStopFeature, SafeStopKind } from "@/api/types";
+import { CARE_FEATURES, KIND_LABEL, LANGUAGE_LABEL, WASHROOM_FEATURES, type FeatureGroup } from "@/lib/safeStops";
+import { STEPS, type Step, type StopOnboardingState } from "@/state/useStopOnboarding";
+import { Icon } from "@/components/Icon";
+import { Button, ButtonLink } from "@/components/ui/Button";
+import { Eyebrow } from "@/components/ui/Eyebrow";
+import { IconButton } from "@/components/ui/IconButton";
+import { LinkButton } from "@/components/ui/LinkButton";
+import { Notice } from "@/components/ui/Notice";
+import { Segmented } from "@/components/ui/Segmented";
+import { SheetHeader } from "@/components/ui/SheetHeader";
+import { ToggleChip } from "@/components/ui/ToggleChip";
 
 const STEP_LABEL: Record<Step, string> = {
   place: "Place",

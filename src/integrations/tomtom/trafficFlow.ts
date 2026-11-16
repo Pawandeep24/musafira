@@ -1,7 +1,7 @@
 import { z } from "zod";
-import type { LngLat } from "../../geo/geometry.js";
-import { fetchJson } from "../../lib/http.js";
-import type { TrafficProvider, TrafficReading } from "../../planner/ports.js";
+import type { LngLat } from "#src/geo/geometry.js";
+import { fetchJson } from "#src/lib/http.js";
+import type { TrafficProvider, TrafficReading } from "#src/planner/ports.js";
 
 const BASE_URL = "https://api.tomtom.com/traffic/services/4/flowSegmentData/absolute/10/json";
 

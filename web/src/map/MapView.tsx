@@ -17,17 +17,17 @@ import { LngLatBounds, Map as MapLibreMap, setWorkerUrl, type IControl } from "m
 import "maplibre-gl/dist/maplibre-gl.css";
 import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?url";
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { City, ItineraryStop, LngLat, Route, Stop, TripReport, Washroom } from "../api/types";
-import { CATEGORY_LABEL } from "../lib/colors";
-import { formatClock, formatDistance } from "../lib/format";
-import { reportAge, reportSummary } from "../lib/reports";
-import { SOURCE_LABEL, washroomName } from "../lib/safeStops";
-import { bearing, pointAt, trackOf, type Track } from "../lib/track";
-import { PREVIEW_CAMERAS, PREVIEW_LEAD_IN_MS, previewMetersAt, RESUME_LEAD_IN_MS, type PreviewCamera, type RidePreview } from "../state/ridePreview";
-import type { MapTheme } from "../state/useMapTheme";
-import type { GridDot } from "./gridDots";
-import { BASEMAPS } from "./mapStyle";
-import { sceneLayers, type RideScene, type TripScene } from "./sceneLayers";
+import type { City, ItineraryStop, LngLat, Route, Stop, TripReport, Washroom } from "@/api/types";
+import { CATEGORY_LABEL } from "@/lib/colors";
+import { formatClock, formatDistance } from "@/lib/format";
+import { reportAge, reportSummary } from "@/lib/reports";
+import { SOURCE_LABEL, washroomName } from "@/lib/safeStops";
+import { bearing, pointAt, trackOf, type Track } from "@/lib/track";
+import { PREVIEW_CAMERAS, PREVIEW_LEAD_IN_MS, previewMetersAt, RESUME_LEAD_IN_MS, type PreviewCamera, type RidePreview } from "@/state/ridePreview";
+import type { MapTheme } from "@/state/useMapTheme";
+import type { GridDot } from "@/map/gridDots";
+import { BASEMAPS } from "@/map/mapStyle";
+import { sceneLayers, type RideScene, type TripScene } from "@/map/sceneLayers";
 
 export interface Insets {
   readonly top: number;

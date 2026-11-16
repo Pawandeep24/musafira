@@ -6,10 +6,10 @@
  * Requests run sequentially with a pause to respect the service.
  */
 import { z } from "zod";
-import type { Grid } from "../../src/city/cityData.js";
-import type { BBox } from "../../src/geo/geometry.js";
-import { haversineMeters } from "../../src/geo/geometry.js";
-import { sleep, USER_AGENT } from "./cache.js";
+import type { Grid } from "#src/city/cityData.js";
+import type { BBox } from "#src/geo/geometry.js";
+import { haversineMeters } from "#src/geo/geometry.js";
+import { sleep, USER_AGENT } from "#scripts/ingest/cache.js";
 
 const CELL_DEGREES = 0.018;
 const PAUSE_MS = 250;

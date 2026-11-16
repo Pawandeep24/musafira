@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
-import { ValhallaClient } from "../src/integrations/valhalla/client.js";
-import { AppError } from "../src/lib/errors.js";
-import { encodePolyline } from "./fixtures.js";
+import { ValhallaClient } from "#src/integrations/valhalla/client.js";
+import { AppError } from "#src/lib/errors.js";
+import { encodePolyline } from "#test/fixtures.js";
 
 const shape = [
   [73.8, 18.52],

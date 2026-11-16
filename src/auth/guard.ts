@@ -1,6 +1,6 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
-import { forbidden, unauthorized } from "../lib/errors.js";
-import type { AuthUser, TokenVerifier } from "./tokenVerifier.js";
+import { forbidden, unauthorized } from "#src/lib/errors.js";
+import type { AuthUser, TokenVerifier } from "#src/auth/tokenVerifier.js";
 
 declare module "fastify" {
   interface FastifyRequest {

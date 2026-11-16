@@ -15,12 +15,12 @@
  * A leg is dark when the sun is below civil twilight at its midpoint, at its middle minute.
  */
 import { getTimes } from "suncalc";
-import type { HoursEvaluator, OpenState } from "../city/openingHours.js";
-import { haversineMeters, interpolate, type LngLat } from "../geo/geometry.js";
-import { isDark } from "../safety/daylight.js";
-import type { Candidate } from "./candidates.js";
-import type { Pick } from "./prompt.js";
-import { SLOTS, type BackBy, type Slot, type TripRequest } from "./trip.js";
+import type { HoursEvaluator, OpenState } from "#src/city/openingHours.js";
+import { haversineMeters, interpolate, type LngLat } from "#src/geo/geometry.js";
+import { isDark } from "#src/safety/daylight.js";
+import type { Candidate } from "#src/itinerary/candidates.js";
+import type { Pick } from "#src/itinerary/prompt.js";
+import { SLOTS, type BackBy, type Slot, type TripRequest } from "#src/itinerary/trip.js";
 
 export interface ScheduledStop extends Pick {
   readonly arriveAt: Date;

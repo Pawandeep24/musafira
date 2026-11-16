@@ -16,8 +16,8 @@
  * the route past MAX_LENGTH_RATIO of the safe route's length (a loop around a one-way block),
  * ends the search and the best set so far is kept.
  */
-import { distancesToPathMeters, type LngLat } from "../geo/geometry.js";
-import { measurePath, type MeasuredPath } from "../geo/path.js";
+import { distancesToPathMeters, type LngLat } from "#src/geo/geometry.js";
+import { measurePath, type MeasuredPath } from "#src/geo/path.js";
 
 export const ON_ROUTE_METERS = 40;
 export const MAX_CHECKPOINTS = 3;

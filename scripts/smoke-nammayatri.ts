@@ -1,7 +1,7 @@
-import { loadEnv } from "../src/config/env.js";
-import { NammaYatriApiError, NammaYatriClient } from "../src/integrations/nammayatri/client.js";
-import { AppError } from "../src/lib/errors.js";
-import type { RideEstimate, RidePlace } from "../src/planner/ports.js";
+import { loadEnv } from "#src/config/env.js";
+import { NammaYatriApiError, NammaYatriClient } from "#src/integrations/nammayatri/client.js";
+import { AppError } from "#src/lib/errors.js";
+import type { RideEstimate, RidePlace } from "#src/planner/ports.js";
 
 const code = process.argv[2]?.trim() ?? "";
 const mobileNumber = process.argv[3]?.replace(/[\s-]/g, "");

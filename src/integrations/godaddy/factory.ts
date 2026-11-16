@@ -1,6 +1,6 @@
-import type { Env } from "../../config/env.js";
-import { GoDaddyClient } from "./client.js";
-import { StaticTokenProvider } from "./tokenProvider.js";
+import type { Env } from "#src/config/env.js";
+import { GoDaddyClient } from "#src/integrations/godaddy/client.js";
+import { StaticTokenProvider } from "#src/integrations/godaddy/tokenProvider.js";
 
 export function createGoDaddyClient(env: Env): GoDaddyClient | undefined {
   const credentials =

@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Icon, type IconName } from "../Icon";
+import { Icon, type IconName } from "@/components/Icon";
 
 export function Eyebrow({ icon, children }: { icon?: IconName; children: ReactNode }) {
   return (

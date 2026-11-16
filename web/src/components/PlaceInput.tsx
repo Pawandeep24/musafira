@@ -1,9 +1,9 @@
 import { useEffect, useId, useState } from "react";
-import { api } from "../api/client";
-import type { LngLat, Place, PlaceKind } from "../api/types";
-import { matchedRuns } from "../lib/matchedRuns";
-import { recentPlaces, rememberPlace } from "../state/recentPlaces";
-import { Icon, type IconName } from "./Icon";
+import { api } from "@/api/client";
+import type { LngLat, Place, PlaceKind } from "@/api/types";
+import { matchedRuns } from "@/lib/matchedRuns";
+import { recentPlaces, rememberPlace } from "@/state/recentPlaces";
+import { Icon, type IconName } from "@/components/Icon";
 
 interface Props {
   cityId: string;

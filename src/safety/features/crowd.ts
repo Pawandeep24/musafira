@@ -1,7 +1,7 @@
-import { clamp01, saturate } from "../curves.js";
-import type { FeatureExtractor, TrafficSample } from "../types.js";
-import { midMeters } from "./along.js";
-import { ACTIVITY } from "./categories.js";
+import { clamp01, saturate } from "#src/safety/curves.js";
+import type { FeatureExtractor, TrafficSample } from "#src/safety/types.js";
+import { midMeters } from "#src/safety/features/along.js";
+import { ACTIVITY } from "#src/safety/features/categories.js";
 
 const RADIUS_METERS = 100;
 const ACTIVITY_K = 5;

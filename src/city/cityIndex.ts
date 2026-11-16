@@ -1,7 +1,7 @@
 import KDBush from "kdbush";
-import { bboxContains, createLocalProjection, type LngLat, type LocalProjection } from "../geo/geometry.js";
-import type { CityData, Grid, Poi } from "./cityData.js";
-import { PlaceSearch } from "./placeSearch.js";
+import { bboxContains, createLocalProjection, type LngLat, type LocalProjection } from "#src/geo/geometry.js";
+import type { CityData, Grid, Poi } from "#src/city/cityData.js";
+import { PlaceSearch } from "#src/city/placeSearch.js";
 
 export interface NearbyPoi {
   readonly poi: Poi;

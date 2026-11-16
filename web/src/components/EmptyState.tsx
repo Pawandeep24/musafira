@@ -1,6 +1,6 @@
-import type { Place } from "../api/types";
-import { Icon } from "./Icon";
-import { Eyebrow } from "./ui/Eyebrow";
+import type { Place } from "@/api/types";
+import { Icon } from "@/components/Icon";
+import { Eyebrow } from "@/components/ui/Eyebrow";
 
 export interface DemoTrip {
   readonly title: string;

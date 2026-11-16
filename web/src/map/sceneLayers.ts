@@ -28,13 +28,13 @@
  */
 import type { Layer, PickingInfo } from "@deck.gl/core";
 import { ArcLayer, ColumnLayer, PathLayer, ScatterplotLayer, TextLayer } from "@deck.gl/layers";
-import type { ItineraryLeg, ItineraryStop, LngLat, Route, Segment, Stop, Stretch, TripReport, Washroom } from "../api/types";
-import { CATEGORY_RGB, deepen, safetyRgb, type Rgb, type Rgba } from "../lib/colors";
-import { REPORT_META, TONE_RGB } from "../lib/reports";
-import { SOURCE_RGB } from "../lib/safeStops";
-import { pointAt, sliceTrack, type Track } from "../lib/track";
-import type { MapTheme } from "../state/useMapTheme";
-import type { GridDot } from "./gridDots";
+import type { ItineraryLeg, ItineraryStop, LngLat, Route, Segment, Stop, Stretch, TripReport, Washroom } from "@/api/types";
+import { CATEGORY_RGB, deepen, safetyRgb, type Rgb, type Rgba } from "@/lib/colors";
+import { REPORT_META, TONE_RGB } from "@/lib/reports";
+import { SOURCE_RGB } from "@/lib/safeStops";
+import { pointAt, sliceTrack, type Track } from "@/lib/track";
+import type { MapTheme } from "@/state/useMapTheme";
+import type { GridDot } from "@/map/gridDots";
 
 export interface TripScene {
   readonly base: LngLat;

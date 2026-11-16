@@ -1,4 +1,4 @@
-import type { Segment, Stretch } from "./types.js";
+import type { Segment, Stretch } from "#src/safety/types.js";
 
 /** Contiguous runs of segments matching `predicate` that are at least `minMeters` long. */
 export function findStretches(

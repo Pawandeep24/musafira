@@ -13,8 +13,8 @@
  * sideways off the route, peaking at DETOUR_PEAK_METERS halfway through DETOUR_SECONDS and
  * coming back, which is long enough for the route guard's consecutive-position rule.
  */
-import type { LngLat } from "../geo/geometry.js";
-import type { MeasuredPath } from "../geo/path.js";
+import type { LngLat } from "#src/geo/geometry.js";
+import type { MeasuredPath } from "#src/geo/path.js";
 
 const SEARCH_SECONDS = 4;
 const ARRIVAL_SECONDS = 8;

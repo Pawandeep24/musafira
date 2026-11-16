@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
-import { NammaYatriClient } from "../src/integrations/nammayatri/client.js";
-import { AppError } from "../src/lib/errors.js";
-import { UpstreamError } from "../src/lib/http.js";
+import { NammaYatriClient } from "#src/integrations/nammayatri/client.js";
+import { AppError } from "#src/lib/errors.js";
+import { UpstreamError } from "#src/lib/http.js";
 
 const BASE = "https://ny.test/app/v2";
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status });

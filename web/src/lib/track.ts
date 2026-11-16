@@ -1,4 +1,4 @@
-import type { LngLat, Route } from "../api/types";
+import type { LngLat, Route } from "@/api/types";
 
 const R = 6_371_008.8;
 const rad = (d: number) => (d * Math.PI) / 180;

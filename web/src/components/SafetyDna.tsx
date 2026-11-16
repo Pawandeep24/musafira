@@ -1,9 +1,9 @@
-import type { ParameterInfo, Preferences, Preset, ScoringOptions } from "../api/types";
-import { formatDistance } from "../lib/format";
-import type { SyncState } from "../state/useSafetyProfile";
-import { Icon } from "./Icon";
-import { Range } from "./Range";
-import { ToggleChip } from "./ui/ToggleChip";
+import type { ParameterInfo, Preferences, Preset, ScoringOptions } from "@/api/types";
+import { formatDistance } from "@/lib/format";
+import type { SyncState } from "@/state/useSafetyProfile";
+import { Icon } from "@/components/Icon";
+import { Range } from "@/components/Range";
+import { ToggleChip } from "@/components/ui/ToggleChip";
 
 interface Props {
   parameters: readonly ParameterInfo[];

@@ -21,10 +21,10 @@
  *
  * For the map, reports of one category in the same ~110 m spot merge into one marker.
  */
-import { bboxContains, distanceToPathMeters, haversineMeters, type BBox, type LngLat } from "../geo/geometry.js";
-import type { ParameterId } from "./parameters.js";
-import { findStretches } from "./stretches.js";
-import type { Measurement, Segment, Stretch } from "./types.js";
+import { bboxContains, distanceToPathMeters, haversineMeters, type BBox, type LngLat } from "#src/geo/geometry.js";
+import type { ParameterId } from "#src/safety/parameters.js";
+import { findStretches } from "#src/safety/stretches.js";
+import type { Measurement, Segment, Stretch } from "#src/safety/types.js";
 
 export const REPORT_CATEGORIES = [
   "poorlyLit",

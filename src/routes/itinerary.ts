@@ -1,10 +1,10 @@
 import type { FastifyPluginAsync } from "fastify";
 import { z } from "zod";
-import type { LngLat } from "../geo/geometry.js";
-import { BACK_BY, DIETS, INTERESTS, TRIP_DAYS } from "../itinerary/trip.js";
-import { AppError } from "../lib/errors.js";
-import type { Itinerary, ItineraryPlanner } from "../planner/itineraryPlanner.js";
-import { lngLatSchema } from "./schemas.js";
+import type { LngLat } from "#src/geo/geometry.js";
+import { BACK_BY, DIETS, INTERESTS, TRIP_DAYS } from "#src/itinerary/trip.js";
+import { AppError } from "#src/lib/errors.js";
+import type { Itinerary, ItineraryPlanner } from "#src/planner/itineraryPlanner.js";
+import { lngLatSchema } from "#src/routes/schemas.js";
 
 const MAX_INTERESTS = 3;
 

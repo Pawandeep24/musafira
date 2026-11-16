@@ -1,7 +1,7 @@
 import { inspect } from "node:util";
 import { describe, expect, it, vi } from "vitest";
-import { GoDaddyApiError, GoDaddyClient } from "../src/integrations/godaddy/client.js";
-import { StaticTokenProvider } from "../src/integrations/godaddy/tokenProvider.js";
+import { GoDaddyApiError, GoDaddyClient } from "#src/integrations/godaddy/client.js";
+import { StaticTokenProvider } from "#src/integrations/godaddy/tokenProvider.js";
 
 const json = (body: unknown, init: ResponseInit = {}) =>
   new Response(JSON.stringify(body), { headers: { "content-type": "application/json" }, ...init });

@@ -1,4 +1,4 @@
-import type { TokenProvider } from "./tokenProvider.js";
+import type { TokenProvider } from "#src/integrations/godaddy/tokenProvider.js";
 
 export const GODADDY_BASE_URLS = {
   ote: "https://api.ote-godaddy.com",

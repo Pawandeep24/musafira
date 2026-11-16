@@ -1,6 +1,6 @@
-import { saturate } from "../curves.js";
-import type { FeatureExtractor } from "../types.js";
-import { STOREFRONTS } from "./categories.js";
+import { saturate } from "#src/safety/curves.js";
+import type { FeatureExtractor } from "#src/safety/types.js";
+import { STOREFRONTS } from "#src/safety/features/categories.js";
 
 const RADIUS_METERS = 100;
 const SHOPS_K = 4;

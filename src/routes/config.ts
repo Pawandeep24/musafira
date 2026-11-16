@@ -1,9 +1,9 @@
 import type { FastifyPluginAsync } from "fastify";
 import { z } from "zod";
-import type { CityRegistry } from "../city/cityRegistry.js";
-import { AppError } from "../lib/errors.js";
-import type { RideBooking } from "../planner/rideBooking.js";
-import { DEFAULT_OPTIONS, DEFAULT_WEIGHTS, MAX_WEIGHT, PARAMETERS, PRESETS } from "../safety/parameters.js";
+import type { CityRegistry } from "#src/city/cityRegistry.js";
+import { AppError } from "#src/lib/errors.js";
+import type { RideBooking } from "#src/planner/rideBooking.js";
+import { DEFAULT_OPTIONS, DEFAULT_WEIGHTS, MAX_WEIGHT, PARAMETERS, PRESETS } from "#src/safety/parameters.js";
 
 const cityParams = z.object({ cityId: z.string().max(40) });
 

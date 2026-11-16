@@ -1,4 +1,4 @@
-import type { RouteStop, Segment, StopKind } from "../types.js";
+import type { RouteStop, Segment, StopKind } from "#src/safety/types.js";
 
 export const midMeters = (segment: Segment) => (segment.startMeters + segment.endMeters) / 2;
 

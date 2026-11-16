@@ -1,7 +1,7 @@
-import type { LngLat } from "../geo/geometry.js";
-import { PARAMETER_IDS, type ParameterId } from "../safety/parameters.js";
-import type { Segment, Stretch } from "../safety/types.js";
-import type { PlanResult, RankedRoute } from "../planner/routePlanner.js";
+import type { LngLat } from "#src/geo/geometry.js";
+import { PARAMETER_IDS, type ParameterId } from "#src/safety/parameters.js";
+import type { Segment, Stretch } from "#src/safety/types.js";
+import type { PlanResult, RankedRoute } from "#src/planner/routePlanner.js";
 
 const round = (value: number, digits: number) => Math.round(value * 10 ** digits) / 10 ** digits;
 const roundPoint = ([lon, lat]: LngLat): LngLat => [round(lon, 6), round(lat, 6)];

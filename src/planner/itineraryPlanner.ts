@@ -10,18 +10,18 @@
  * 12 h by city, base (≈100 m), answers and start day, so repeat asks cost nothing; a plan that fell
  * back for a passing reason (model failure, today's budget) is evicted so the next ask retries.
  */
-import type { CityIndex } from "../city/cityIndex.js";
-import type { CityRegistry } from "../city/cityRegistry.js";
-import { createHoursEvaluator, type HoursEvaluator } from "../city/openingHours.js";
-import { selectCandidates } from "../itinerary/candidates.js";
-import { fillGaps } from "../itinerary/fill.js";
-import { buildPrompt, parseReply, type ParsedReply } from "../itinerary/prompt.js";
-import { scheduleTrip, tripStart, type ScheduledDay } from "../itinerary/schedule.js";
-import { dayCount, slotsFor, type TripRequest } from "../itinerary/trip.js";
-import { AppError } from "../lib/errors.js";
-import { UpstreamError } from "../lib/http.js";
-import { TtlCache } from "../lib/ttlCache.js";
-import type { TextModel } from "./ports.js";
+import type { CityIndex } from "#src/city/cityIndex.js";
+import type { CityRegistry } from "#src/city/cityRegistry.js";
+import { createHoursEvaluator, type HoursEvaluator } from "#src/city/openingHours.js";
+import { selectCandidates } from "#src/itinerary/candidates.js";
+import { fillGaps } from "#src/itinerary/fill.js";
+import { buildPrompt, parseReply, type ParsedReply } from "#src/itinerary/prompt.js";
+import { scheduleTrip, tripStart, type ScheduledDay } from "#src/itinerary/schedule.js";
+import { dayCount, slotsFor, type TripRequest } from "#src/itinerary/trip.js";
+import { AppError } from "#src/lib/errors.js";
+import { UpstreamError } from "#src/lib/http.js";
+import { TtlCache } from "#src/lib/ttlCache.js";
+import type { TextModel } from "#src/planner/ports.js";
 
 export type FallbackReason = "not_configured" | "unavailable" | "daily_limit";
 

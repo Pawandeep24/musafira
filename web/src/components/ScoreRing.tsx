@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { safetyCss } from "../lib/colors";
+import { safetyCss } from "@/lib/colors";
 
 /** Animates a number towards `target` so score changes read as motion, not a jump. */
 function useTweened(target: number, durationMs = 650): number {

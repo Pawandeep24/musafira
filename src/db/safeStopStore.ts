@@ -1,6 +1,6 @@
 import { Timestamp, type Firestore, type Query } from "firebase-admin/firestore";
 import { z } from "zod";
-import { safeStopProfileSchema, type SafeStop } from "../stops/safeStop.js";
+import { safeStopProfileSchema, type SafeStop } from "#src/stops/safeStop.js";
 
 export interface SafeStopStore {
   get(id: string): Promise<SafeStop | undefined>;

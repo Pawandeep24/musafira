@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
-import { api, ApiError } from "./api/client";
-import type { City, PublicSafeStop } from "./api/types";
-import { Icon } from "./components/Icon";
-import { Logo } from "./components/TopBar";
-import { ButtonLink } from "./components/ui/Button";
-import { Eyebrow } from "./components/ui/Eyebrow";
-import { cityTime, formatClock } from "./lib/format";
+import { api, ApiError } from "@/api/client";
+import type { City, PublicSafeStop } from "@/api/types";
+import { Icon } from "@/components/Icon";
+import { Logo } from "@/components/TopBar";
+import { ButtonLink } from "@/components/ui/Button";
+import { Eyebrow } from "@/components/ui/Eyebrow";
+import { cityTime, formatClock } from "@/lib/format";
 import {
   accessLabel,
   ATTENDANT_LABEL,
@@ -17,7 +17,7 @@ import {
   PADS_LABEL,
   WASHROOM_FEATURES,
   type FeatureGroup,
-} from "./lib/safeStops";
+} from "@/lib/safeStops";
 
 const plural = (count: number, word: string) => `${count} ${word}${count === 1 ? "" : "s"}`;
 

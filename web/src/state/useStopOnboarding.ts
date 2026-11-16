@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { api, ApiError } from "../api/client";
+import { api, ApiError } from "@/api/client";
 import type {
   City,
   DomainIdea,
@@ -11,9 +11,9 @@ import type {
   SafeStopKind,
   SafeStopProfile,
   VerifyChecks,
-} from "../api/types";
-import type { AuthState } from "../auth/useAuth";
-import { locateRider } from "../lib/locate";
+} from "@/api/types";
+import type { AuthState } from "@/auth/useAuth";
+import { locateRider } from "@/lib/locate";
 
 export const STEPS = ["place", "washroom", "care", "domain", "verify"] as const;
 export type Step = (typeof STEPS)[number];

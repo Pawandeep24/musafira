@@ -1,8 +1,8 @@
 import { useState } from "react";
-import type { AuthState } from "../auth/useAuth";
-import { Button } from "./ui/Button";
-import { IconButton } from "./ui/IconButton";
-import { LinkButton } from "./ui/LinkButton";
+import type { AuthState } from "@/auth/useAuth";
+import { Button } from "@/components/ui/Button";
+import { IconButton } from "@/components/ui/IconButton";
+import { LinkButton } from "@/components/ui/LinkButton";
 
 const friendly = (error: unknown) => {
   const code = (error as { code?: string }).code ?? "";

@@ -5,8 +5,8 @@
  * rejects sampling parameters (temperature, top_p, top_k), so none are sent.
  */
 import { z } from "zod";
-import { fetchJson } from "../../lib/http.js";
-import type { TextModel, TextReply, TextRequest } from "../../planner/ports.js";
+import { fetchJson } from "#src/lib/http.js";
+import type { TextModel, TextReply, TextRequest } from "#src/planner/ports.js";
 
 const MESSAGES_URL = "https://api.anthropic.com/v1/messages";
 const MODEL = "claude-haiku-5-5";

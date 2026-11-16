@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { api, ApiError } from "../api/client";
-import type { Place, Plan, ScoringOptions, Weights } from "../api/types";
+import { api, ApiError } from "@/api/client";
+import type { Place, Plan, ScoringOptions, Weights } from "@/api/types";
 
 export type Departure = { mode: "now" } | { mode: "at"; at: Date };
 export type PlannerStatus = "idle" | "planning" | "rescoring" | "ready" | "error";

@@ -1,14 +1,14 @@
-import type { Washroom } from "../api/types";
-import { formatClock, formatDistance } from "../lib/format";
-import { FACT_LABEL, FILTERS, SOURCE_LABEL, washroomName } from "../lib/safeStops";
-import type { WashroomsState } from "../state/useWashrooms";
-import { Icon } from "./Icon";
-import { Button, ButtonLink } from "./ui/Button";
-import { IconButton } from "./ui/IconButton";
-import { LinkButton } from "./ui/LinkButton";
-import { Notice } from "./ui/Notice";
-import { SheetHeader } from "./ui/SheetHeader";
-import { ToggleChip } from "./ui/ToggleChip";
+import type { Washroom } from "@/api/types";
+import { formatClock, formatDistance } from "@/lib/format";
+import { FACT_LABEL, FILTERS, SOURCE_LABEL, washroomName } from "@/lib/safeStops";
+import type { WashroomsState } from "@/state/useWashrooms";
+import { Icon } from "@/components/Icon";
+import { Button, ButtonLink } from "@/components/ui/Button";
+import { IconButton } from "@/components/ui/IconButton";
+import { LinkButton } from "@/components/ui/LinkButton";
+import { Notice } from "@/components/ui/Notice";
+import { SheetHeader } from "@/components/ui/SheetHeader";
+import { ToggleChip } from "@/components/ui/ToggleChip";
 
 interface Props {
   washrooms: WashroomsState;

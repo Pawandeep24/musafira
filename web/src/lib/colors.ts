@@ -1,4 +1,4 @@
-import type { PoiCategory } from "../api/types";
+import type { PoiCategory } from "@/api/types";
 
 export type Rgba = [number, number, number, number];
 export type Rgb = readonly [number, number, number];

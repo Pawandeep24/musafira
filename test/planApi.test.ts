@@ -1,18 +1,18 @@
 import { describe, expect, it, vi } from "vitest";
-import { buildApp } from "../src/app.js";
-import type { TokenVerifier } from "../src/auth/tokenVerifier.js";
-import type { NamedPlace } from "../src/city/cityData.js";
-import type { CityIndex } from "../src/city/cityIndex.js";
-import { createCityRegistry } from "../src/city/cityRegistry.js";
-import { loadEnv } from "../src/config/env.js";
-import type { Preferences, PreferencesStore } from "../src/db/preferencesStore.js";
-import type { ReportStore, StoredReport } from "../src/db/reportStore.js";
-import { unauthorized } from "../src/lib/errors.js";
-import { createCommunityReports } from "../src/planner/communityReports.js";
-import type { Geocoder, RouteProvider } from "../src/planner/ports.js";
-import { createRoutePlanner } from "../src/planner/routePlanner.js";
-import { DEFAULT_OPTIONS, DEFAULT_WEIGHTS } from "../src/safety/parameters.js";
-import { MIDDLE_LON, NIGHT, ROUTE_EAST, ROUTE_LAT, ROUTE_WEST, straightRoute, testCity } from "./fixtures.js";
+import { buildApp } from "#src/app.js";
+import type { TokenVerifier } from "#src/auth/tokenVerifier.js";
+import type { NamedPlace } from "#src/city/cityData.js";
+import type { CityIndex } from "#src/city/cityIndex.js";
+import { createCityRegistry } from "#src/city/cityRegistry.js";
+import { loadEnv } from "#src/config/env.js";
+import type { Preferences, PreferencesStore } from "#src/db/preferencesStore.js";
+import type { ReportStore, StoredReport } from "#src/db/reportStore.js";
+import { unauthorized } from "#src/lib/errors.js";
+import { createCommunityReports } from "#src/planner/communityReports.js";
+import type { Geocoder, RouteProvider } from "#src/planner/ports.js";
+import { createRoutePlanner } from "#src/planner/routePlanner.js";
+import { DEFAULT_OPTIONS, DEFAULT_WEIGHTS } from "#src/safety/parameters.js";
+import { MIDDLE_LON, NIGHT, ROUTE_EAST, ROUTE_LAT, ROUTE_WEST, straightRoute, testCity } from "#test/fixtures.js";
 
 const env = loadEnv({ NODE_ENV: "test", LOG_LEVEL: "silent" });
 const verifier: TokenVerifier = {

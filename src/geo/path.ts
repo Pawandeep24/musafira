@@ -1,4 +1,4 @@
-import { createLocalProjection, haversineMeters, interpolate, type LngLat } from "./geometry.js";
+import { createLocalProjection, haversineMeters, interpolate, type LngLat } from "#src/geo/geometry.js";
 
 export interface PathPosition {
   /** Index of the vertex at or before the position. */

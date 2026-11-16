@@ -1,9 +1,9 @@
 import { useMemo } from "react";
-import { skyGradient } from "../lib/colors";
-import { cityHour, dayLabel, formatClock, isNightHour } from "../lib/format";
-import type { Departure } from "../state/usePlanner";
-import { Icon } from "./Icon";
-import { Segmented } from "./ui/Segmented";
+import { skyGradient } from "@/lib/colors";
+import { cityHour, dayLabel, formatClock, isNightHour } from "@/lib/format";
+import type { Departure } from "@/state/usePlanner";
+import { Icon } from "@/components/Icon";
+import { Segmented } from "@/components/ui/Segmented";
 
 const MODES: readonly (readonly [Departure["mode"], string])[] = [
   ["now", "Leave now"],

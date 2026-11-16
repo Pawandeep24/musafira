@@ -1,6 +1,6 @@
-import type { PoiCategory } from "../../city/cityData.js";
-import { saturate } from "../curves.js";
-import type { FeatureExtractor } from "../types.js";
+import type { PoiCategory } from "#src/city/cityData.js";
+import { saturate } from "#src/safety/curves.js";
+import type { FeatureExtractor } from "#src/safety/types.js";
 
 const RADIUS_METERS = 300;
 const SERVICES_K = 1.5;

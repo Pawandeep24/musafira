@@ -1,7 +1,7 @@
-import type { CityData, Grid, Poi } from "../src/city/cityData.js";
-import { CityIndex } from "../src/city/cityIndex.js";
-import { haversineMeters, type LngLat } from "../src/geo/geometry.js";
-import type { CandidateRoute } from "../src/safety/types.js";
+import type { CityData, Grid, Poi } from "#src/city/cityData.js";
+import { CityIndex } from "#src/city/cityIndex.js";
+import { haversineMeters, type LngLat } from "#src/geo/geometry.js";
+import type { CandidateRoute } from "#src/safety/types.js";
 
 export const ROUTE_WEST = 73.8;
 export const ROUTE_EAST = 73.84;

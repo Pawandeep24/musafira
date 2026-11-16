@@ -1,10 +1,10 @@
 import { useState } from "react";
-import type { City, ParameterInfo, Route, Weights } from "../api/types";
-import { CATEGORY_LABEL, safetyCss } from "../lib/colors";
-import { formatClock, formatDistance } from "../lib/format";
-import { REPORT_META, reportAge, reportSummary } from "../lib/reports";
-import { Icon } from "./Icon";
-import { Segmented } from "./ui/Segmented";
+import type { City, ParameterInfo, Route, Weights } from "@/api/types";
+import { CATEGORY_LABEL, safetyCss } from "@/lib/colors";
+import { formatClock, formatDistance } from "@/lib/format";
+import { REPORT_META, reportAge, reportSummary } from "@/lib/reports";
+import { Icon } from "@/components/Icon";
+import { Segmented } from "@/components/ui/Segmented";
 
 interface Props {
   route: Route;

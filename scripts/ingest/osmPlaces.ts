@@ -12,10 +12,10 @@
  * "Suyojan Society" or "Nal Stop" an area and a label for everything around it, so those are
  * reclassified by name.
  */
-import type { NamedPlace, PlaceKind } from "../../src/city/cityData.js";
-import { foldText } from "../../src/city/placeSearch.js";
-import { haversineMeters, type BBox } from "../../src/geo/geometry.js";
-import { fetchOverpass, type OverpassElement } from "./osmPois.js";
+import type { NamedPlace, PlaceKind } from "#src/city/cityData.js";
+import { foldText } from "#src/city/placeSearch.js";
+import { haversineMeters, type BBox } from "#src/geo/geometry.js";
+import { fetchOverpass, type OverpassElement } from "#scripts/ingest/osmPois.js";
 
 const AREA_PLACES = new Set(["suburb", "neighbourhood", "quarter", "locality", "village", "hamlet", "town"]);
 const RESIDENTIAL_BUILDINGS = new Set(["apartments", "residential", "dormitory", "house"]);

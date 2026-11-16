@@ -13,18 +13,18 @@
  * when it isn't or refuses. Answers are cached for an hour.
  */
 import { randomBytes } from "node:crypto";
-import type { Poi } from "../city/cityData.js";
-import type { CityRegistry } from "../city/cityRegistry.js";
-import { createHoursEvaluator, type HoursEvaluator, type OpenState } from "../city/openingHours.js";
-import type { SafeStopStore } from "../db/safeStopStore.js";
-import type { LngLat } from "../geo/geometry.js";
-import type { GoDaddyClient } from "../integrations/godaddy/client.js";
-import { checkDomainAvailability } from "../integrations/godaddy/domains.js";
-import { AppError } from "../lib/errors.js";
-import { TtlCache } from "../lib/ttlCache.js";
-import { domainIdeas, goDaddySearchUrl, isGoDaddyRegistrar, osmHours, verifyRecord, type SafeStop, type SafeStopProfile } from "../stops/safeStop.js";
-import { fuelStation, publicWashroom, rankWashrooms, safeStopWashroom, WASHROOM_SEARCH_METERS, type RankedWashroom } from "../stops/washrooms.js";
-import type { DomainLookup, SafeStopSource } from "./ports.js";
+import type { Poi } from "#src/city/cityData.js";
+import type { CityRegistry } from "#src/city/cityRegistry.js";
+import { createHoursEvaluator, type HoursEvaluator, type OpenState } from "#src/city/openingHours.js";
+import type { SafeStopStore } from "#src/db/safeStopStore.js";
+import type { LngLat } from "#src/geo/geometry.js";
+import type { GoDaddyClient } from "#src/integrations/godaddy/client.js";
+import { checkDomainAvailability } from "#src/integrations/godaddy/domains.js";
+import { AppError } from "#src/lib/errors.js";
+import { TtlCache } from "#src/lib/ttlCache.js";
+import { domainIdeas, goDaddySearchUrl, isGoDaddyRegistrar, osmHours, verifyRecord, type SafeStop, type SafeStopProfile } from "#src/stops/safeStop.js";
+import { fuelStation, publicWashroom, rankWashrooms, safeStopWashroom, WASHROOM_SEARCH_METERS, type RankedWashroom } from "#src/stops/washrooms.js";
+import type { DomainLookup, SafeStopSource } from "#src/planner/ports.js";
 
 const HOUR_MS = 3_600_000;
 const MAX_STOPS_PER_OWNER = 5;

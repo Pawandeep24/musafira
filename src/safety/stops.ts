@@ -1,8 +1,8 @@
-import type { Poi } from "../city/cityData.js";
-import type { OpenState } from "../city/openingHours.js";
-import { BREAKDOWN_HELP, SAFETY_STOPS } from "./features/categories.js";
-import { midMeters } from "./features/along.js";
-import type { RouteStop, SegmentContext, StopKind } from "./types.js";
+import type { Poi } from "#src/city/cityData.js";
+import type { OpenState } from "#src/city/openingHours.js";
+import { BREAKDOWN_HELP, SAFETY_STOPS } from "#src/safety/features/categories.js";
+import { midMeters } from "#src/safety/features/along.js";
+import type { RouteStop, SegmentContext, StopKind } from "#src/safety/types.js";
 
 const REACH_METERS: Readonly<Record<StopKind, number>> = { safety: 150, breakdown: 300 };
 

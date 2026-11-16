@@ -1,5 +1,5 @@
-import type { Route } from "../api/types";
-import { safetyCss } from "../lib/colors";
+import type { Route } from "@/api/types";
+import { safetyCss } from "@/lib/colors";
 
 /** The whole ride as one bar: colour per 100 m, rose brackets for dark stretches. */
 export function SafetyStrip({ route, height = 10, progressMeters }: { route: Route; height?: number; progressMeters?: number }) {

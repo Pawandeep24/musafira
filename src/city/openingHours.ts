@@ -13,8 +13,8 @@
  * equal the city's local time, then convert results back to real instants.
  */
 import OpeningHours from "opening_hours";
-import type { LngLat } from "../geo/geometry.js";
-import type { PoiCategory, SightKind } from "./cityData.js";
+import type { LngLat } from "#src/geo/geometry.js";
+import type { PoiCategory, SightKind } from "#src/city/cityData.js";
 
 type HoursCategory = PoiCategory | SightKind | "washroom";
 

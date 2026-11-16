@@ -1,17 +1,17 @@
 import { describe, expect, it, vi } from "vitest";
-import { buildApp } from "../src/app.js";
-import type { TokenVerifier } from "../src/auth/tokenVerifier.js";
-import { createCityRegistry } from "../src/city/cityRegistry.js";
-import { loadEnv } from "../src/config/env.js";
-import type { SafeStopStore } from "../src/db/safeStopStore.js";
-import { GoDaddyClient } from "../src/integrations/godaddy/client.js";
-import { StaticTokenProvider } from "../src/integrations/godaddy/tokenProvider.js";
-import { unauthorized } from "../src/lib/errors.js";
-import type { DomainLookup, RouteProvider } from "../src/planner/ports.js";
-import { createRoutePlanner } from "../src/planner/routePlanner.js";
-import { createSafeStops } from "../src/planner/safeStops.js";
-import type { SafeStop } from "../src/stops/safeStop.js";
-import { MIDDLE_LON, NIGHT, ROUTE_EAST, ROUTE_LAT, ROUTE_WEST, safeStopAnswers, straightRoute, testCity } from "./fixtures.js";
+import { buildApp } from "#src/app.js";
+import type { TokenVerifier } from "#src/auth/tokenVerifier.js";
+import { createCityRegistry } from "#src/city/cityRegistry.js";
+import { loadEnv } from "#src/config/env.js";
+import type { SafeStopStore } from "#src/db/safeStopStore.js";
+import { GoDaddyClient } from "#src/integrations/godaddy/client.js";
+import { StaticTokenProvider } from "#src/integrations/godaddy/tokenProvider.js";
+import { unauthorized } from "#src/lib/errors.js";
+import type { DomainLookup, RouteProvider } from "#src/planner/ports.js";
+import { createRoutePlanner } from "#src/planner/routePlanner.js";
+import { createSafeStops } from "#src/planner/safeStops.js";
+import type { SafeStop } from "#src/stops/safeStop.js";
+import { MIDDLE_LON, NIGHT, ROUTE_EAST, ROUTE_LAT, ROUTE_WEST, safeStopAnswers, straightRoute, testCity } from "#test/fixtures.js";
 
 const env = loadEnv({ NODE_ENV: "test", LOG_LEVEL: "silent" });
 const verifier: TokenVerifier = {

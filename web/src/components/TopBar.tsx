@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import type { City } from "../api/types";
-import type { AuthState } from "../auth/useAuth";
-import type { MapTheme } from "../state/useMapTheme";
-import { Icon } from "./Icon";
-import { Segmented } from "./ui/Segmented";
+import type { City } from "@/api/types";
+import type { AuthState } from "@/auth/useAuth";
+import type { MapTheme } from "@/state/useMapTheme";
+import { Icon } from "@/components/Icon";
+import { Segmented } from "@/components/ui/Segmented";
 
 interface Props {
   cities: readonly City[];
