@@ -3,10 +3,11 @@ import { z } from "zod";
 import { AppError } from "../lib/errors.js";
 import type { CommunityReports } from "../planner/communityReports.js";
 import { REPORT_CATEGORIES, REPORT_WHEN } from "../safety/community.js";
+import { lngLatSchema } from "./schemas.js";
 
 const reportBody = z
   .object({
-    point: z.tuple([z.number().min(-180).max(180), z.number().min(-90).max(90)]),
+    point: lngLatSchema,
     category: z.enum(REPORT_CATEGORIES),
     when: z.enum(REPORT_WHEN).default("now"),
   })

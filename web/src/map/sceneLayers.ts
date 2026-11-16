@@ -7,6 +7,9 @@
  * stops → rider-report pillars → start/end beacons → the spot being reported →
  * ride-preview puck.
  *
+ * A day trip replaces the routes with its own layers: legs as arcs (rose when ridden
+ * after dark), numbered stops (amber to eat, teal to see) and a beacon at the base.
+ *
  * Report pillars are sized in screen pixels: radius and height are multiplied by
  * the map's metres-per-pixel each frame, so they read the same at city and street
  * zoom. They rise over ~1 s when a search lands (`reportsRise` 0..1). A pillar is
@@ -16,15 +19,22 @@
  * animated ones change their data, the rest keep stable data references.
  */
 import type { Layer, PickingInfo } from "@deck.gl/core";
-import { ColumnLayer, PathLayer, ScatterplotLayer } from "@deck.gl/layers";
-import type { LngLat, Route, Segment, Stop, Stretch, TripReport } from "../api/types";
+import { ArcLayer, ColumnLayer, PathLayer, ScatterplotLayer, TextLayer } from "@deck.gl/layers";
+import type { ItineraryLeg, ItineraryStop, LngLat, Route, Segment, Stop, Stretch, TripReport } from "../api/types";
 import { CATEGORY_RGB, safetyRgba, type Rgba } from "../lib/colors";
 import { REPORT_META, TONE_RGB } from "../lib/reports";
 import { pointAt, sliceTrack, type Track } from "../lib/track";
 import type { GridDot } from "./gridDots";
 
+export interface TripScene {
+  readonly base: LngLat;
+  readonly stops: readonly ItineraryStop[];
+  readonly legs: readonly ItineraryLeg[];
+}
+
 export interface SceneInput {
   readonly routes: readonly Route[];
+  readonly trip?: TripScene;
   readonly selected?: Route;
   readonly tracks: ReadonlyMap<string, Track>;
   readonly from?: LngLat;
@@ -40,7 +50,14 @@ export interface SceneInput {
   onSelectRoute(id: string): void;
   onHoverStop(info: PickingInfo<Stop>): void;
   onHoverReport(info: PickingInfo<TripReport>): void;
+  onHoverTripStop(info: PickingInfo<ItineraryStop>): void;
 }
+
+const EAT_RGB = [255, 196, 87] as const;
+const SEE_RGB = [46, 242, 200] as const;
+const LEG_RGB = [168, 140, 255] as const;
+const DARK_LEG_RGB = [255, 61, 110] as const;
+const EATERY_KINDS: ReadonlySet<string> = new Set(["restaurant", "cafe", "fast_food"]);
 
 const PILLAR_RADIUS_PX = 6;
 const PILLAR_BASE_PX = 34;
@@ -144,6 +161,59 @@ function beacon(id: string, point: LngLat | undefined, rgb: readonly [number, nu
       lineWidthUnits: "pixels",
       getLineWidth: 3,
     }),
+  ];
+}
+
+function tripLayers(trip: TripScene, timeMs: number, onHover: SceneInput["onHoverTripStop"]): Layer[] {
+  const glow = pulse(timeMs, 1800);
+  const stopRgb = (s: ItineraryStop) => (EATERY_KINDS.has(s.kind) ? EAT_RGB : SEE_RGB);
+  return [
+    new ArcLayer<ItineraryLeg>({
+      id: "trip-legs",
+      data: trip.legs,
+      getSourcePosition: (l) => l.from,
+      getTargetPosition: (l) => l.to,
+      getSourceColor: (l) => [...(l.dark ? DARK_LEG_RGB : LEG_RGB), 230],
+      getTargetColor: (l) => [...(l.dark ? DARK_LEG_RGB : SEE_RGB), 230],
+      getHeight: 0.35,
+      getWidth: 3,
+      widthUnits: "pixels",
+    }),
+    new ScatterplotLayer<ItineraryStop>({
+      id: "trip-stop-halos",
+      data: trip.stops,
+      getPosition: (s) => s.point,
+      getRadius: 19 + 5 * glow,
+      radiusUnits: "pixels",
+      getFillColor: (s) => [...stopRgb(s), 50],
+      updateTriggers: { getRadius: glow },
+    }),
+    new ScatterplotLayer<ItineraryStop>({
+      id: "trip-stops",
+      data: trip.stops,
+      getPosition: (s) => s.point,
+      getRadius: 11,
+      radiusUnits: "pixels",
+      getFillColor: (s) => [...stopRgb(s), 255],
+      stroked: true,
+      getLineColor: [6, 8, 15, 255],
+      lineWidthUnits: "pixels",
+      getLineWidth: 2,
+      pickable: true,
+      onHover,
+    }),
+    new TextLayer<ItineraryStop>({
+      id: "trip-stop-numbers",
+      data: trip.stops,
+      getPosition: (s) => s.point,
+      getText: (_, { index }) => String(index + 1),
+      getSize: 12,
+      getColor: [6, 8, 15, 255],
+      fontFamily: "Inter, system-ui, sans-serif",
+      fontWeight: 700,
+      characterSet: "0123456789",
+    }),
+    ...beacon("trip-base", trip.base, LEG_RGB, timeMs),
   ];
 }
 
@@ -282,6 +352,7 @@ export function sceneLayers(input: SceneInput): Layer[] {
       updateTriggers: { getFillColor: selected?.id },
     }),
 
+    ...(input.trip ? tripLayers(input.trip, timeMs, input.onHoverTripStop) : []),
     ...beacon("origin", input.from, [168, 140, 255], timeMs),
     ...beacon("destination", input.to, [46, 242, 200], timeMs + 1100),
     ...beacon("report-spot", input.reportPoint, [255, 196, 87], timeMs + 500),

@@ -30,6 +30,12 @@ describe("opening hours", () => {
     expect(evaluator().stateAt(place("shop"), at0015Ist)).toEqual({ open: false, estimated: true });
   });
 
+  it("gives trip sights typical hours when OSM has none", () => {
+    const museum = { cat: "museum", hours: undefined } as const;
+    expect(evaluator().stateAt(museum, new Date("2026-11-14T02:30:00Z"))).toEqual({ open: false, estimated: true });
+    expect(evaluator().stateAt(museum, new Date("2026-11-14T05:30:00Z"))).toMatchObject({ open: true, estimated: true });
+  });
+
   it("treats police and hospitals as always open and ignores unparseable tags", () => {
     const at = new Date("2026-11-14T21:00:00Z");
     expect(evaluator().stateAt(place("police"), at).open).toBe(true);

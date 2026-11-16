@@ -25,6 +25,10 @@ export const PLACE_KINDS = ["area", "residence", "landmark", "street"] as const;
 
 export type PlaceKind = (typeof PLACE_KINDS)[number];
 
+export const SIGHT_KINDS = ["heritage", "museum", "worship", "nature", "market", "attraction"] as const;
+
+export type SightKind = (typeof SIGHT_KINDS)[number];
+
 const lngLat = z.tuple([z.number(), z.number()]);
 
 const poiSchema = z.object({
@@ -44,6 +48,17 @@ const namedPlaceSchema = z.object({
   lat: z.number(),
   kind: z.enum(PLACE_KINDS),
   aka: z.array(z.string()).optional(),
+});
+
+/** A place worth visiting on a trip; `famous` means OSM links it to Wikidata, Wikipedia or a heritage register. */
+const sightSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  lon: z.number(),
+  lat: z.number(),
+  kind: z.enum(SIGHT_KINDS),
+  famous: z.boolean().optional(),
+  hours: z.string().optional(),
 });
 
 /** Row-major raster, row 0 at `north`. `values` uses `null` for no-data cells. */
@@ -72,6 +87,7 @@ export const cityDataSchema = z.object({
   utcOffsetMinutes: z.number().int(),
   pois: z.array(poiSchema),
   places: z.array(namedPlaceSchema).default([]),
+  sights: z.array(sightSchema).default([]),
   lights: gridSchema.optional(),
   cellDensity: gridSchema.optional(),
   sources: z.array(sourceSchema),
@@ -80,5 +96,6 @@ export const cityDataSchema = z.object({
 export type CityData = z.infer<typeof cityDataSchema>;
 export type Poi = z.infer<typeof poiSchema>;
 export type NamedPlace = z.infer<typeof namedPlaceSchema>;
+export type Sight = z.infer<typeof sightSchema>;
 export type Grid = z.infer<typeof gridSchema>;
 export type DataSource = z.infer<typeof sourceSchema>;

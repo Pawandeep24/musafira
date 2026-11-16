@@ -29,3 +29,18 @@ export interface Geocoder {
 export interface ReportSource {
   active(cityId: string): readonly CommunityReport[];
 }
+
+export interface TextRequest {
+  readonly system: string;
+  readonly prompt: string;
+  readonly maxTokens: number;
+}
+
+export interface TextReply {
+  readonly text: string;
+  readonly costUsd: number;
+}
+
+export interface TextModel {
+  complete(request: TextRequest): Promise<TextReply>;
+}

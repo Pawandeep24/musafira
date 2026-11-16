@@ -8,6 +8,7 @@ import { CITY_DEFINITIONS } from "./cities.js";
 import { cropNightLights } from "./nightLights.js";
 import { fetchOsmPlaceElements, toNamedPlaces } from "./osmPlaces.js";
 import { fetchOsmPois } from "./osmPois.js";
+import { toSights } from "./osmSights.js";
 
 const OUT_DIR = join(import.meta.dirname, "../../data/cities");
 
@@ -51,8 +52,11 @@ for (const city of targets) {
   const pois = await cachedJson(`${city.id}-osm-pois.json`, () => fetchOsmPois(city.bbox));
   console.log(`  points of interest: ${pois.length} (${pois.filter((p) => p.hours).length} with opening hours)`);
 
-  const places = toNamedPlaces(await cachedJson(`${city.id}-osm-places.json`, () => fetchOsmPlaceElements(city.bbox)));
+  const placeElements = await cachedJson(`${city.id}-osm-places.json`, () => fetchOsmPlaceElements(city.bbox));
+  const places = toNamedPlaces(placeElements);
   console.log(`  searchable places: ${places.length} (${places.filter((p) => p.kind === "residence").length} housing societies)`);
+  const sights = toSights(placeElements);
+  console.log(`  sights: ${sights.length} (${sights.filter((s) => s.famous).length} famous)`);
 
   const lights = await optional("night lights", () =>
     cachedJson(`${city.id}-night-lights.json`, () => cropNightLights(city.bbox, env.NASA_EARTHDATA_TOKEN)),
@@ -76,6 +80,7 @@ for (const city of targets) {
     version: new Date().toISOString().slice(0, 10),
     pois,
     places,
+    sights,
     ...(lights ? { lights: lights.grid } : {}),
     ...(cellDensity ? { cellDensity } : {}),
     sources: [OSM, ...(lights ? [BLACK_MARBLE] : []), ...(cellDensity ? [OPENCELLID] : [])],

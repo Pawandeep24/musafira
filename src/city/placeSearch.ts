@@ -232,17 +232,19 @@ export class PlaceSearch {
 
   #toPlace({ entry, shownName }: Hit): Place {
     const officialName = entry.variants[0]!.text;
-    const area = entry.kind === "area" ? undefined : this.#nearestArea(entry);
+    const area = entry.kind === "area" ? undefined : this.areaNear(entry.point, officialName);
     const parts = [shownName, ...(officialName === shownName ? [] : [officialName]), ...(area ? [area] : []), this.city.name];
     return { id: entry.id, name: shownName, label: parts.join(", "), point: entry.point, kind: entry.kind };
   }
 
-  #nearestArea(entry: Entry): string | undefined {
+  /** The nearest area name, skipping one the place's own name already contains ("Koregaon Park Plaza"). */
+  areaNear(point: LngLat, name = ""): string | undefined {
+    const key = foldText(name);
     let nearest: Entry | undefined;
     let nearestMeters = AREA_LABEL_METERS;
     for (const area of this.#areas) {
-      const meters = haversineMeters(area.point, entry.point);
-      if (meters < nearestMeters && !entry.key.includes(area.key)) {
+      const meters = haversineMeters(area.point, point);
+      if (meters < nearestMeters && !key.includes(area.key)) {
         nearest = area;
         nearestMeters = meters;
       }

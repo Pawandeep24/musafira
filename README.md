@@ -22,6 +22,8 @@ Place search answers from an in-memory index of each city's named places: housin
 
 Signed-in riders can report what they saw at a spot: poor lighting, a deserted stretch, harassment, a bad road, police nearby and so on. Reports correct the sensor-based scores for riders passing at a similar hour and fade over weeks; harassment and loitering add a penalty that no slider can switch off. After a search, reports around the trip rise on the 3D map as pillars, bright where they count for the selected route. They are stored without the reporter's identity. See `src/safety/community.ts`.
 
+Day trips start from a base place and four quick questions: how long, interests, diet and when to be back. `POST /api/itinerary` offers Claude Haiku a numbered list of real places near the base, and Haiku replies with one short line per stop (about $0.0006 a plan). The server then sets the times in city time, checks opening hours, keeps rides before dusk unless the rider chose a later return, and flags any ride after dark. Any leg opens in the route planner for a safety check. Without `ANTHROPIC_API_KEY`, or after the daily spend cap, the same places are planned without AI. See `src/itinerary/`.
+
 Planning has two stages. `POST /api/plan` fetches the routes and measures every segment at its arrival time; the result is cached under a `searchId` for 30 minutes. `POST /api/plan/:searchId/score` re-weights that cached analysis in tens of milliseconds, which is why the sliders feel live. The formula lives in `src/safety/scoring.ts`.
 
 | Concern | Where | Notes |
@@ -30,9 +32,10 @@ Planning has two stages. `POST /api/plan` fetches the routes and measures every 
 | Planner | `src/planner/` | Ports for routing/traffic/geocoding, caching, ranking |
 | City data | `src/city/`, `data/cities/` | Spatial index, opening hours in city time |
 | Inbound auth (who is calling us?) | `src/auth/` | Verifies Firebase ID tokens; `requireAuth`, `requireVerifiedEmail`, `requireClaim` guards |
-| Outbound clients | `src/integrations/` | Valhalla, TomTom, openrouteservice, GoDaddy |
+| Trip plans | `src/itinerary/`, `src/planner/itineraryPlanner.ts` | Candidates, Claude line format, schedule, fallback |
+| Outbound clients | `src/integrations/` | Valhalla, TomTom, openrouteservice, GoDaddy, Anthropic |
 | Config | `src/config/env.ts` | Zod-validated env, fails fast |
-| Routes | `src/routes/` | `/api/config`, `/api/plan`, `/api/places/*`, `/api/me/preferences` and `/api/reports` (protected), `/healthz` |
+| Routes | `src/routes/` | `/api/config`, `/api/plan`, `/api/itinerary`, `/api/places/*`, `/api/me/preferences` and `/api/reports` (protected), `/healthz` |
 | Web app | `web/` | Map scene in `web/src/map/`, state hooks in `web/src/state/` |
 
 ## Run it locally

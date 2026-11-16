@@ -4,7 +4,7 @@ import { LngLatBounds, Map as MapLibreMap, setWorkerUrl, type IControl } from "m
 import "maplibre-gl/dist/maplibre-gl.css";
 import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?url";
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { City, LngLat, Route, Stop, TripReport } from "../api/types";
+import type { City, ItineraryStop, LngLat, Route, Stop, TripReport } from "../api/types";
 import { CATEGORY_LABEL } from "../lib/colors";
 import { formatClock } from "../lib/format";
 import { reportAge, reportSummary } from "../lib/reports";
@@ -12,7 +12,7 @@ import { bearing, pointAt, trackOf, type Track } from "../lib/track";
 import { PREVIEW_LEAD_IN_MS, previewMetersAt, type RidePreview } from "../state/ridePreview";
 import type { GridDot } from "./gridDots";
 import { midnightStyle } from "./mapStyle";
-import { sceneLayers } from "./sceneLayers";
+import { sceneLayers, type TripScene } from "./sceneLayers";
 
 export interface Insets {
   readonly top: number;
@@ -25,6 +25,7 @@ interface Props {
   city?: City;
   routes: readonly Route[];
   reports: readonly TripReport[];
+  trip?: TripScene;
   searchId?: string;
   selectedId?: string;
   from?: LngLat;
@@ -40,7 +41,7 @@ interface Props {
   onPreviewEnd(): void;
 }
 
-type Hover = { x: number; y: number } & ({ stop: Stop } | { report: TripReport });
+type Hover = { x: number; y: number } & ({ stop: Stop } | { report: TripReport } | { tripStop: ItineraryStop });
 
 // MapLibre derives its worker path from import.meta.url, which bundling breaks.
 setWorkerUrl(workerUrl);
@@ -113,6 +114,7 @@ export function MapView(props: Props) {
         layers: sceneLayers({
           routes: p.routes,
           reports: p.reports,
+          ...(p.trip ? { trip: p.trip } : {}),
           metersPerPixel,
           reportsRise: (now - reportsShownAt.current - REPORTS_RISE_DELAY_MS) / REPORTS_RISE_MS,
           ...(selected ? { selected } : {}),
@@ -127,6 +129,7 @@ export function MapView(props: Props) {
           onSelectRoute: (id) => latest.current.onSelectRoute(id),
           onHoverStop: (info: PickingInfo<Stop>) => setHover(info.object ? { stop: info.object, x: info.x, y: info.y } : null),
           onHoverReport: (info: PickingInfo<TripReport>) => setHover(info.object ? { report: info.object, x: info.x, y: info.y } : null),
+          onHoverTripStop: (info: PickingInfo<ItineraryStop>) => setHover(info.object ? { tripStop: info.object, x: info.x, y: info.y } : null),
         }),
       });
       frame = requestAnimationFrame(tick);
@@ -161,6 +164,15 @@ export function MapView(props: Props) {
 
   useEffect(() => {
     const map = mapRef.current;
+    const trip = props.trip;
+    if (!map || !trip) return;
+    const bounds = trip.stops.reduce((b, s) => b.extend(s.point), new LngLatBounds(trip.base, trip.base));
+    map.setPadding(NO_PADDING);
+    map.fitBounds(bounds, { padding: props.insets, pitch: 52, bearing: -14, duration: 1600, maxZoom: 15 });
+  }, [props.trip]);
+
+  useEffect(() => {
+    const map = mapRef.current;
     const track = props.preview ? tracks.get(props.preview.routeId) : undefined;
     if (!map || !track) return;
     map.flyTo({
@@ -190,6 +202,15 @@ export function MapView(props: Props) {
           <div className="map-tooltip__meta">Last reported {reportAge(hover.report.lastObservedAt, new Date(), offset)}</div>
           <div className="map-tooltip__state">
             {hover.report.routeIds.includes(selectedId ?? "") ? "Counted on this route" : "Near your trip, not counted on this route"}
+          </div>
+        </div>
+      )}
+      {hover && "tripStop" in hover && (
+        <div className="map-tooltip glass" style={{ left: hover.x + 14, top: hover.y + 14 }}>
+          <div className="map-tooltip__title">{hover.tripStop.name}</div>
+          <div className="map-tooltip__meta">
+            {formatClock(hover.tripStop.arriveAt, offset)} to {formatClock(hover.tripStop.leaveAt, offset)}
+            {hover.tripStop.area && ` · ${hover.tripStop.area}`}
           </div>
         </div>
       )}

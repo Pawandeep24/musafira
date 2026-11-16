@@ -14,17 +14,20 @@ import { GoDaddyApiError } from "./integrations/godaddy/client.js";
 import { AppError } from "./lib/errors.js";
 import { UpstreamError } from "./lib/http.js";
 import type { CommunityReports } from "./planner/communityReports.js";
+import type { ItineraryPlanner } from "./planner/itineraryPlanner.js";
 import { createPlaceSuggester } from "./planner/placeSuggester.js";
 import type { Geocoder } from "./planner/ports.js";
 import type { RoutePlanner } from "./planner/routePlanner.js";
 import { configRoutes } from "./routes/config.js";
 import { domainRoutes } from "./routes/domains.js";
 import { healthRoutes } from "./routes/health.js";
+import { itineraryRoutes } from "./routes/itinerary.js";
 import { meRoutes } from "./routes/me.js";
 import { placesRoutes } from "./routes/places.js";
 import { planRoutes } from "./routes/plan.js";
 import { preferencesRoutes } from "./routes/preferences.js";
 import { reportRoutes } from "./routes/reports.js";
+import { serveWebApp, webAppCsp } from "./routes/webApp.js";
 
 export interface AppDeps {
   env: Env;
@@ -33,10 +36,12 @@ export interface AppDeps {
   db?: Firestore;
   cities?: CityRegistry;
   planner?: RoutePlanner;
+  itineraries?: ItineraryPlanner;
   geocoder?: Geocoder;
   preferences?: PreferencesStore;
   reports?: CommunityReports;
   now?: () => Date;
+  webRoot?: string;
 }
 
 export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
@@ -50,7 +55,11 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
     trustProxy: true, // correct client IPs behind Render/Fly/Cloud Run proxies (rate limiting)
   });
 
-  await app.register(helmet);
+  await app.register(helmet, {
+    contentSecurityPolicy: { directives: webAppCsp },
+    // Google sign-in reports back to the page from its popup window.
+    crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
+  });
   await app.register(cors, {
     origin: env.CORS_ORIGINS.length ? env.CORS_ORIGINS : false,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
@@ -100,10 +109,12 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
   await app.register(planRoutes({ ...(deps.planner ? { planner: deps.planner } : {}), ...(deps.now ? { now: deps.now } : {}) }), {
     prefix: "/api",
   });
+  await app.register(itineraryRoutes({ ...(deps.itineraries ? { planner: deps.itineraries } : {}) }), { prefix: "/api" });
   await app.register(preferencesRoutes({ requireAuth, ...(deps.preferences ? { store: deps.preferences } : {}) }), {
     prefix: "/api",
   });
   await app.register(reportRoutes({ requireAuth, ...(deps.reports ? { reports: deps.reports } : {}) }), { prefix: "/api" });
+  if (deps.webRoot) await serveWebApp(app, deps.webRoot);
 
   return app;
 }

@@ -55,6 +55,7 @@ export function testCity(overrides: Partial<CityData> = {}): CityIndex {
     utcOffsetMinutes: 330,
     pois: [],
     places: [],
+    sights: [],
     lights: grid(() => 40),
     cellDensity: grid(() => 50),
     sources: [],

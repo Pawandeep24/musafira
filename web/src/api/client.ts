@@ -1,4 +1,17 @@
-import type { AppConfig, CityLayers, LngLat, Place, Plan, Preferences, ReportCategory, ReportWhen, ScoringOptions, Weights } from "./types";
+import type {
+  AppConfig,
+  CityLayers,
+  Itinerary,
+  LngLat,
+  Place,
+  Plan,
+  Preferences,
+  ReportCategory,
+  ReportWhen,
+  ScoringOptions,
+  TripAnswers,
+  Weights,
+} from "./types";
 
 export class ApiError extends Error {
   constructor(
@@ -56,6 +69,8 @@ export const api = {
   plan: (body: PlanBody, signal?: AbortSignal) => request<Plan>("/plan", { method: "POST", body, ...(signal ? { signal } : {}) }),
   rescore: (searchId: string, body: { weights: Weights; options: ScoringOptions }, signal?: AbortSignal) =>
     request<Plan>(`/plan/${searchId}/score`, { method: "POST", body, ...(signal ? { signal } : {}) }),
+  itinerary: (body: TripAnswers & { base: { name: string; point: LngLat } }, signal?: AbortSignal) =>
+    request<Itinerary>("/itinerary", { method: "POST", body, ...(signal ? { signal } : {}) }),
   getPreferences: (token: string) => request<{ preferences: Preferences | null }>("/me/preferences", { token }).then((r) => r.preferences),
   savePreferences: (token: string, preferences: Preferences) =>
     request<{ preferences: Preferences }>("/me/preferences", { method: "PUT", body: preferences, token }),

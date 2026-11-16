@@ -4,11 +4,10 @@ import { AppError, badRequest } from "../lib/errors.js";
 import type { RoutePlanner } from "../planner/routePlanner.js";
 import { DEFAULT_OPTIONS, DEFAULT_WEIGHTS, optionsSchema, weightsSchema } from "../safety/parameters.js";
 import { toPlanResponse } from "./planResponse.js";
+import { lngLatSchema } from "./schemas.js";
 
 const MAX_PAST_MS = 60 * 60_000;
 const MAX_FUTURE_MS = 14 * 24 * 60 * 60_000;
-
-const lngLatSchema = z.tuple([z.number().min(-180).max(180), z.number().min(-90).max(90)]);
 
 const scoringBody = {
   weights: weightsSchema.default(DEFAULT_WEIGHTS),

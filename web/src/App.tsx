@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { api } from "./api/client";
-import type { AppConfig, LngLat, Place, ReportCategory, ReportWhen, TripReport } from "./api/types";
+import type { AppConfig, ItineraryLeg, LngLat, Place, ReportCategory, ReportWhen, Route, TripReport } from "./api/types";
 import { useAuth } from "./auth/useAuth";
 import { AuthDialog, type AuthPurpose } from "./components/AuthDialog";
 import { DepartureControl } from "./components/DepartureControl";
 import { EmptyState, type DemoTrip } from "./components/EmptyState";
 import { Icon } from "./components/Icon";
+import { ItineraryView } from "./components/ItineraryView";
 import { Attribution, Legend } from "./components/Legend";
 import { ReportSheet } from "./components/ReportSheet";
 import { RideHud } from "./components/RideHud";
@@ -15,13 +16,16 @@ import { SafetyDna } from "./components/SafetyDna";
 import { Scanning } from "./components/Scanning";
 import { TopBar } from "./components/TopBar";
 import { TripInputs } from "./components/TripInputs";
+import { TripPlanner } from "./components/TripPlanner";
 import { skyRgb } from "./lib/colors";
 import { cityHour, formatDuration, nextCityHour } from "./lib/format";
 import { useMediaQuery } from "./lib/useMediaQuery";
 import { routeVerdict } from "./lib/verdict";
 import { gridDots, nightLightDot, signalDot, type GridDot } from "./map/gridDots";
 import { MapView, type Insets } from "./map/MapView";
+import type { TripScene } from "./map/sceneLayers";
 import { PREVIEW_SECONDS, retimePreview, startPreview, type RidePreview } from "./state/ridePreview";
+import { useItinerary } from "./state/useItinerary";
 import { usePlanner } from "./state/usePlanner";
 import { useReport } from "./state/useReport";
 import { useSafetyProfile } from "./state/useSafetyProfile";
@@ -30,6 +34,9 @@ const DEMO_HOUR = 23;
 const DEFAULT_CITY_ID = "pune";
 const TOAST_MS = 4500;
 const NO_REPORTS: readonly TripReport[] = [];
+const NO_ROUTES: readonly Route[] = [];
+
+type Mode = "ride" | "trip";
 
 interface Rasters {
   lights?: readonly GridDot[];
@@ -53,12 +60,14 @@ export function App() {
   const [preview, setPreview] = useState<RidePreview>();
   const [speed, setSpeed] = useState(1);
   const [toast, setToast] = useState<string>();
+  const [mode, setMode] = useState<Mode>("ride");
   const mobile = useMediaQuery("(max-width: 760px)");
 
   const auth = useAuth();
   const safety = useSafetyProfile(config?.defaults, auth);
   const planner = usePlanner(safety.profile && { weights: safety.profile.weights, options: safety.profile.options });
   const report = useReport(auth);
+  const trip = useItinerary();
 
   useEffect(() => {
     if (!toast) return;
@@ -97,7 +106,13 @@ export function App() {
 
   const city = config?.cities.find((c) => c.id === cityId);
   const offset = city?.utcOffsetMinutes ?? 330;
-  const routes = planner.plan?.routes ?? [];
+  const tripMode = mode === "trip";
+  const routes = (!tripMode && planner.plan?.routes) || NO_ROUTES;
+  const tripDay = trip.itinerary?.days[trip.dayIndex];
+  const tripScene = useMemo<TripScene | undefined>(
+    () => (tripMode && trip.itinerary && tripDay ? { base: trip.itinerary.base.point, stops: tripDay.stops, legs: tripDay.legs } : undefined),
+    [tripMode, trip.itinerary, tripDay],
+  );
   const selected = routes.find((r) => r.id === planner.selectedId);
   const verdict = useMemo(() => (config ? routeVerdict(routes, config.parameters) : null), [routes, config]);
 
@@ -148,7 +163,20 @@ export function App() {
     if (id === cityId) return;
     setPreview(undefined);
     planner.clear();
+    trip.clear();
     setCityId(id);
+  };
+
+  const switchMode = (next: Mode) => {
+    setPreview(undefined);
+    report.close();
+    setMode(next);
+  };
+
+  const checkLeg = (leg: ItineraryLeg, fromName: string, toName: string) => {
+    const place = (name: string, point: LngLat): Place => ({ id: `trip:${point.join(",")}`, name, label: name, point });
+    switchMode("ride");
+    planner.search({ from: place(fromName, leg.from), to: place(toName, leg.to), departure: { mode: "at", at: new Date(leg.departAt) } });
   };
 
   const runDemo = (trip: DemoTrip) => {
@@ -158,7 +186,8 @@ export function App() {
   const pickPoint = async (point: LngLat) => {
     if (preview) return;
     const place = await placeAt(point);
-    if (!planner.from) planner.setFrom(place);
+    if (tripMode) trip.setBase(place);
+    else if (!planner.from) planner.setFrom(place);
     else planner.setTo(place);
   };
 
@@ -169,7 +198,7 @@ export function App() {
   const skyHour = planner.departure.mode === "at" ? cityHour(planner.departure.at, offset) : cityHour(new Date(), offset);
   const [r, g, b] = skyRgb(skyHour);
   const planning = planner.status === "planning";
-  const busy = planning || planner.status === "rescoring";
+  const busy = tripMode ? trip.status === "planning" : planning || planner.status === "rescoring";
   const outdated = planner.stale || planning;
 
   if (loadError) {
@@ -187,11 +216,12 @@ export function App() {
       <MapView
         {...(city ? { city } : {})}
         routes={routes}
-        reports={planner.plan?.reports ?? NO_REPORTS}
-        {...(planner.plan ? { searchId: planner.plan.searchId } : {})}
-        {...(planner.selectedId ? { selectedId: planner.selectedId } : {})}
-        {...(planner.from ? { from: planner.from.point } : {})}
-        {...(planner.to ? { to: planner.to.point } : {})}
+        reports={(!tripMode && planner.plan?.reports) || NO_REPORTS}
+        {...(tripScene ? { trip: tripScene } : {})}
+        {...(!tripMode && planner.plan ? { searchId: planner.plan.searchId } : {})}
+        {...(!tripMode && planner.selectedId ? { selectedId: planner.selectedId } : {})}
+        {...(tripMode ? (!tripScene && trip.base ? { from: trip.base.point } : {}) : planner.from ? { from: planner.from.point } : {})}
+        {...(!tripMode && planner.to ? { to: planner.to.point } : {})}
         {...(report.point ? { reportPoint: report.point } : {})}
         {...(showLights && rasters.lights ? { lights: rasters.lights } : {})}
         {...(showSignal && rasters.signal ? { signal: rasters.signal } : {})}
@@ -225,55 +255,91 @@ export function App() {
       {config && city && (
         <aside className={`panel glass ${busy ? "is-busy" : ""}`}>
           <div className="panel__progress" />
-          <TripInputs cityId={city.id} from={planner.from} to={planner.to} onFrom={planner.setFrom} onTo={planner.setTo} onSwap={planner.swap} />
-          <DepartureControl departure={planner.departure} utcOffsetMinutes={offset} onChange={planner.setDeparture} />
-
-          {(!planner.plan || outdated) && (
-            <button
-              className="button button--primary button--wide"
-              onClick={() => planner.search()}
-              disabled={!planner.from || !planner.to || planning}
-              aria-busy={planning}
-            >
-              <Icon name="search" size={16} /> {planning ? "Finding routes…" : planner.plan ? "Update routes" : "Find safe routes"}
+          <div className="segmented mode-switch" role="tablist" aria-label="Mode">
+            <button role="tab" aria-selected={!tripMode} className={tripMode ? "" : "is-on"} onClick={() => switchMode("ride")}>
+              <Icon name="route" size={14} /> Ride
             </button>
-          )}
+            <button role="tab" aria-selected={tripMode} className={tripMode ? "is-on" : ""} onClick={() => switchMode("trip")}>
+              <Icon name="sparkle" size={14} /> Day trip
+            </button>
+          </div>
 
-          {planner.error && (
-            <div className="notice notice--error">
-              <Icon name="alert" size={15} /> {planner.error}
-            </div>
-          )}
-
-          {!planner.plan && planner.status === "planning" && <Scanning />}
-          {!planner.plan && planner.status !== "planning" && <EmptyState cityId={city.id} onDemo={runDemo} />}
-
-          {planner.plan && (
-            <div className={`results ${outdated ? "is-stale" : ""}`}>
-              {verdict && (
-                <p className="verdict">
-                  <Icon name="sparkle" size={15} /> {verdict}
-                </p>
+          {tripMode && (
+            <>
+              {trip.itinerary ? (
+                <ItineraryView itinerary={trip.itinerary} dayIndex={trip.dayIndex} onDay={trip.setDayIndex} onEdit={trip.edit} onCheckRoute={checkLeg} />
+              ) : (
+                <TripPlanner
+                  cityId={city.id}
+                  {...(trip.base ? { base: trip.base } : {})}
+                  answers={trip.answers}
+                  planning={trip.status === "planning"}
+                  onBase={trip.setBase}
+                  onAnswer={trip.answer}
+                  onPlan={trip.plan}
+                />
               )}
-              <RouteCards
-                routes={routes}
-                {...(planner.selectedId ? { selectedId: planner.selectedId } : {})}
-                utcOffsetMinutes={offset}
-                onSelect={planner.setSelectedId}
-              />
-              {selected && safety.profile && (
-                <RouteInsights route={selected} parameters={config.parameters} weights={safety.profile.weights} city={city} />
+              {trip.error && (
+                <div className="notice notice--error">
+                  <Icon name="alert" size={15} /> {trip.error}
+                </div>
               )}
-            </div>
+            </>
           )}
 
-          {selected && !outdated && (
-            <div className="panel__footer">
-              <button className="button button--primary button--wide" onClick={beginPreview}>
-                <Icon name="play" size={15} /> Preview the ride
-                <span className="button__meta">{formatDuration(selected.durationSeconds)}</span>
-              </button>
-            </div>
+          {!tripMode && (
+            <>
+              <TripInputs cityId={city.id} from={planner.from} to={planner.to} onFrom={planner.setFrom} onTo={planner.setTo} onSwap={planner.swap} />
+              <DepartureControl departure={planner.departure} utcOffsetMinutes={offset} onChange={planner.setDeparture} />
+
+              {(!planner.plan || outdated) && (
+                <button
+                  className="button button--primary button--wide"
+                  onClick={() => planner.search()}
+                  disabled={!planner.from || !planner.to || planning}
+                  aria-busy={planning}
+                >
+                  <Icon name="search" size={16} /> {planning ? "Finding routes…" : planner.plan ? "Update routes" : "Find safe routes"}
+                </button>
+              )}
+
+              {planner.error && (
+                <div className="notice notice--error">
+                  <Icon name="alert" size={15} /> {planner.error}
+                </div>
+              )}
+
+              {!planner.plan && planner.status === "planning" && <Scanning />}
+              {!planner.plan && planner.status !== "planning" && <EmptyState cityId={city.id} onDemo={runDemo} />}
+
+              {planner.plan && (
+                <div className={`results ${outdated ? "is-stale" : ""}`}>
+                  {verdict && (
+                    <p className="verdict">
+                      <Icon name="sparkle" size={15} /> {verdict}
+                    </p>
+                  )}
+                  <RouteCards
+                    routes={routes}
+                    {...(planner.selectedId ? { selectedId: planner.selectedId } : {})}
+                    utcOffsetMinutes={offset}
+                    onSelect={planner.setSelectedId}
+                  />
+                  {selected && safety.profile && (
+                    <RouteInsights route={selected} parameters={config.parameters} weights={safety.profile.weights} city={city} />
+                  )}
+                </div>
+              )}
+
+              {selected && !outdated && (
+                <div className="panel__footer">
+                  <button className="button button--primary button--wide" onClick={beginPreview}>
+                    <Icon name="play" size={15} /> Preview the ride
+                    <span className="button__meta">{formatDuration(selected.durationSeconds)}</span>
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </aside>
       )}

@@ -170,6 +170,61 @@ export interface Plan {
   reports: TripReport[];
 }
 
+export type TripDays = 0.5 | 1 | 2 | 3;
+export type TripInterest = "food" | "heritage" | "temples" | "nature" | "markets" | "cafes";
+export type TripDiet = "veg" | "egg" | "any";
+export type TripBackBy = "sunset" | "20:00" | "22:00";
+export type TripSlot = "breakfast" | "morning" | "lunch" | "afternoon" | "snack" | "dinner";
+export type SightKind = "heritage" | "museum" | "worship" | "nature" | "market" | "attraction";
+
+export interface TripAnswers {
+  days: TripDays;
+  interests: TripInterest[];
+  diet: TripDiet;
+  backBy: TripBackBy;
+}
+
+export interface ItineraryStop {
+  id: string;
+  slot: TripSlot;
+  name: string;
+  area: string | null;
+  kind: SightKind | "restaurant" | "cafe" | "fast_food";
+  famous: boolean;
+  point: LngLat;
+  arriveAt: string;
+  leaveAt: string;
+  closesAt: string | null;
+  note: string | null;
+}
+
+export interface ItineraryLeg {
+  from: LngLat;
+  to: LngLat;
+  departAt: string;
+  arriveAt: string;
+  distanceMeters: number;
+  dark: boolean;
+}
+
+export interface ItineraryDay {
+  index: number;
+  startAt: string;
+  endAt: string;
+  dusk: string;
+  stops: ItineraryStop[];
+  legs: ItineraryLeg[];
+}
+
+export interface Itinerary {
+  title: string;
+  source: "ai" | "basic";
+  fallback: "not_configured" | "unavailable" | "daily_limit" | null;
+  city: { id: string; name: string; utcOffsetMinutes: number };
+  base: { name: string; point: LngLat };
+  days: ItineraryDay[];
+}
+
 export interface Grid {
   west: number;
   north: number;

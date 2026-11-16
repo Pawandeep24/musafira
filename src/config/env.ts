@@ -25,6 +25,8 @@ const schema = z.object({
   TOMTOM_API_KEY: z.string().min(1).optional(),
   OPENCELLID_API_KEY: z.string().min(1).optional(),
   NASA_EARTHDATA_TOKEN: z.string().min(1).optional(),
+  ANTHROPIC_API_KEY: z.string().min(1).optional(),
+  ANTHROPIC_DAILY_BUDGET_USD: z.coerce.number().positive().default(1),
 
   FIREBASE_PROJECT_ID: z.string().min(1).optional(),
   FIREBASE_WEB_API_KEY: z.string().min(1).optional(),

@@ -31,6 +31,10 @@ const PATHS = {
   shield: "M12 3l7 3v6c0 4.5-3 7.8-7 9-4-1.2-7-4.5-7-9V6l7-3z",
   droplet: "M12 3s-6 6.8-6 11a6 6 0 0 0 12 0c0-4.2-6-11-6-11z",
   eye: "M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12zM12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6z",
+  utensils: "M6 3v7M4 3v5a2 2 0 0 0 4 0V3M6 10v11M17 21V3c-2.2 1.2-3 3.8-3 7v3h3",
+  landmark: "M3 21h18M5 21V10M9.5 21V10M14.5 21V10M19 21V10M2.5 10L12 4l9.5 6h-19z",
+  coffee: "M4 9h12v4a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V9zM16 10h1.5a2.5 2.5 0 0 1 0 5H16M8 3v3M12 3v3",
+  route: "M6 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM18 9a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM8 17h7a3 3 0 0 0 0-6H9a3 3 0 0 1 0-6h7",
 } as const satisfies Record<string, string>;
 
 export type IconName = keyof typeof PATHS | ParameterId;

@@ -29,8 +29,9 @@ Run `npm run typecheck && npm test` after every API change, and `npm run web:typ
 - `src/geo/` - pure geometry: distances, polylines, measured paths
 - `src/city/` - city data model (zod), spatial index, opening hours, registry loaded from `data/cities/`
 - `src/safety/` - the pure scoring engine: segmentation, one extractor per parameter in `features/`, stops, stretches, scoring
-- `src/planner/` - application service: ports (`RouteProvider`, `TrafficProvider`, `Geocoder`) plus caching and ranking around the engine
-- `src/integrations/<vendor>/` - outbound API clients, one folder per vendor (`valhalla`, `tomtom`, `ors`, `godaddy`)
+- `src/itinerary/` - the pure trip-plan engine: candidate places, Claude prompt and reply parser, basic plan, schedule in city time
+- `src/planner/` - application services: ports (`RouteProvider`, `TrafficProvider`, `Geocoder`, `TextModel`) plus caching and ranking around the engines
+- `src/integrations/<vendor>/` - outbound API clients, one folder per vendor (`valhalla`, `tomtom`, `ors`, `godaddy`, `anthropic`)
 - `src/routes/` - HTTP handlers; thin, delegate to services or clients
 - `src/db/` - Firestore access
 - `src/lib/` - small shared helpers (errors, fetch with schema, TTL cache)
@@ -53,6 +54,12 @@ Read the doc header before changing these:
 - `src/city/openingHours.ts` - OSM hours vs category defaults, city wall-clock evaluation
 - `src/city/placeSearch.ts` - type-ahead matching (prefix, sound-alike, typo), rank formula, duplicate merging
 - `src/planner/placeSuggester.ts` - when the remote geocoder tops up local place results
+- `src/itinerary/candidates.ts` - which real places are offered for a trip: diet and chain filters, duplicates, rank formula
+- `src/itinerary/prompt.ts` - the compact line format sent to Claude and parsed back (refs only, so it can't invent places)
+- `src/itinerary/fill.ts` - the basic plan and gap filling: anchor sight, nearest-first walk
+- `src/itinerary/schedule.ts` - stay times, meal windows, opening-hours swaps, dusk limit and dark legs
+- `src/planner/itineraryPlanner.ts` - plan cache, daily spend cap, fallback to the basic plan
+- `src/integrations/anthropic/client.ts` - Haiku request shape and cost from token usage
 - `scripts/ingest/osmPlaces.ts` - which OSM features become searchable places and how duplicates merge
 - `src/integrations/valhalla/client.ts` - alternates, per-vertex ETA, road classes via `trace_attributes`
 - `scripts/ingest/nightLights.ts`, `scripts/ingest/cellTowers.ts` - source formats and grid construction
