@@ -49,11 +49,19 @@ export interface City {
 }
 
 export interface AppConfig {
+  contactEmail?: string;
   parameters: ParameterInfo[];
   maxWeight: number;
   presets: Preset[];
   defaults: { weights: Weights; options: ScoringOptions };
   cities: City[];
+}
+
+export interface ContactMessage {
+  name: string;
+  email: string;
+  message: string;
+  website?: string;
 }
 
 export type PlaceKind = "area" | "residence" | "landmark" | "street";

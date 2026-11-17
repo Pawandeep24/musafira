@@ -1,0 +1,25 @@
+.contact__message {
+  min-height: 120px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  outline: none;
+  background: var(--surface-raised);
+  color: inherit;
+  font: inherit;
+  resize: vertical;
+}
+
+.contact__message:focus {
+  border-color: var(--accent-line);
+}
+
+.dialog .contact__trap {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  pointer-events: none;
+}

@@ -18,6 +18,7 @@
 - `npm run ingest -- <cityId>` - rebuild `data/cities/<cityId>.json` (OSM POIs, named places and public toilets, NASA night lights, OpenCelliD); needs keys in `.env`
 - `npm run smoke:godaddy` - read-only check of the GoDaddy key for `GODADDY_ENV`
 - `npm run smoke:nammayatri -- <code>` - read-only Namma Yatri check with a fresh 2-minute code: sign-in, fares direct and via a stop; never books
+- `npm run golive:check -- <domain>` - read-only launch check through `gddy` and the live site: domain, attachment and certificate, DNS, HTTPS, mailbox, mail records, contact form
 - `npm run web:dev` - start the web app on http://localhost:5173 (proxies `/api` to the API)
 - `npm run web:typecheck` / `npm run web:build` - check or build the web app
 
@@ -33,12 +34,13 @@ Run `npm run typecheck && npm test` after every API change, and `npm run web:typ
 - `src/itinerary/` - the pure trip-plan engine: candidate places, Claude prompt and reply parser, basic plan, schedule in city time
 - `src/rides/` - the pure ride engine: safety checkpoints, route guard, demo meter fares and simulated driver
 - `src/stops/` - Safe Stop questionnaire and domain proof, washroom ranking for "washrooms near me"
-- `src/planner/` - application services: ports (`RouteProvider`, `TrafficProvider`, `Geocoder`, `TextModel`, `CarRouter`, `RideHailing`, `SafeStopSource`, `DomainLookup`) plus caching and ranking around the engines
-- `src/integrations/<vendor>/` - outbound API clients, one folder per vendor (`valhalla`, `tomtom`, `ors`, `godaddy`, `anthropic`, `nammayatri`, `rdap`, `dns`); JSON calls go through `fetchJson` in `src/lib/http.ts` (GoDaddy keeps its own for retries and token refresh)
+- `src/planner/` - application services: ports (`RouteProvider`, `TrafficProvider`, `Geocoder`, `TextModel`, `CarRouter`, `RideHailing`, `SafeStopSource`, `DomainLookup`, `Mailer`) plus caching and ranking around the engines
+- `src/integrations/<vendor>/` - outbound API clients, one folder per vendor (`valhalla`, `tomtom`, `ors`, `godaddy`, `anthropic`, `nammayatri`, `rdap`, `dns`, `smtp`); JSON calls go through `fetchJson` in `src/lib/http.ts` (GoDaddy keeps its own for retries and token refresh)
 - `src/routes/` - HTTP handlers, one file per resource with all its methods; thin, delegate to services or clients
 - `src/db/` - Firestore access
 - `src/lib/` - small shared helpers (errors, fetch with schema, TTL cache)
 - `scripts/ingest/` - offline city ingest; raw downloads are cached in `data/raw/` (gitignored), output in `data/cities/` (committed)
+- `.claude/skills/godaddy-go-live/` - agent skill: domain, HTTPS, mailbox, SMTP and Firebase steps on GoDaddy hosting with `gddy`, ending in `golive:check`
 - `test/` - tests mirror the behaviour under test, not the file layout
 - `web/src/api/` - DTO types and the fetch client (mirror `src/routes/planResponse.ts`)
 - `web/src/state/` - React hooks owning app state (planner, safety profile, ride preview clock and camera presets, ride booking, washrooms, Safe Stop onboarding, map theme, mobile sheet height)
@@ -77,6 +79,7 @@ Read the doc header before changing these:
 - `src/stops/washrooms.ts` - washroom candidates and the rank formula (ride minutes, unknown facts, Safe Stop bonus)
 - `src/planner/safeStops.ts` - listings, in-memory index of listed stops, re-verification on domain change, limits, domain-idea availability
 - `src/integrations/rdap/client.ts`, `src/integrations/dns/txt.ts` - registrar from RDAP; TXT asked of the zone's own nameservers first
+- `src/integrations/smtp/client.ts` - contact mail sent from and to the site's own mailbox so SPF and DKIM pass, visitor in Reply-To, only the SMTP reply code on failure
 - `scripts/ingest/osmWashrooms.ts` - which OSM toilet tags become washroom facts
 - `scripts/ingest/nightLights.ts`, `scripts/ingest/cellTowers.ts` - source formats and grid construction
 - `web/src/map/sceneLayers.ts` - layer stack and animation model
@@ -117,7 +120,7 @@ Apply SOLID and common patterns where they remove real duplication or coupling, 
 
 ## Security
 
-- Secrets (GoDaddy key/secret, Firebase service account) live only in `.env`, never in code, logs, tests, or commits. Add new variables to `.env.example` with blank values.
+- Secrets (GoDaddy key/secret, Firebase service account, SMTP password) live only in `.env` and GoDaddy's hosting secrets, never in code, logs, tests, or commits. Add new variables to `.env.example` with blank values.
 - Never log tokens or `Authorization` headers.
 - Protected routes must use `requireAuth`; add `requireVerifiedEmail` or `requireClaim` when the action needs it.
 - Default `GODADDY_ENV` to the sandbox for anything that writes or costs money.

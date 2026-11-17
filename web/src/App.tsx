@@ -3,6 +3,7 @@ import { api } from "@/api/client";
 import type { AppConfig, City, ItineraryLeg, LngLat, Place, ReportCategory, ReportWhen, Route, TripReport, Washroom } from "@/api/types";
 import { useAuth } from "@/auth/useAuth";
 import { AuthDialog, type AuthPurpose } from "@/components/AuthDialog";
+import { ContactDialog } from "@/components/ContactDialog";
 import { DepartureControl } from "@/components/DepartureControl";
 import { EmptyState, type DemoTrip } from "@/components/EmptyState";
 import { Icon } from "@/components/Icon";
@@ -37,6 +38,7 @@ import { gridDots, nightLightDot, signalDot, type GridDot } from "@/map/gridDots
 import { MapView, type Insets } from "@/map/MapView";
 import type { RideScene, TripScene } from "@/map/sceneLayers";
 import { previewMetersPerSecond, retimePreview, startPreview, togglePreviewPause, type PreviewCamera, type RidePreview } from "@/state/ridePreview";
+import { useContact } from "@/state/useContact";
 import { useItinerary } from "@/state/useItinerary";
 import { useMapTheme } from "@/state/useMapTheme";
 import { usePlanner } from "@/state/usePlanner";
@@ -120,6 +122,8 @@ export function App() {
   const rides = useRideBooking();
   const washrooms = useWashrooms();
   const listing = useStopOnboarding(auth, config?.cities ?? NO_CITIES);
+  const contact = useContact();
+  const contactLink = config?.contactEmail ? { onContact: contact.start } : {};
 
   useEffect(() => {
     if (!toast) return;
@@ -572,6 +576,7 @@ export function App() {
               ) : (
                 <LinkButton onClick={() => setAuthPurpose("sync")}>Sign in to keep these on every device</LinkButton>
               )}
+              {config.contactEmail && <LinkButton onClick={contact.start}>Contact us</LinkButton>}
             </div>
           )}
         </aside>
@@ -629,7 +634,7 @@ export function App() {
 
       <div className="bottom-bar">
         <Legend showRoute={Boolean(selected)} showLights={showLights && Boolean(rasters.lights)} showSignal={showSignal && Boolean(rasters.signal)} />
-        <Attribution {...(city ? { city } : {})} compact={mobile} />
+        <Attribution {...(city ? { city } : {})} compact={mobile} {...contactLink} />
       </div>
 
       {toast && (
@@ -644,6 +649,19 @@ export function App() {
           purpose={authPurpose}
           {...(authPurpose === "report" ? { onSignedIn: openReport } : authPurpose === "listing" ? { onSignedIn: openListing } : {})}
           onClose={() => setAuthPurpose(undefined)}
+        />
+      )}
+
+      {contact.open && config?.contactEmail && (
+        <ContactDialog
+          to={config.contactEmail}
+          name={auth.user?.displayName ?? ""}
+          email={auth.user?.email ?? ""}
+          sending={contact.sending}
+          {...(contact.sentTo ? { sentTo: contact.sentTo } : {})}
+          {...(contact.error ? { error: contact.error } : {})}
+          onSend={contact.send}
+          onClose={contact.close}
         />
       )}
     </div>

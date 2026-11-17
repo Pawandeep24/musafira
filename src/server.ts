@@ -16,6 +16,7 @@ import { createGoDaddyClient } from "#src/integrations/godaddy/factory.js";
 import { NammaYatriClient } from "#src/integrations/nammayatri/client.js";
 import { OrsGeocoder } from "#src/integrations/ors/geocoder.js";
 import { RdapClient } from "#src/integrations/rdap/client.js";
+import { createSmtpMailer } from "#src/integrations/smtp/client.js";
 import { TomTomTrafficFlow } from "#src/integrations/tomtom/trafficFlow.js";
 import { ValhallaClient } from "#src/integrations/valhalla/client.js";
 import { createCommunityReports } from "#src/planner/communityReports.js";
@@ -69,6 +70,9 @@ const app = await buildApp({
   preferences: createFirestorePreferencesStore(db),
   reports,
   safeStops,
+  ...(env.SMTP_USER && env.SMTP_PASSWORD
+    ? { mailer: createSmtpMailer({ host: env.SMTP_HOST, port: env.SMTP_PORT, user: env.SMTP_USER, password: env.SMTP_PASSWORD }) }
+    : {}),
   ...(existsSync(join(webRoot, "index.html")) ? { webRoot } : {}),
 });
 
@@ -86,6 +90,7 @@ if (cities.cities.length === 0) app.log.warn("No city data in data/cities - run 
 if (!env.TOMTOM_API_KEY) app.log.warn("No TOMTOM_API_KEY - crowd scores use open places only");
 if (!env.ORS_API_KEY) app.log.warn("No ORS_API_KEY - place search uses city data only; reverse lookup returns 503");
 if (!env.ANTHROPIC_API_KEY) app.log.warn("No ANTHROPIC_API_KEY - trip plans use the basic planner only");
+if (!env.SMTP_USER || !env.SMTP_PASSWORD) app.log.warn("No SMTP_USER/SMTP_PASSWORD - the contact form is hidden and /api/contact returns 503");
 if (!godaddy) app.log.warn(`No GoDaddy credentials for "${env.GODADDY_ENV}" - /api/domains/* will return 503`);
 if (env.GODADDY_ENV === "production") app.log.warn("GoDaddy client is pointed at PRODUCTION");
 

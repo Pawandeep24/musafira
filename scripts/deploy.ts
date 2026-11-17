@@ -39,6 +39,10 @@ const SERVER_SETTINGS = [
   "FIREBASE_PROJECT_ID",
   "FIREBASE_SERVICE_ACCOUNT_JSON",
   "GODADDY_ENV",
+  "SMTP_HOST",
+  "SMTP_PORT",
+  "SMTP_USER",
+  "SMTP_PASSWORD",
 ];
 
 const importSchema = z.object({ importId: z.string(), status: z.string() });

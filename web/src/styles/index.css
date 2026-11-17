@@ -27,5 +27,6 @@
 @import "@/components/RideHud.css";
 @import "@/components/Legend.css";
 @import "@/styles/dialog.css";
+@import "@/components/ContactDialog.css";
 @import "@/styles/motion.css";
 @import "@/styles/responsive.css";

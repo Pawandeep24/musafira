@@ -1,6 +1,7 @@
 import type {
   AppConfig,
   CityLayers,
+  ContactMessage,
   DomainIdea,
   Itinerary,
   LngLat,
@@ -119,4 +120,5 @@ export const api = {
     request<{ stop: OwnedSafeStop; checks: VerifyChecks }>(`/stops/${encodeURIComponent(id)}/verify`, { method: "POST", token }),
   domainIdeas: (token: string, name: string, cityId: string) =>
     request<{ ideas: DomainIdea[] }>("/stops/domain-ideas", { method: "POST", body: { name, cityId }, token }).then((r) => r.ideas),
+  contact: (message: ContactMessage) => request<{ sent: boolean }>("/contact", { method: "POST", body: message }),
 };

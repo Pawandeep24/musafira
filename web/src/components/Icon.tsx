@@ -44,6 +44,7 @@ const PATHS = {
   back: "M15 6l-6 6 6 6",
   link: "M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1",
   copy: "M9 9h11v12H9zM5 15H4V4a1 1 0 0 1 1-1h11v1",
+  mail: "M3 5h18v14H3zM3 6l9 7 9-7",
 } as const satisfies Record<string, string>;
 
 export type IconName = keyof typeof PATHS | ParameterId;

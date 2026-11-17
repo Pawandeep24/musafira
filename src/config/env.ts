@@ -33,6 +33,11 @@ const schema = z.object({
     .default("false")
     .transform((v) => v === "true"),
 
+  SMTP_HOST: z.string().min(1).default("smtpout.secureserver.net"),
+  SMTP_PORT: z.coerce.number().int().positive().default(465),
+  SMTP_USER: z.email().optional(),
+  SMTP_PASSWORD: z.string().min(1).optional(),
+
   FIREBASE_PROJECT_ID: z.string().min(1).optional(),
   FIREBASE_WEB_API_KEY: z.string().min(1).optional(),
   FIREBASE_SERVICE_ACCOUNT_JSON: z.string().min(1).optional(),

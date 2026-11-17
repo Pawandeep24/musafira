@@ -126,3 +126,15 @@ export interface TextReply {
 export interface TextModel {
   complete(request: TextRequest): Promise<TextReply>;
 }
+
+export interface SiteMail {
+  readonly replyTo: { readonly name: string; readonly address: string };
+  readonly subject: string;
+  readonly text: string;
+}
+
+export interface Mailer {
+  /** The site's own mailbox: every message is delivered there, and it is shown to visitors. */
+  readonly address: string;
+  send(mail: SiteMail): Promise<void>;
+}

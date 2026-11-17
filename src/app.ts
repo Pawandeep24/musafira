@@ -16,11 +16,12 @@ import { UpstreamError } from "#src/lib/http.js";
 import type { CommunityReports } from "#src/planner/communityReports.js";
 import type { ItineraryPlanner } from "#src/planner/itineraryPlanner.js";
 import { createPlaceSuggester } from "#src/planner/placeSuggester.js";
-import type { Geocoder } from "#src/planner/ports.js";
+import type { Geocoder, Mailer } from "#src/planner/ports.js";
 import type { RideBooking } from "#src/planner/rideBooking.js";
 import type { RoutePlanner } from "#src/planner/routePlanner.js";
 import type { SafeStops } from "#src/planner/safeStops.js";
 import { configRoutes } from "#src/routes/config.js";
+import { contactRoutes } from "#src/routes/contact.js";
 import { domainRoutes } from "#src/routes/domains.js";
 import { healthRoutes } from "#src/routes/health.js";
 import { itineraryRoutes } from "#src/routes/itinerary.js";
@@ -45,6 +46,7 @@ export interface AppDeps {
   reports?: CommunityReports;
   rides?: RideBooking;
   safeStops?: SafeStops;
+  mailer?: Mailer;
   now?: () => Date;
   webRoot?: string;
 }
@@ -106,7 +108,8 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
   await app.register(healthRoutes);
   await app.register(meRoutes({ requireAuth, db: deps.db, preferences: deps.preferences }), { prefix: "/api" });
   await app.register(domainRoutes({ requireAuth, godaddy: deps.godaddy }), { prefix: "/api" });
-  await app.register(configRoutes(cities, deps.rides), { prefix: "/api" });
+  await app.register(configRoutes(cities, deps.rides, deps.mailer?.address), { prefix: "/api" });
+  await app.register(contactRoutes({ ...(deps.mailer ? { mailer: deps.mailer } : {}) }), { prefix: "/api" });
   await app.register(
     placesRoutes({ cities, suggester: createPlaceSuggester(deps.geocoder), ...(deps.geocoder ? { geocoder: deps.geocoder } : {}) }),
     { prefix: "/api" },

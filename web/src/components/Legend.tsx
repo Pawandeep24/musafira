@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { City } from "@/api/types";
+import { Icon } from "@/components/Icon";
 
 const MAP_CREDITS = [
   { name: "OpenFreeMap", url: "https://openfreemap.org" },
@@ -44,7 +45,7 @@ export function Legend({ showRoute, showLights, showSignal }: { showRoute: boole
   );
 }
 
-export function Attribution({ city, compact }: { city?: City; compact: boolean }) {
+export function Attribution({ city, compact, onContact }: { city?: City; compact: boolean; onContact?(): void }) {
   const [expanded, setExpanded] = useState(false);
   const credits = [...(city?.sources ?? []).map((s) => ({ name: s.attribution, url: s.url })), ...MAP_CREDITS];
   const shown = compact && !expanded ? credits.slice(0, 1) : credits;
@@ -61,6 +62,11 @@ export function Attribution({ city, compact }: { city?: City; compact: boolean }
       {compact && credits.length > 1 && (
         <button className="attribution__more" onClick={() => setExpanded((v) => !v)} aria-expanded={expanded} aria-label={expanded ? "Fewer credits" : "All credits"}>
           {expanded ? "×" : "i"}
+        </button>
+      )}
+      {onContact && (
+        <button className="attribution__contact glass" onClick={onContact}>
+          <Icon name="mail" size={14} /> Contact us
         </button>
       )}
     </div>

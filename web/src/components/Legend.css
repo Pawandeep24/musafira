@@ -118,3 +118,34 @@
 .app.is-day .attribution a:hover {
   color: #161b2b;
 }
+
+.attribution__contact {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  margin-left: 10px;
+  padding: 0 12px 0 10px;
+  border-radius: 999px;
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 600;
+  text-shadow: none;
+  vertical-align: middle;
+  transition: border-color 200ms;
+}
+
+.attribution__contact svg {
+  color: var(--accent);
+}
+
+.attribution__contact::after {
+  content: "";
+  position: absolute;
+  inset: -5px -4px;
+}
+
+.attribution__contact:hover {
+  border-color: var(--selected-line);
+}
