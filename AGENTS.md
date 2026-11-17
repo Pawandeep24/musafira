@@ -40,7 +40,7 @@ Run `npm run typecheck && npm test` after every API change, and `npm run web:typ
 - `src/db/` - Firestore access
 - `src/lib/` - small shared helpers (errors, fetch with schema, TTL cache)
 - `scripts/ingest/` - offline city ingest; raw downloads are cached in `data/raw/` (gitignored), output in `data/cities/` (committed)
-- `.claude/skills/godaddy-go-live/` - agent skill: domain, HTTPS, mailbox, SMTP and Firebase steps on GoDaddy hosting with `gddy`, ending in `golive:check`
+- `.claude/skills/godaddy-go-live/` - agent skill: domain, HTTPS, mailbox, contact mail and Firebase steps on GoDaddy hosting with `gddy`, ending in `golive:check`
 - `test/` - tests mirror the behaviour under test, not the file layout
 - `web/src/api/` - DTO types and the fetch client (mirror `src/routes/planResponse.ts`)
 - `web/src/state/` - React hooks owning app state (planner, safety profile, ride preview clock and camera presets, ride booking, washrooms, Safe Stop onboarding, map theme, mobile sheet height)
@@ -79,7 +79,8 @@ Read the doc header before changing these:
 - `src/stops/washrooms.ts` - washroom candidates and the rank formula (ride minutes, unknown facts, Safe Stop bonus)
 - `src/planner/safeStops.ts` - listings, in-memory index of listed stops, re-verification on domain change, limits, domain-idea availability
 - `src/integrations/rdap/client.ts`, `src/integrations/dns/txt.ts` - registrar from RDAP; TXT asked of the zone's own nameservers first
-- `src/integrations/smtp/client.ts` - contact mail sent from and to the site's own mailbox so SPF and DKIM pass, visitor in Reply-To, only the SMTP reply code on failure
+- `src/integrations/godaddy/emailGateway.ts` - contact mail on GoDaddy hosting through the loopback email gateway (SMTP can't leave the container), no `from`, SMTP fallback only when nothing listens
+- `src/integrations/smtp/client.ts` - contact mail off hosting, sent from and to the site's own mailbox so SPF and DKIM pass, visitor in Reply-To, only the SMTP reply code on failure
 - `scripts/ingest/osmWashrooms.ts` - which OSM toilet tags become washroom facts
 - `scripts/ingest/nightLights.ts`, `scripts/ingest/cellTowers.ts` - source formats and grid construction
 - `web/src/map/sceneLayers.ts` - layer stack and animation model

@@ -1,5 +1,6 @@
 /**
- * Sends mail through the site's own mailbox. On GoDaddy that is smtpout.secureserver.net with the
+ * Sends mail through the site's own mailbox over SMTP, used off GoDaddy hosting (a laptop) where the
+ * hosting email gateway isn't there. For a GoDaddy mailbox that is smtpout.secureserver.net with the
  * full address as the username. The mailbox is both sender and recipient, so the domain's SPF and
  * DKIM line up; the visitor only goes in Reply-To. Port 465 is implicit TLS; any other port
  * upgrades with STARTTLS. A failure surfaces as an `UpstreamError("Email")` carrying only the SMTP

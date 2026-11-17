@@ -12,6 +12,7 @@ import { createFirestoreReportStore } from "#src/db/reportStore.js";
 import { createFirestoreSafeStopStore } from "#src/db/safeStopStore.js";
 import { AnthropicTextModel } from "#src/integrations/anthropic/client.js";
 import { txtRecords } from "#src/integrations/dns/txt.js";
+import { createEmailGatewayMailer } from "#src/integrations/godaddy/emailGateway.js";
 import { createGoDaddyClient } from "#src/integrations/godaddy/factory.js";
 import { NammaYatriClient } from "#src/integrations/nammayatri/client.js";
 import { OrsGeocoder } from "#src/integrations/ors/geocoder.js";
@@ -71,7 +72,11 @@ const app = await buildApp({
   reports,
   safeStops,
   ...(env.SMTP_USER && env.SMTP_PASSWORD
-    ? { mailer: createSmtpMailer({ host: env.SMTP_HOST, port: env.SMTP_PORT, user: env.SMTP_USER, password: env.SMTP_PASSWORD }) }
+    ? {
+        mailer: createEmailGatewayMailer(
+          createSmtpMailer({ host: env.SMTP_HOST, port: env.SMTP_PORT, user: env.SMTP_USER, password: env.SMTP_PASSWORD }),
+        ),
+      }
     : {}),
   ...(existsSync(join(webRoot, "index.html")) ? { webRoot } : {}),
 });

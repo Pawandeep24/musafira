@@ -1,6 +1,6 @@
 ---
 name: godaddy-go-live
-description: Takes an app on GoDaddy Node.js Hosting live on its own domain with the gddy CLI. Checks or suggests a domain, attaches it with HTTPS, sets up a Professional Email mailbox and its mail DNS, connects the site's contact form to that mailbox over SMTP, adds the domain to Firebase Auth, and proves it all with a read-only go-live check. Use when the user wants to connect a domain, go live, set up a custom domain or business email, wire SMTP, or check launch readiness on GoDaddy hosting.
+description: Takes an app on GoDaddy Node.js Hosting live on its own domain with the gddy CLI. Checks or suggests a domain, attaches it with HTTPS, sets up a Professional Email mailbox and its mail DNS, delivers the site's contact form to that mailbox through the hosting email gateway, adds the domain to Firebase Auth, and proves it all with a read-only go-live check. Use when the user wants to connect a domain, go live, set up a custom domain or business email, wire SMTP, or check launch readiness on GoDaddy hosting.
 ---
 
 # GoDaddy go-live
@@ -22,7 +22,7 @@ Copy this list, tick each step and report it at the end:
 - [ ] 3. Domain attached to the app, certificate issued
 - [ ] 4. HTTPS answers from outside
 - [ ] 5. Mailbox ready, mail DNS present
-- [ ] 6. Contact form: SMTP settings deployed
+- [ ] 6. Contact form: mail settings deployed, sends through the hosting email gateway
 - [ ] 7. Domain authorised in Firebase Auth
 - [ ] 8. Go-live check passes
 ```
@@ -90,9 +90,9 @@ Show the user each consent type, which may start a trial that auto-renews, and g
 | CNAME (DKIM) | `secureserver1._domainkey`, `secureserver2._domainkey` | `*.onsecureserver.net` |
 | TXT (DMARC) | `_dmarc` | `v=DMARC1; ...` |
 
-### 6. Contact form over SMTP
+### 6. Contact form
 
-The app sends through the mailbox (`src/integrations/smtp/client.ts`). The mailbox is both the sender and the recipient, so SPF and DKIM pass; the visitor's address goes in Reply-To. In `.env`:
+GoDaddy Node.js Hosting lets apps connect out only on HTTP and HTTPS, so SMTP can't leave the container. On hosting the app posts each message to the platform's email gateway at `http://127.0.0.1:2525/api/email/send` (`src/integrations/godaddy/emailGateway.ts`, GoDaddy's contract rule C13). The gateway picks the sender from the attached domain, the mailbox is the recipient, and the visitor's address goes in Reply-To. Where no gateway is listening, as on a laptop, the same message goes over SMTP through the mailbox (`src/integrations/smtp/client.ts`). In `.env`:
 
 ```
 SMTP_HOST=smtpout.secureserver.net
@@ -106,7 +106,7 @@ Without `SMTP_USER` and `SMTP_PASSWORD`, the form stays hidden and `/api/contact
 - `npm run deploy -- --secrets` copies the settings into GoDaddy's encrypted secrets for preview and live, then restarts both.
 - `npm run deploy -- --publish` ships the build if the live site doesn't have the form yet.
 
-Corporate networks often block outbound SMTP from a laptop, so test the form on the deployed site. A failed send is logged as `upstream error` with `service: "Email"` and `upstreamStatus` set to the SMTP reply code; 535 means the password is wrong. To read the logs: `gddy hosting log list --app-id <APP_ID> --variant PUBLISH --level ERROR`.
+Test the form locally (SMTP) and on the deployed site (gateway). A failed send is logged as `upstream error` with `service: "Email"` and `upstreamStatus` set to the gateway's HTTP status, or locally to the SMTP reply code, where 535 means the password is wrong. To read the logs: `gddy hosting log list --app-id <APP_ID> --variant PUBLISH --level ERROR`.
 
 ### 7. Firebase Auth
 
