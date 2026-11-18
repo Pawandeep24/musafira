@@ -73,7 +73,7 @@ Read the doc header before changing these:
 - `src/rides/checkpoints.ts` - where safety checkpoints go so a car route follows the safe route, and when none are needed
 - `src/rides/guard.ts` - off-route rule (recent positions vs distance from the route) and progress
 - `src/rides/demoRide.ts` - city auto tariffs with night rates, the simulated driver clock and detour
-- `src/planner/rideBooking.ts` - Namma Yatri sessions, live vs demo quotes, booking match after a driver accepts, tracking, cancel stages
+- `src/planner/rideBooking.ts` - live vs demo quotes and bookings; `ridePricing.ts` fares through checkpoints; `liveRides.ts` booking match after a driver accepts, tracking, cancel stages; `rideSessions.ts` Namma Yatri sessions
 - `src/integrations/nammayatri/client.ts` - rider API: code sign-in, search with stops, estimate polling, bookings, ride status
 - `src/stops/safeStop.ts` - questionnaire schema, TXT record at `_musafira.<domain>` plus GoDaddy registrar as proof of ownership
 - `src/stops/washrooms.ts` - washroom candidates and the rank formula (ride minutes, unknown facts, Safe Stop bonus)

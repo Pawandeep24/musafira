@@ -2,7 +2,8 @@ import type { FastifyPluginAsync, FastifyRequest } from "fastify";
 import { z } from "zod";
 import type { LngLat } from "#src/geo/geometry.js";
 import { AppError } from "#src/lib/errors.js";
-import type { NamedPoint, RideBooking, RideQuote, RideView } from "#src/planner/rideBooking.js";
+import type { RideBooking, RideQuote } from "#src/planner/rideBooking.js";
+import type { NamedPoint, RideView } from "#src/planner/rideTypes.js";
 import { scoringBody } from "#src/routes/plan.js";
 
 export const SESSION_HEADER = "x-ny-session";

@@ -1,14 +1,26 @@
 import type { Poi } from "#src/city/cityData.js";
+import type { CityIndex } from "#src/city/cityIndex.js";
 import type { Place } from "#src/city/placeSearch.js";
 import type { BBox, LngLat } from "#src/geo/geometry.js";
 import type { CommunityReport } from "#src/safety/community.js";
-import type { CandidateRoute, RoadSpan } from "#src/safety/types.js";
+import type { CandidateRoute, RoadSpan, RouteAnalysis } from "#src/safety/types.js";
 
 export type { Place };
 
 export interface RouteProvider {
   /** Two-wheeler route candidates from `from` to `to`, best first. */
   routes(from: LngLat, to: LngLat): Promise<CandidateRoute[]>;
+}
+
+export interface StoredRoute {
+  readonly city: CityIndex;
+  readonly departAt: Date;
+  readonly analysis: RouteAnalysis;
+  analyze(route: CandidateRoute): RouteAnalysis;
+}
+
+export interface PlannedRoutes {
+  route(searchId: string, routeId: string): StoredRoute;
 }
 
 export interface CarRouter {

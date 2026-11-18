@@ -34,16 +34,17 @@ import { SOURCE_LABEL, washroomName } from "@/lib/safeStops";
 import { shareTrip } from "@/lib/shareTrip";
 import { useMediaQuery } from "@/lib/useMediaQuery";
 import { routeVerdict } from "@/lib/verdict";
-import { gridDots, nightLightDot, signalDot, type GridDot } from "@/map/gridDots";
 import { MapView, type Insets } from "@/map/MapView";
-import type { RideScene, TripScene } from "@/map/sceneLayers";
-import { previewMetersPerSecond, retimePreview, startPreview, togglePreviewPause, type PreviewCamera, type RidePreview } from "@/state/ridePreview";
+import { rideSceneOf } from "@/map/rideScene";
+import type { TripScene } from "@/map/sceneLayers";
+import { useCityRasters } from "@/state/useCityRasters";
 import { useContact } from "@/state/useContact";
 import { useItinerary } from "@/state/useItinerary";
 import { useMapTheme } from "@/state/useMapTheme";
 import { usePlanner } from "@/state/usePlanner";
+import { usePreview } from "@/state/usePreview";
 import { useReport } from "@/state/useReport";
-import { RIDE_POLL_MS, useRideBooking } from "@/state/useRideBooking";
+import { useRideBooking } from "@/state/useRideBooking";
 import { useSafetyProfile } from "@/state/useSafetyProfile";
 import { useSheet } from "@/state/useSheet";
 import { useStopOnboarding } from "@/state/useStopOnboarding";
@@ -74,11 +75,6 @@ const MODES: readonly (readonly [Mode, ReactNode])[] = [
   ],
 ];
 
-interface Rasters {
-  lights?: readonly GridDot[];
-  signal?: readonly GridDot[];
-}
-
 async function placeAt(point: LngLat): Promise<Place> {
   const found = await api.reverse(point).catch(() => null);
   return { id: `pin:${point.join(",")}`, name: found?.name ?? "Dropped pin", label: found?.label ?? "Dropped pin", point };
@@ -99,14 +95,10 @@ export function App() {
   const [config, setConfig] = useState<AppConfig>();
   const [loadError, setLoadError] = useState(false);
   const [cityId, setCityId] = useState<string>();
-  const [rasters, setRasters] = useState<Rasters>({});
   const [showLights, setShowLights] = useState(true);
   const [showSignal, setShowSignal] = useState(false);
   const [dnaOpen, setDnaOpen] = useState(false);
   const [authPurpose, setAuthPurpose] = useState<AuthPurpose>();
-  const [preview, setPreview] = useState<RidePreview>();
-  const [speed, setSpeed] = useState(1);
-  const [camera, setCamera] = useState<PreviewCamera>("street");
   const [toast, setToast] = useState<string>();
   const [mode, setMode] = useState<Mode>("ride");
   const [editingTrip, setEditingTrip] = useState(false);
@@ -146,24 +138,7 @@ export function App() {
       .catch(() => setLoadError(true));
   }, []);
 
-  useEffect(() => {
-    if (!cityId) return;
-    let cancelled = false;
-    setRasters({});
-    api
-      .layers(cityId)
-      .then((layers) => {
-        if (cancelled) return;
-        setRasters({
-          ...(layers.lights ? { lights: gridDots(layers.lights, nightLightDot) } : {}),
-          ...(layers.cellDensity ? { signal: gridDots(layers.cellDensity, signalDot) } : {}),
-        });
-      })
-      .catch(() => undefined);
-    return () => {
-      cancelled = true;
-    };
-  }, [cityId]);
+  const rasters = useCityRasters(cityId);
 
   const city = config?.cities.find((c) => c.id === cityId);
   const offset = city?.utcOffsetMinutes ?? 330;
@@ -176,66 +151,33 @@ export function App() {
   );
   const selected = routes.find((r) => r.id === planner.selectedId);
   const verdict = useMemo(() => (config ? routeVerdict(routes, config.parameters) : null), [routes, config]);
-
-  useEffect(() => {
-    if (preview && preview.routeId !== selected?.id) setPreview(undefined);
-  }, [preview, selected?.id]);
+  const previewer = usePreview(selected?.id);
+  const { preview, speed, camera } = previewer;
 
   useEffect(() => {
     if (!rides.active) rides.close();
   }, [planner.plan?.searchId, planner.selectedId]);
 
-  const rideScene = useMemo<RideScene | undefined>(() => {
-    const { ride, quote, selectedOption } = rides;
-    if (rides.step === "ride" && ride) {
-      return {
-        key: `ride:${ride.ref}`,
-        path: ride.route,
-        checkpoints: ride.checkpoints.map((c) => c.point),
-        ...(ride.position ? { driver: ride.position } : {}),
-        offRoute: Boolean(ride.guard?.offRoute),
-        tweenMs: RIDE_POLL_MS[ride.mode],
-      };
-    }
-    if (!rides.open || rides.step !== "compare" || !quote || !selectedOption) return undefined;
-    const other = quote.options.find((o) => o.kind !== selectedOption.kind);
-    return {
-      key: `quote:${quote.quoteId}:${selectedOption.kind}`,
-      path: selectedOption.path,
-      ...(other ? { alternative: other.path } : {}),
-      checkpoints: selectedOption.kind === "safe" ? quote.checkpoints.map((c) => c.point) : [],
-      offRoute: false,
-      tweenMs: RIDE_POLL_MS.demo,
-    };
-  }, [rides.open, rides.step, rides.ride, rides.quote, rides.selectedOption]);
+  const rideScene = useMemo(() => rideSceneOf(rides), [rides.open, rides.step, rides.ride, rides.quote, rides.selectedOption]);
 
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setPreview(undefined);
-    addEventListener("keydown", onKey);
-    return () => removeEventListener("keydown", onKey);
-  }, []);
-
-  const closeSheets = () => {
-    washrooms.close();
-    listing.close();
+  const closePanels = (keep?: "report" | "washrooms" | "listing") => {
+    setDnaOpen(false);
+    previewer.stop();
+    if (keep !== "report") report.close();
+    if (keep !== "washrooms") washrooms.close();
+    if (keep !== "listing") listing.close();
   };
 
   const beginPreview = () => {
     if (!selected) return;
-    setSpeed(1);
-    setDnaOpen(false);
-    report.close();
-    closeSheets();
+    closePanels();
     if (!rides.active) rides.close();
-    setPreview(startPreview(selected.id, previewMetersPerSecond(camera, 1), performance.now()));
+    previewer.start(selected.id);
   };
 
   const openRide = () => {
     if (!selected || !planner.plan || !safety.profile) return;
-    setDnaOpen(false);
-    report.close();
-    closeSheets();
-    setPreview(undefined);
+    closePanels();
     rides.start(
       { searchId: planner.plan.searchId, routeId: selected.id, weights: safety.profile.weights, options: safety.profile.options },
       Boolean(city?.rides.live),
@@ -250,9 +192,7 @@ export function App() {
   };
 
   const openReport = () => {
-    setDnaOpen(false);
-    setPreview(undefined);
-    closeSheets();
+    closePanels("report");
     report.start();
   };
   const toggleReport = () => {
@@ -262,22 +202,17 @@ export function App() {
   };
   const toggleDna = () => {
     report.close();
-    closeSheets();
+    washrooms.close();
+    listing.close();
     setDnaOpen((v) => !v);
   };
   const toggleWashrooms = () => {
     if (washrooms.open) return washrooms.close();
-    setDnaOpen(false);
-    setPreview(undefined);
-    report.close();
-    listing.close();
+    closePanels("washrooms");
     washrooms.start();
   };
   const openListing = () => {
-    setDnaOpen(false);
-    setPreview(undefined);
-    report.close();
-    washrooms.close();
+    closePanels("listing");
     void listing.start();
   };
   const startListing = () => (auth.user ? openListing() : setAuthPurpose("listing"));
@@ -288,7 +223,7 @@ export function App() {
     if (!from) return;
     const washroomCity = washrooms.result?.cityId;
     washrooms.close();
-    setPreview(undefined);
+    previewer.stop();
     setMode("ride");
     if (washroomCity && washroomCity !== cityId) setCityId(washroomCity);
     planner.search({
@@ -302,25 +237,17 @@ export function App() {
     setToast("Thanks. Routes through that spot now reflect your report.");
     if (planner.plan && !planner.stale) planner.search();
   };
-  const changeSpeed = (multiplier: number) => {
-    setSpeed(multiplier);
-    setPreview((p) => p && retimePreview(p, previewMetersPerSecond(camera, multiplier), performance.now()));
-  };
-  const changeCamera = (next: PreviewCamera) => {
-    setCamera(next);
-    setPreview((p) => p && retimePreview(p, previewMetersPerSecond(next, speed), performance.now()));
-  };
 
   const switchCity = (id: string) => {
     if (id === cityId) return;
-    setPreview(undefined);
+    previewer.stop();
     planner.clear();
     trip.clear();
     setCityId(id);
   };
 
   const switchMode = (next: Mode) => {
-    setPreview(undefined);
+    previewer.stop();
     report.close();
     setMode(next);
   };
@@ -431,7 +358,7 @@ export function App() {
         onSelectRoute={(id) => !tapPoint && planner.setSelectedId(id)}
         onPickPoint={pickPoint}
         {...(tapPoint ? { onTapPoint: tapPoint } : {})}
-        onPreviewEnd={() => setPreview(undefined)}
+        onPreviewEnd={previewer.stop}
       />
       <div className="sky-tint" style={{ background: `radial-gradient(120% 60% at 50% 0%, rgba(${r},${g},${b},0.22), transparent 70%)` }} />
 
@@ -621,10 +548,10 @@ export function App() {
           speed={speed}
           camera={camera}
           compact={mobile}
-          onSpeed={changeSpeed}
-          onCamera={changeCamera}
-          onTogglePause={() => setPreview((p) => p && togglePreviewPause(p, performance.now()))}
-          onExit={() => setPreview(undefined)}
+          onSpeed={previewer.changeSpeed}
+          onCamera={previewer.changeCamera}
+          onTogglePause={previewer.togglePause}
+          onExit={previewer.stop}
         />
       )}
 

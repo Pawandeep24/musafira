@@ -28,7 +28,7 @@ import { spotsWithin, type SpotReport } from "#src/safety/community.js";
 import type { ScoringOptions, Weights } from "#src/safety/parameters.js";
 import { scoreRoute } from "#src/safety/scoring.js";
 import type { CandidateRoute, RouteAnalysis, RouteScore, TrafficSample } from "#src/safety/types.js";
-import type { ReportSource, RouteProvider, SafeStopSource, TrafficProvider, TrafficReading } from "#src/planner/ports.js";
+import type { ReportSource, RouteProvider, SafeStopSource, StoredRoute, TrafficProvider, TrafficReading } from "#src/planner/ports.js";
 
 const LIVE_WINDOW_MS = 15 * 60_000;
 const TRAFFIC_SPACING_METERS = 2000;
@@ -65,13 +65,6 @@ export interface PlanRequest {
   readonly departAt?: Date;
   readonly weights: Weights;
   readonly options: ScoringOptions;
-}
-
-export interface StoredRoute {
-  readonly city: CityIndex;
-  readonly departAt: Date;
-  readonly analysis: RouteAnalysis;
-  analyze(route: CandidateRoute): RouteAnalysis;
 }
 
 export interface RoutePlanner {
