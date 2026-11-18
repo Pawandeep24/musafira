@@ -1,10 +1,13 @@
 # Musafira
 
-**Safer two-wheeler routes for the hour you ride.**
+**we care for your safety.**
 
-*Musafira* is Hindi and Urdu for a woman traveller. For each trip it compares up to three routes and scores every 100 m of each one for the minute you will actually be there. Is the street lit after dark? Is a police station or a 24-hour pharmacy open? Are people around? Will your phone have signal? Then it helps with the rest of the journey: a preview that rides the route before you do, an auto that is booked to follow the safe route, washrooms you can trust, and day trips that bring you home before dusk.
+*Musafira* is Hindi/Urdu word for a traveller.
 
-Live at **[musafira.app](https://musafira.app)**. Covers Pune and Bengaluru. Built for the GoDaddy Inclusive Innovation Hackathon 2026.
+For each trip it compares up to three routes and scores every 100 m of each one for the minute you will actually be there. Is the street lit after dark? Is a police station or a 24-hour pharmacy open? Are people around? Will your phone have signal? Then it helps with the rest of the journey: a preview that rides the route before you do, an auto that is booked to follow the safe route, washrooms you can trust, and day trips that bring you home before dusk.
+
+
+Live at **[musafira.app](https://musafira.app)**. Covers Pune and Bengaluru under first phase.
 
 ## Contents
 
@@ -749,16 +752,15 @@ Route planning is public on purpose: a rider must never need an account to find 
 1. **Score segments at their arrival minute, not routes at the departure minute.** Lighting, open shops and crowds change by the hour, and a 40-minute ride can cross dusk. *Trade-off:* every segment needs its own ETA, so the Valhalla client spreads each manoeuvre's time over its vertices.
 2. **Measure once, weigh many times.** `plan` does all the IO and analysis; `rescore` is pure arithmetic on a cached analysis, which is what makes sliders live. *Trade-off:* searches live in memory for 30 minutes, and traffic is a snapshot from plan time.
 3. **Pure engines behind ports.** Safety, rides, trips and washrooms are pure functions with time passed in, and vendors sit behind interfaces. Tests run on synthetic cities and fakes, and each integration is optional: no TomTom key means crowd scores use open places; no Anthropic key means the basic trip planner.
-4. **Offline city files instead of live POI and raster APIs.** Fast (an in-memory spatial index), free, deterministic and reviewable in git. *Trade-off:* data is as fresh as the last `npm run ingest`.
-5. **A route can't hide its worst stretch.** The worst-10% term and multiplicative penalties make one isolated dark stretch count, and keep two bad routes distinguishable.
-6. **Unknown is not unsafe.** Missing data lowers confidence, not the score, and estimated opening hours are flagged as estimates.
-7. **Reports are evidence, not votes.** They decay, match the time of day and fade with distance, and three reports overturn a sensor. Ids are hashes, so no report can be traced to a rider.
-8. **The AI picks, it never invents.** Claude chooses refs from our own list in a line format we validate line by line; times, routes and gap-filling are ours, with a basic planner behind it.
-9. **Stops are the contract with the driver.** Ride apps price and route through stops, so safety checkpoints make the safe route the agreed route before pickup.
-10. **Ownership proven by DNS, brand proven by RDAP.** A TXT record proves control of the domain; the registrar check makes it a GoDaddy domain.
-11. **One process, one origin.** The API serves the built web app, so production needs no CORS, the CSP lives in one place, and a deploy is a single upload. *Trade-off:* in-memory state means one instance (see [Limits](#limits-and-whats-next)).
-12. **The browser never touches the database.** It loads only Firebase Auth; all data goes through the API, where zod and the auth guards apply.
-13. **City time, not server or browser time.** Opening hours, night rates, day bands and the dusk limit all use the city's wall clock, so the result doesn't depend on where the server or the rider's phone is set.
+4. **A route can't hide its worst stretch.** The worst-10% term and multiplicative penalties make one isolated dark stretch count, and keep two bad routes distinguishable.
+5. **Unknown is not unsafe.** Missing data lowers confidence, not the score, and estimated opening hours are flagged as estimates.
+6. **Reports are evidence, not votes.** They decay, match the time of day and fade with distance, and three reports overturn a sensor. Ids are hashes, so no report can be traced to a rider.
+7. **The AI picks, it never invents.** Claude chooses refs from our own list in a line format we validate line by line; times, routes and gap-filling are ours, with a basic planner behind it.
+8. **Stops are the contract with the driver.** Ride apps price and route through stops, so safety checkpoints make the safe route the agreed route before pickup.
+9. **Ownership proven by DNS, brand proven by RDAP.** A TXT record proves control of the domain; the registrar check makes it a GoDaddy domain.
+10. **One process, one origin.** The API serves the built web app, so production needs no CORS, the CSP lives in one place, and a deploy is a single upload. *Trade-off:* in-memory state means one instance (see [Limits](#limits-and-whats-next)).
+11. **The browser never touches the database.** It loads only Firebase Auth; all data goes through the API, where zod and the auth guards apply.
+12. **City time, not server or browser time.** Opening hours, night rates, day bands and the dusk limit all use the city's wall clock, so the result doesn't depend on where the server or the rider's phone is set.
 
 ## Security and privacy
 
