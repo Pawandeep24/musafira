@@ -121,7 +121,7 @@ Apply SOLID and common patterns where they remove real duplication or coupling, 
 
 ## Security
 
-- Secrets (GoDaddy key/secret, Firebase service account, SMTP password) live only in `.env` and GoDaddy's hosting secrets, never in code, logs, tests, or commits. Add new variables to `.env.example` with blank values.
+- Secrets (GoDaddy key/secret, Firebase service account, SMTP password) live only in `.env` and GoDaddy's hosting secrets, never in code, logs, tests, or commits.
 - Never log tokens or `Authorization` headers.
 - Protected routes must use `requireAuth`; add `requireVerifiedEmail` or `requireClaim` when the action needs it.
 - Default `GODADDY_ENV` to the sandbox for anything that writes or costs money.

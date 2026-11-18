@@ -52,7 +52,6 @@ Planning has two stages. `POST /api/plan` fetches the routes and measures every 
 
 ```bash
 npm ci && npm ci --prefix web
-cp .env.example .env               # ORS_API_KEY adds address search and pin names; TOMTOM_API_KEY live traffic
 cp web/.env.example web/.env       # optional: Firebase web config for sign-in
 npm run dev                        # API on http://localhost:3000
 npm run web:dev                    # app on http://localhost:5173

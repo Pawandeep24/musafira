@@ -59,7 +59,7 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
       // Never log credentials.
       redact: ["req.headers.authorization", "req.headers.cookie", `req.headers["${SESSION_HEADER}"]`],
     },
-    trustProxy: true, // correct client IPs behind Render/Fly/Cloud Run proxies (rate limiting)
+    trustProxy: true,
   });
 
   await app.register(helmet, {
@@ -71,16 +71,18 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
     origin: env.CORS_ORIGINS.length ? env.CORS_ORIGINS : false,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
   });
-  await app.register(rateLimit, { max: 100, timeWindow: "1 minute" });
+  await app.register(rateLimit, {
+    max: 100,
+    timeWindow: "1 minute",
+    errorResponseBuilder: (_req, { statusCode, after }) => new AppError(statusCode, "RATE_LIMITED", `Too many requests. Try again in ${after}.`),
+  });
 
   app.setErrorHandler((err, req, reply) => {
     if (err instanceof AppError) {
       return reply.status(err.statusCode).send({ error: { code: err.code, message: err.message } });
     }
     if (err instanceof ZodError) {
-      return reply.status(400).send({
-        error: { code: "BAD_REQUEST", message: "Invalid request", details: err.issues },
-      });
+      return reply.status(400).send({ error: { code: "BAD_REQUEST", message: "Invalid request" } });
     }
     if (err instanceof GoDaddyApiError) {
       // Upstream 401/403 mean OUR server credential is wrong - not the caller's. Surface as 502.
@@ -96,7 +98,7 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
     }
     const status = (err as { statusCode?: number }).statusCode;
     if (status && status >= 400 && status < 500) {
-      return reply.status(status).send({ error: { code: "REQUEST_ERROR", message: (err as Error).message } });
+      return reply.status(status).send({ error: { code: "REQUEST_ERROR", message: "Invalid request" } });
     }
     req.log.error(err);
     return reply.status(500).send({ error: { code: "INTERNAL", message: "Internal server error" } });

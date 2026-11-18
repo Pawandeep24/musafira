@@ -8,7 +8,7 @@ const domain = process.argv[2] ?? "my-hackathon-idea-2026.com";
 const client = createGoDaddyClient(env);
 
 if (!client) {
-  console.error(`No GoDaddy key/secret configured for GODADDY_ENV="${env.GODADDY_ENV}". See .env.example.`);
+  console.error(`No GoDaddy key/secret configured for GODADDY_ENV="${env.GODADDY_ENV}".`);
   process.exit(1);
 }
 

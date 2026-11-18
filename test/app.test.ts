@@ -78,3 +78,33 @@ describe("auth guard + routes", () => {
     expect(res.statusCode).toBe(503);
   });
 });
+
+describe("error replies", () => {
+  it("answers invalid input with a fixed message and no validation details", async () => {
+    const godaddy = { request: vi.fn() } as unknown as GoDaddyClient;
+    const app = await buildApp({ env, verifier, godaddy });
+    const res = await app.inject({
+      method: "GET",
+      url: "/api/domains/availability?domain=not_a_domain",
+      headers: { authorization: "Bearer good-token" },
+    });
+    expect(res.statusCode).toBe(400);
+    expect(res.json()).toEqual({ error: { code: "BAD_REQUEST", message: "Invalid request" } });
+  });
+
+  it("answers a malformed body without echoing the parser's message", async () => {
+    const app = await buildApp({ env, verifier });
+    const res = await app.inject({ method: "POST", url: "/api/contact", headers: { "content-type": "application/json" }, payload: "{oops" });
+    expect(res.statusCode).toBe(400);
+    expect(res.json()).toEqual({ error: { code: "REQUEST_ERROR", message: "Invalid request" } });
+  });
+
+  it("tells a rate-limited caller when to try again", async () => {
+    const app = await buildApp({ env, verifier });
+    let limited = await app.inject({ method: "GET", url: "/healthz" });
+    for (let i = 0; i < 100; i++) limited = await app.inject({ method: "GET", url: "/healthz" });
+    expect(limited.statusCode).toBe(429);
+    expect(limited.json().error.code).toBe("RATE_LIMITED");
+    expect(limited.json().error.message).toMatch(/^Too many requests\. Try again in \d+ (seconds?|minutes?)\.$/);
+  });
+});
