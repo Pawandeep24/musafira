@@ -48,7 +48,8 @@ export function Legend({ showRoute, showLights, showSignal }: { showRoute: boole
 export function Attribution({ city, compact, onContact }: { city?: City; compact: boolean; onContact?(): void }) {
   const [expanded, setExpanded] = useState(false);
   const credits = [...(city?.sources ?? []).map((s) => ({ name: s.attribution, url: s.url })), ...MAP_CREDITS];
-  const shown = compact && !expanded ? credits.slice(0, 1) : credits;
+  const showAll = !compact || expanded;
+  const shown = showAll ? credits : credits.slice(0, 1);
   return (
     <div className={`attribution ${compact && expanded ? "is-expanded" : ""}`}>
       {shown.map((c, i) => (
@@ -59,6 +60,7 @@ export function Attribution({ city, compact, onContact }: { city?: City; compact
           </a>
         </span>
       ))}
+      {showAll && <span> · © 2026 Pawandeep Kaur</span>}
       {compact && credits.length > 1 && (
         <button className="attribution__more" onClick={() => setExpanded((v) => !v)} aria-expanded={expanded} aria-label={expanded ? "Fewer credits" : "All credits"}>
           {expanded ? "×" : "i"}

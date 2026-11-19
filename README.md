@@ -9,6 +9,8 @@ For each trip it compares up to three routes and scores every 100 m of each one 
 
 Live at **[musafira.app](https://musafira.app)**. Covers Pune and Bengaluru under first phase.
 
+© 2026 Pawandeep Kaur. All rights reserved. See [License](#license).
+
 ## Contents
 
 1. [What it does](#what-it-does)
@@ -41,6 +43,7 @@ Live at **[musafira.app](https://musafira.app)**. Covers Pune and Bengaluru unde
 13. [Project layout](#project-layout)
 14. [Limits and what's next](#limits-and-whats-next)
 15. [Data sources and credits](#data-sources-and-credits)
+16. [License](#license)
 
 ## What it does
 
@@ -933,3 +936,9 @@ Files with non-obvious logic (a formula, a tuning constant, time zones, an exter
 ## Data sources and credits
 
 © OpenStreetMap contributors (ODbL) · NASA Black Marble VNP46A4 (public domain) · OpenCelliD (CC BY-SA 4.0) · OpenFreeMap tiles · Valhalla · TomTom Traffic Flow · openrouteservice · Namma Yatri · Anthropic Claude · GoDaddy Domains, Node.js Hosting and Professional Email · Firebase.
+
+## License
+
+Copyright © 2026 Pawandeep Kaur. All rights reserved. Musafira was created for the GoDaddy Inclusive Innovation Hackathon 2026.
+
+You may read this code and judges may run it to evaluate the event, but copying, reusing, deploying or submitting any part of it, or anything derived from it, needs the author's written permission. The data sources above keep their own licences. Full terms are in [`LICENSE`](LICENSE).

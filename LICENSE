@@ -1,0 +1,31 @@
+Copyright (c) 2026 Pawandeep Kaur. All rights reserved.
+
+Musafira, including its source code, documentation, diagrams, design, name
+and logo, is the work of Pawandeep Kaur, created for the GoDaddy Inclusive
+Innovation Hackathon 2026.
+
+This repository is published so it can be read and evaluated. No licence is
+granted to copy, modify, distribute, deploy, sublicense or sell any part of
+it, or to submit it or any work derived from it to a hackathon, competition
+or portfolio as your own, without prior written permission from the author.
+
+Allowed without asking:
+  - Viewing the repository, and forking it through GitHub's own features, as
+    GitHub's Terms of Service allow for public repositories.
+  - Running and reviewing it by the organisers and judges of the GoDaddy
+    Inclusive Innovation Hackathon 2026, for judging that event.
+
+Third-party material keeps its own licence, and this notice claims no rights
+over it:
+  - The city data in data/cities/ is built from OpenStreetMap (ODbL 1.0,
+    (c) OpenStreetMap contributors), OpenCelliD (CC BY-SA 4.0) and NASA Black
+    Marble VNP46A4 (public domain).
+  - Dependencies are covered by their own licences.
+
+For permission, contact the author through https://musafira.app or
+https://github.com/Pawandeep24.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY CLAIM, DAMAGES OR
+OTHER LIABILITY ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR
+ITS USE.

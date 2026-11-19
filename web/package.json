@@ -2,6 +2,8 @@
   "name": "musafira-web",
   "version": "0.1.0",
   "private": true,
+  "author": "Pawandeep Kaur",
+  "license": "UNLICENSED",
   "type": "module",
   "scripts": {
     "dev": "vite",
