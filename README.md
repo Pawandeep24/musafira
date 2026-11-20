@@ -8,6 +8,7 @@ For each trip it compares up to three routes and scores every 100 m of each one 
 
 
 Live at **[musafira.app](https://musafira.app)**. Covers Pune and Bengaluru under first phase.
+Check [Demo](https://youtu.be/fmg14REfWPo) here
 
 © 2026 Pawandeep Kaur. All rights reserved. See [License](#license).
 
