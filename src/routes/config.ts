@@ -7,12 +7,13 @@ import { DEFAULT_OPTIONS, DEFAULT_WEIGHTS, MAX_WEIGHT, PARAMETERS, PRESETS } fro
 
 const cityParams = z.object({ cityId: z.string().max(40) });
 
-/** Everything the client needs to render the planner: parameters, presets, covered cities, and the contact address once mail can be sent. */
+/** Everything the client needs to render the planner: parameters, presets, covered cities, the contact address once mail can be sent, and whether the city assistant is on. */
 export const configRoutes =
-  (cities: CityRegistry, rides?: RideBooking, contactEmail?: string): FastifyPluginAsync =>
+  (cities: CityRegistry, rides?: RideBooking, contactEmail?: string, assistant = false): FastifyPluginAsync =>
   async (app) => {
     app.get("/config", async () => ({
       ...(contactEmail ? { contactEmail } : {}),
+      assistant,
       parameters: PARAMETERS,
       maxWeight: MAX_WEIGHT,
       presets: PRESETS,

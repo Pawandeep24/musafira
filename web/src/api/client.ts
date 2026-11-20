@@ -1,5 +1,7 @@
 import type {
   AppConfig,
+  AssistantEvent,
+  AssistantTurn,
   CityLayers,
   ContactMessage,
   DomainIdea,
@@ -59,6 +61,32 @@ async function request<T>(path: string, { method = "GET", body, token, session, 
     throw new ApiError(response.status, data?.error?.code ?? "ERROR", data?.error?.message ?? "Something went wrong");
   }
   return data as T;
+}
+
+/** Server-sent events from a POST: each `data:` frame is one JSON event, handed over as soon as it arrives. */
+async function stream<T>(path: string, body: unknown, onEvent: (event: T) => void, signal?: AbortSignal): Promise<void> {
+  const response = await fetch(`/api${path}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+    ...(signal ? { signal } : {}),
+  });
+  if (!response.ok || !response.body) {
+    const data = (await response.json().catch(() => null)) as { error?: { code: string; message: string } } | null;
+    throw new ApiError(response.status, data?.error?.code ?? "ERROR", data?.error?.message ?? "Something went wrong");
+  }
+  const reader = response.body.pipeThrough(new TextDecoderStream()).getReader();
+  let buffer = "";
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) return;
+    buffer += value;
+    const frames = buffer.split("\n\n");
+    buffer = frames.pop() ?? "";
+    for (const frame of frames) {
+      if (frame.startsWith("data: ")) onEvent(JSON.parse(frame.slice(6)) as T);
+    }
+  }
 }
 
 export interface QuoteBody {
@@ -121,4 +149,6 @@ export const api = {
   domainIdeas: (token: string, name: string, cityId: string) =>
     request<{ ideas: DomainIdea[] }>("/stops/domain-ideas", { method: "POST", body: { name, cityId }, token }).then((r) => r.ideas),
   contact: (message: ContactMessage) => request<{ sent: boolean }>("/contact", { method: "POST", body: message }),
+  ask: (body: { cityId: string; messages: AssistantTurn[]; location?: LngLat }, onEvent: (event: AssistantEvent) => void, signal?: AbortSignal) =>
+    stream("/assistant", body, onEvent, signal),
 };

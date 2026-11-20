@@ -13,6 +13,7 @@ import type { GoDaddyClient } from "#src/integrations/godaddy/client.js";
 import { GoDaddyApiError } from "#src/integrations/godaddy/client.js";
 import { AppError } from "#src/lib/errors.js";
 import { UpstreamError } from "#src/lib/http.js";
+import type { CityAssistant } from "#src/planner/cityAssistant.js";
 import type { CommunityReports } from "#src/planner/communityReports.js";
 import type { ItineraryPlanner } from "#src/planner/itineraryPlanner.js";
 import { createPlaceSuggester } from "#src/planner/placeSuggester.js";
@@ -20,6 +21,7 @@ import type { Geocoder, Mailer } from "#src/planner/ports.js";
 import type { RideBooking } from "#src/planner/rideBooking.js";
 import type { RoutePlanner } from "#src/planner/routePlanner.js";
 import type { SafeStops } from "#src/planner/safeStops.js";
+import { assistantRoutes } from "#src/routes/assistant.js";
 import { configRoutes } from "#src/routes/config.js";
 import { contactRoutes } from "#src/routes/contact.js";
 import { domainRoutes } from "#src/routes/domains.js";
@@ -41,6 +43,7 @@ export interface AppDeps {
   cities?: CityRegistry;
   planner?: RoutePlanner;
   itineraries?: ItineraryPlanner;
+  assistant?: CityAssistant;
   geocoder?: Geocoder;
   preferences?: PreferencesStore;
   reports?: CommunityReports;
@@ -110,7 +113,7 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
   await app.register(healthRoutes);
   await app.register(meRoutes({ requireAuth, db: deps.db, preferences: deps.preferences }), { prefix: "/api" });
   await app.register(domainRoutes({ requireAuth, godaddy: deps.godaddy }), { prefix: "/api" });
-  await app.register(configRoutes(cities, deps.rides, deps.mailer?.address), { prefix: "/api" });
+  await app.register(configRoutes(cities, deps.rides, deps.mailer?.address, Boolean(deps.assistant)), { prefix: "/api" });
   await app.register(contactRoutes({ ...(deps.mailer ? { mailer: deps.mailer } : {}) }), { prefix: "/api" });
   await app.register(
     placesRoutes({ cities, suggester: createPlaceSuggester(deps.geocoder), ...(deps.geocoder ? { geocoder: deps.geocoder } : {}) }),
@@ -120,6 +123,7 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
     prefix: "/api",
   });
   await app.register(itineraryRoutes({ ...(deps.itineraries ? { planner: deps.itineraries } : {}) }), { prefix: "/api" });
+  await app.register(assistantRoutes({ ...(deps.assistant ? { assistant: deps.assistant } : {}) }), { prefix: "/api" });
   await app.register(reportRoutes({ requireAuth, ...(deps.reports ? { reports: deps.reports } : {}) }), { prefix: "/api" });
   await app.register(rideRoutes({ ...(deps.rides ? { rides: deps.rides } : {}) }), { prefix: "/api" });
   await app.register(stopRoutes({ requireAuth, ...(deps.safeStops ? { safeStops: deps.safeStops } : {}) }), { prefix: "/api" });

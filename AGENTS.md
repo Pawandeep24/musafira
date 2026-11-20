@@ -1,6 +1,6 @@
 # Project guide
 
-**Musafira** – safer two-wheeler routes for the hour you ride, built for the GoDaddy Inclusive Innovation Hackathon 2026. A Node.js + TypeScript API (Fastify) scores alternative routes for lighting, safety stops, people around, signal and more at the rider's actual arrival time; a React + MapLibre + deck.gl web app (`web/`) presents them. Firebase Auth verifies optional sign-in, Firestore stores preferences, rider reports and Safe Stop listings (shops verified through their GoDaddy domain).
+**Musafira** – safer two-wheeler routes for the hour you ride, built for the GoDaddy Inclusive Innovation Hackathon 2026. A Node.js + TypeScript API (Fastify) scores alternative routes for lighting, safety stops, people around, signal and more at the rider's actual arrival time; a React + MapLibre + deck.gl web app (`web/`) presents them. A Claude Sonnet city guide answers questions about the city through tools over the same data. Firebase Auth verifies optional sign-in, Firestore stores preferences, rider reports and Safe Stop listings (shops verified through their GoDaddy domain).
 
 ## Workflow rules (always follow)
 
@@ -32,9 +32,10 @@ Run `npm run typecheck && npm test` after every API change, and `npm run web:typ
 - `src/city/` - city data model (zod), spatial index, opening hours, registry loaded from `data/cities/`
 - `src/safety/` - the pure scoring engine: segmentation, one extractor per parameter in `features/`, stops, stretches, scoring
 - `src/itinerary/` - the pure trip-plan engine: candidate places, Claude prompt and reply parser, basic plan, schedule in city time
+- `src/assistant/` - pure city-guide helpers: area check at a time, places open along a route, Claude prompt, city-time strings
 - `src/rides/` - the pure ride engine: safety checkpoints, route guard, demo meter fares and simulated driver
 - `src/stops/` - Safe Stop questionnaire and domain proof, washroom ranking for "washrooms near me"
-- `src/planner/` - application services: ports (`RouteProvider`, `TrafficProvider`, `Geocoder`, `TextModel`, `CarRouter`, `RideHailing`, `SafeStopSource`, `DomainLookup`, `Mailer`) plus caching and ranking around the engines
+- `src/planner/` - application services: ports (`RouteProvider`, `TrafficProvider`, `Geocoder`, `TextModel`, `ChatModel`, `CarRouter`, `RideHailing`, `SafeStopSource`, `DomainLookup`, `Mailer`) plus caching and ranking around the engines
 - `src/integrations/<vendor>/` - outbound API clients, one folder per vendor (`valhalla`, `tomtom`, `ors`, `godaddy`, `anthropic`, `nammayatri`, `rdap`, `dns`, `smtp`); JSON calls go through `fetchJson` in `src/lib/http.ts` (GoDaddy keeps its own for retries and token refresh)
 - `src/routes/` - HTTP handlers, one file per resource with all its methods; thin, delegate to services or clients
 - `src/db/` - Firestore access
@@ -43,7 +44,7 @@ Run `npm run typecheck && npm test` after every API change, and `npm run web:typ
 - `.claude/skills/godaddy-go-live/` - agent skill: domain, HTTPS, mailbox, contact mail and Firebase steps on GoDaddy hosting with `gddy`, ending in `golive:check`
 - `test/` - tests mirror the behaviour under test, not the file layout
 - `web/src/api/` - DTO types and the fetch client (mirror `src/routes/planResponse.ts`)
-- `web/src/state/` - React hooks owning app state (planner, safety profile, ride preview clock and camera presets, ride booking, washrooms, Safe Stop onboarding, map theme, mobile sheet height)
+- `web/src/state/` - React hooks owning app state (planner, safety profile, ride preview clock and camera presets, ride booking, washrooms, Safe Stop onboarding, city guide chat, map theme, mobile sheet height)
 - `web/src/StopPage.tsx` - the public Safe Stop page at `/s/<id>`, chosen in `main.tsx` instead of the map app
 - `web/src/map/` - MapLibre style, deck.gl scene layers, data dot-matrices
 - `web/src/components/` - presentational components, each with its own `.css` beside it; no fetching except place search
@@ -68,6 +69,13 @@ Read the doc header before changing these:
 - `src/itinerary/schedule.ts` - stay times, meal windows, opening-hours swaps, dusk limit and dark legs
 - `src/planner/itineraryPlanner.ts` - plan cache, daily spend cap, fallback to the basic plan
 - `src/integrations/anthropic/client.ts` - Haiku request shape and cost from token usage
+- `src/integrations/anthropic/chat.ts` - Sonnet tool-use request, cache breakpoint, raw content sent back each step, cost from usage
+- `src/planner/cityAssistant.ts` - the city guide's loop: model-call and tool caps, daily spend, place refs kept or dropped in answers, code answers replaced
+- `src/planner/assistantTools.ts` - the tools Claude may call: inputs, compact results, place refs and the rider's `me`, which failures become tool errors
+- `src/assistant/area.ts` - light, signal and people-around levels at a time, on the route score's thresholds
+- `src/assistant/alongRoute.ts` - errands on the way: corridor around a planned route, open at the minute the rider passes
+- `src/assistant/prompt.ts` - the guide's fixed rules (cached): what's in scope and what it declines, ground rules; per-request city, clock and location
+- `src/assistant/cityTime.ts` - the city-time strings Claude reads and writes
 - `scripts/ingest/osmPlaces.ts` - which OSM features become searchable places and how duplicates merge
 - `src/integrations/valhalla/client.ts` - alternates, per-vertex ETA, road classes via `trace_attributes`, car routes through checkpoints
 - `src/rides/checkpoints.ts` - where safety checkpoints go so a car route follows the safe route, and when none are needed
@@ -85,7 +93,8 @@ Read the doc header before changing these:
 - `scripts/ingest/nightLights.ts`, `scripts/ingest/cellTowers.ts` - source formats and grid construction
 - `web/src/map/sceneLayers.ts` - layer stack and animation model
 - `web/src/state/ridePreview.ts` - ride preview as a re-timeable clock: the same on-screen pace in every camera preset, pause and resume
-- `web/src/map/MapView.tsx` - preview camera: follows the rider, eases to a preset, keeps the rider's own pinch or scroll zoom, lets go while paused and flies back on resume
+- `web/src/map/MapView.tsx` - preview camera: follows the rider, eases to a preset, keeps the rider's own pinch or scroll zoom, lets go while paused and flies back on resume; marked versus focused points
+- `web/src/lib/richText.ts` - the city guide's reply format (lines, bullets, bold, place refs) parsed into blocks, never HTML
 - `web/src/state/useRideBooking.ts` - booking steps, session and ride kept in sessionStorage, polling and off-route alert
 - `web/src/state/useSheet.ts` - mobile sheet detents, drag and flick snapping, drag height written to CSS outside React
 

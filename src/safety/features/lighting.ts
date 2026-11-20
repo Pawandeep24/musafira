@@ -18,7 +18,7 @@ const ROAD_LIGHTING: Readonly<Record<string, number>> = {
   track: 0.1,
 };
 const UNKNOWN_ROAD_LIGHTING = 0.4;
-const RADIANCE_K = 20;
+export const RADIANCE_K = 20;
 const SATELLITE_SHARE = 0.65;
 
 export const lighting: FeatureExtractor = {

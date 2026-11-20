@@ -27,6 +27,7 @@ const schema = z.object({
   NASA_EARTHDATA_TOKEN: z.string().min(1).optional(),
   ANTHROPIC_API_KEY: z.string().min(1).optional(),
   ANTHROPIC_DAILY_BUDGET_USD: z.coerce.number().positive().default(1),
+  ASSISTANT_DAILY_BUDGET_USD: z.coerce.number().positive().default(2),
   NAMMA_YATRI_API_URL: z.string().url().default("https://api.moving.tech/pilot/app/v2"),
   NAMMA_YATRI_LIVE: z
     .enum(["true", "false"])

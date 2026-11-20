@@ -1,7 +1,21 @@
 import { useEffect, useMemo, useState, type CSSProperties, type FocusEvent, type ReactNode } from "react";
 import { api } from "@/api/client";
-import type { AppConfig, City, ItineraryLeg, LngLat, Place, ReportCategory, ReportWhen, Route, TripReport, Washroom } from "@/api/types";
+import type {
+  AppConfig,
+  AssistantPlace,
+  AssistantRoute,
+  City,
+  ItineraryLeg,
+  LngLat,
+  Place,
+  ReportCategory,
+  ReportWhen,
+  Route,
+  TripReport,
+  Washroom,
+} from "@/api/types";
 import { useAuth } from "@/auth/useAuth";
+import { AssistantSheet } from "@/components/AssistantSheet";
 import { AuthDialog, type AuthPurpose } from "@/components/AuthDialog";
 import { ContactDialog } from "@/components/ContactDialog";
 import { DepartureControl } from "@/components/DepartureControl";
@@ -37,6 +51,7 @@ import { routeVerdict } from "@/lib/verdict";
 import { MapView, type Insets } from "@/map/MapView";
 import { rideSceneOf } from "@/map/rideScene";
 import type { TripScene } from "@/map/sceneLayers";
+import { useAssistant } from "@/state/useAssistant";
 import { useCityRasters } from "@/state/useCityRasters";
 import { useContact } from "@/state/useContact";
 import { useItinerary } from "@/state/useItinerary";
@@ -115,6 +130,7 @@ export function App() {
   const washrooms = useWashrooms();
   const listing = useStopOnboarding(auth, config?.cities ?? NO_CITIES);
   const contact = useContact();
+  const assistant = useAssistant(cityId);
   const contactLink = config?.contactEmail ? { onContact: contact.start } : {};
 
   useEffect(() => {
@@ -160,12 +176,13 @@ export function App() {
 
   const rideScene = useMemo(() => rideSceneOf(rides), [rides.open, rides.step, rides.ride, rides.quote, rides.selectedOption]);
 
-  const closePanels = (keep?: "report" | "washrooms" | "listing") => {
+  const closePanels = (keep?: "report" | "washrooms" | "listing" | "assistant") => {
     setDnaOpen(false);
     previewer.stop();
     if (keep !== "report") report.close();
     if (keep !== "washrooms") washrooms.close();
     if (keep !== "listing") listing.close();
+    if (keep !== "assistant") assistant.close();
   };
 
   const beginPreview = () => {
@@ -204,6 +221,7 @@ export function App() {
     report.close();
     washrooms.close();
     listing.close();
+    assistant.close();
     setDnaOpen((v) => !v);
   };
   const toggleWashrooms = () => {
@@ -217,6 +235,19 @@ export function App() {
   };
   const startListing = () => (auth.user ? openListing() : setAuthPurpose("listing"));
   const toggleListing = () => (listing.open ? listing.close() : startListing());
+  const toggleAssistant = () => {
+    if (assistant.open) return assistant.close();
+    closePanels("assistant");
+    assistant.start();
+  };
+
+  const showAssistantRoute = (route: AssistantRoute) => {
+    const place = ({ name, point }: AssistantPlace): Place => ({ id: `ask:${point.join(",")}`, name, label: name, point });
+    assistant.close();
+    previewer.stop();
+    setMode("ride");
+    planner.search({ from: place(route.from), to: place(route.to), departure: { mode: "at", at: new Date(route.departAt) } });
+  };
 
   const rideToWashroom = (washroom: Washroom) => {
     const from = washrooms.point;
@@ -270,10 +301,18 @@ export function App() {
     else planner.setTo(place);
   };
 
-  const sheetOpen = (washrooms.open || listing.open) && !preview;
+  const sheetOpen = (washrooms.open || listing.open || assistant.open) && !preview;
   const rideSheetOpen = rides.open && !dnaOpen && !report.open && !sheetOpen && !preview;
   const tapPoint = report.open ? report.mark : washrooms.open ? washrooms.mark : listing.open && listing.step === "place" ? listing.mark : undefined;
-  const markedPoint = report.open ? report.point : washrooms.open ? washrooms.point : listing.open ? listing.draft.point : undefined;
+  const markedPoint = report.open
+    ? report.point
+    : washrooms.open
+      ? washrooms.point
+      : listing.open
+        ? listing.draft.point
+        : assistant.open
+          ? assistant.focused?.point
+          : undefined;
   const rideable = Boolean(city && (city.rides.live || city.rides.demo));
   const planDepartsNow = planner.plan ? Math.abs(new Date(planner.plan.departAt).getTime() - Date.now()) <= LIVE_RIDE_WINDOW_MS : false;
   const liveOffered = Boolean(city?.rides.live);
@@ -290,11 +329,13 @@ export function App() {
             ? "washrooms"
             : listing.open
               ? "listing"
-              : rideSheetOpen
-                ? "ride"
-                : config && city
-                  ? "planner"
-                  : undefined;
+              : assistant.open
+                ? "assistant"
+                : rideSheetOpen
+                  ? "ride"
+                  : config && city
+                    ? "planner"
+                    : undefined;
   const sheetKey = `${activeSheet}:${planner.plan?.searchId}`;
   const [shownSheetKey, setShownSheetKey] = useState(sheetKey);
   if (sheetKey !== shownSheetKey) {
@@ -348,6 +389,7 @@ export function App() {
         {...(tripMode ? (!tripScene && trip.base ? { from: trip.base.point } : {}) : planner.from ? { from: planner.from.point } : {})}
         {...(!tripMode && planner.to ? { to: planner.to.point } : {})}
         {...(markedPoint ? { markedPoint } : {})}
+        {...(assistant.open && assistant.focused ? { focusPoint: assistant.focused.point } : {})}
         {...(washrooms.open ? { washrooms: washrooms.shown } : {})}
         {...(showLights && rasters.lights ? { lights: rasters.lights } : {})}
         {...(showSignal && rasters.signal ? { signal: rasters.signal } : {})}
@@ -375,6 +417,8 @@ export function App() {
           reporting={report.open}
           washrooms={washrooms.open}
           listing={listing.open}
+          assistant={config.assistant}
+          asking={assistant.open}
           auth={auth}
           onCity={switchCity}
           onToggleTheme={mapTheme.toggle}
@@ -384,6 +428,7 @@ export function App() {
           onToggleReport={toggleReport}
           onToggleWashrooms={toggleWashrooms}
           onToggleListing={toggleListing}
+          onToggleAssistant={toggleAssistant}
           onSignIn={() => setAuthPurpose("sync")}
         />
       )}
@@ -526,6 +571,10 @@ export function App() {
       )}
 
       {listing.open && !preview && <StopOnboarding onboarding={listing} />}
+
+      {assistant.open && !preview && city && (
+        <AssistantSheet assistant={assistant} cityId={city.id} cityName={city.name} utcOffsetMinutes={offset} onShowRoute={showAssistantRoute} />
+      )}
 
       {rideSheetOpen && city && (
         <RideSheet

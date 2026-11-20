@@ -17,6 +17,8 @@ interface Props {
   reporting: boolean;
   washrooms: boolean;
   listing: boolean;
+  assistant: boolean;
+  asking: boolean;
   auth: AuthState;
   onCity(id: string): void;
   onToggleTheme(): void;
@@ -26,6 +28,7 @@ interface Props {
   onToggleReport(): void;
   onToggleWashrooms(): void;
   onToggleListing(): void;
+  onToggleAssistant(): void;
   onSignIn(): void;
 }
 
@@ -95,6 +98,17 @@ export function TopBar(props: Props) {
   );
   const primary = (
     <>
+      {props.assistant && (
+        <button
+          className={`pill glass ${props.asking ? "is-on" : ""}`}
+          onClick={props.onToggleAssistant}
+          aria-pressed={props.asking}
+          aria-label="Ask"
+          title="Ask Claude anything about the city, checked against Musafira's data"
+        >
+          <Icon name="sparkle" size={15} /> <span>Ask</span>
+        </button>
+      )}
       <button
         className={`pill glass ${props.washrooms ? "is-on" : ""}`}
         onClick={props.onToggleWashrooms}

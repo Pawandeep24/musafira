@@ -50,12 +50,34 @@ export interface City {
 
 export interface AppConfig {
   contactEmail?: string;
+  assistant: boolean;
   parameters: ParameterInfo[];
   maxWeight: number;
   presets: Preset[];
   defaults: { weights: Weights; options: ScoringOptions };
   cities: City[];
 }
+
+export interface AssistantTurn {
+  role: "user" | "assistant";
+  text: string;
+}
+
+export interface AssistantPlace {
+  name: string;
+  point: LngLat;
+}
+
+export interface AssistantRoute {
+  from: AssistantPlace;
+  to: AssistantPlace;
+  departAt: string;
+}
+
+export type AssistantEvent =
+  | { type: "step"; label: string }
+  | { type: "answer"; text: string; places: Record<string, AssistantPlace>; route: AssistantRoute | null }
+  | { type: "error"; code: string; message: string };
 
 export interface ContactMessage {
   name: string;

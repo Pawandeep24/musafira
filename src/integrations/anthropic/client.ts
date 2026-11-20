@@ -8,9 +8,9 @@ import { z } from "zod";
 import { fetchJson } from "#src/lib/http.js";
 import type { TextModel, TextReply, TextRequest } from "#src/planner/ports.js";
 
-const MESSAGES_URL = "https://api.anthropic.com/v1/messages";
+export const MESSAGES_URL = "https://api.anthropic.com/v1/messages";
+export const API_VERSION = "2026-10-21";
 const MODEL = "claude-haiku-5-5";
-const API_VERSION = "2026-10-21";
 const USD_PER_INPUT_TOKEN = 0.1 / 1_000_000;
 const USD_PER_OUTPUT_TOKEN = 0.5 / 1_000_000;
 

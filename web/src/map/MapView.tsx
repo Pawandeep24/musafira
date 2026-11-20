@@ -10,6 +10,9 @@
  * Paused, the camera stops following and gestures are free to look around; a preset
  * picked meanwhile eases in place, and resuming flies back to the rider during the
  * clock's resume lead-in.
+ *
+ * A marked point (set by tapping the map) eases into view only when off screen; a focus
+ * point (a place the rider picked from a list) always eases to street zoom inside the insets.
  */
 import type { PickingInfo } from "@deck.gl/core";
 import { MapboxOverlay } from "@deck.gl/mapbox";
@@ -47,6 +50,7 @@ interface Props {
   from?: LngLat;
   to?: LngLat;
   markedPoint?: LngLat;
+  focusPoint?: LngLat;
   washrooms?: readonly Washroom[];
   lights?: readonly GridDot[];
   signal?: readonly GridDot[];
@@ -312,6 +316,14 @@ export function MapView(props: Props) {
     const point = props.markedPoint;
     if (map && point && !map.getBounds().contains(point)) map.easeTo({ center: point, zoom: Math.max(map.getZoom(), 15), duration: 900 });
   }, [props.markedPoint]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    const point = props.focusPoint;
+    if (!map || !point) return;
+    map.setPadding(NO_PADDING);
+    map.easeTo({ center: point, zoom: Math.max(map.getZoom(), 15), padding: props.insets, duration: 900 });
+  }, [props.focusPoint]);
 
   useEffect(() => {
     const map = mapRef.current;

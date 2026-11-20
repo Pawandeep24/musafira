@@ -10,6 +10,7 @@ import { getDb } from "#src/db/firestore.js";
 import { createFirestorePreferencesStore } from "#src/db/preferencesStore.js";
 import { createFirestoreReportStore } from "#src/db/reportStore.js";
 import { createFirestoreSafeStopStore } from "#src/db/safeStopStore.js";
+import { AnthropicChatModel } from "#src/integrations/anthropic/chat.js";
 import { AnthropicTextModel } from "#src/integrations/anthropic/client.js";
 import { txtRecords } from "#src/integrations/dns/txt.js";
 import { createEmailGatewayMailer } from "#src/integrations/godaddy/emailGateway.js";
@@ -20,8 +21,10 @@ import { RdapClient } from "#src/integrations/rdap/client.js";
 import { createSmtpMailer } from "#src/integrations/smtp/client.js";
 import { TomTomTrafficFlow } from "#src/integrations/tomtom/trafficFlow.js";
 import { ValhallaClient } from "#src/integrations/valhalla/client.js";
+import { createCityAssistant } from "#src/planner/cityAssistant.js";
 import { createCommunityReports } from "#src/planner/communityReports.js";
 import { createItineraryPlanner } from "#src/planner/itineraryPlanner.js";
+import { createPlaceSuggester } from "#src/planner/placeSuggester.js";
 import { createRideBooking } from "#src/planner/rideBooking.js";
 import { createRoutePlanner } from "#src/planner/routePlanner.js";
 import { createSafeStops } from "#src/planner/safeStops.js";
@@ -48,6 +51,7 @@ const planner = createRoutePlanner({
   reports,
   safeStops,
 });
+const geocoder = env.ORS_API_KEY ? new OrsGeocoder(env.ORS_API_KEY) : undefined;
 
 const app = await buildApp({
   env,
@@ -67,7 +71,20 @@ const app = await buildApp({
     ...(env.ANTHROPIC_API_KEY ? { model: new AnthropicTextModel(env.ANTHROPIC_API_KEY) } : {}),
     dailyBudgetUsd: env.ANTHROPIC_DAILY_BUDGET_USD,
   }),
-  ...(env.ORS_API_KEY ? { geocoder: new OrsGeocoder(env.ORS_API_KEY) } : {}),
+  ...(env.ANTHROPIC_API_KEY
+    ? {
+        assistant: createCityAssistant({
+          cities,
+          model: new AnthropicChatModel(env.ANTHROPIC_API_KEY),
+          planner,
+          suggester: createPlaceSuggester(geocoder),
+          reports,
+          safeStops,
+          dailyBudgetUsd: env.ASSISTANT_DAILY_BUDGET_USD,
+        }),
+      }
+    : {}),
+  ...(geocoder ? { geocoder } : {}),
   preferences: createFirestorePreferencesStore(db),
   reports,
   safeStops,
@@ -94,7 +111,7 @@ app.log.info({ cities: cities.cities.map((c) => `${c.id}@${c.data.version}`) }, 
 if (cities.cities.length === 0) app.log.warn("No city data in data/cities - run `npm run ingest`");
 if (!env.TOMTOM_API_KEY) app.log.warn("No TOMTOM_API_KEY - crowd scores use open places only");
 if (!env.ORS_API_KEY) app.log.warn("No ORS_API_KEY - place search uses city data only; reverse lookup returns 503");
-if (!env.ANTHROPIC_API_KEY) app.log.warn("No ANTHROPIC_API_KEY - trip plans use the basic planner only");
+if (!env.ANTHROPIC_API_KEY) app.log.warn("No ANTHROPIC_API_KEY - trip plans use the basic planner only and the city assistant is off");
 if (!env.SMTP_USER || !env.SMTP_PASSWORD) app.log.warn("No SMTP_USER/SMTP_PASSWORD - the contact form is hidden and /api/contact returns 503");
 if (!godaddy) app.log.warn(`No GoDaddy credentials for "${env.GODADDY_ENV}" - /api/domains/* will return 503`);
 if (env.GODADDY_ENV === "production") app.log.warn("GoDaddy client is pointed at PRODUCTION");

@@ -56,7 +56,7 @@ export interface SafeStops extends SafeStopSource {
   verify(uid: string, id: string): Promise<{ stop: SafeStop; checks: VerifyChecks }>;
   listedStop(id: string): { stop: SafeStop; state: OpenState } | undefined;
   domainIdeas(shopName: string, cityId: string): Promise<DomainIdea[]>;
-  washroomsNear(point: LngLat): WashroomsNear;
+  washroomsNear(point: LngLat, at?: Date): WashroomsNear;
 }
 
 export interface SafeStopsDeps {
@@ -203,9 +203,8 @@ export function createSafeStops({ store, cities, lookup, godaddy, now = () => ne
       );
     },
 
-    washroomsNear(point) {
+    washroomsNear(point, at = now()) {
       const city = cityAt(point, "Washroom search");
-      const at = now();
       const hours = hoursByCity.get(city.id)!;
       const candidates = [
         ...listedIn(city.id).flatMap((stop) => safeStopWashroom(stop) ?? []),

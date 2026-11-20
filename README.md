@@ -4,7 +4,7 @@
 
 *Musafira* is Hindi/Urdu word for a traveller.
 
-For each trip it compares up to three routes and scores every 100 m of each one for the minute you will actually be there. Is the street lit after dark? Is a police station or a 24-hour pharmacy open? Are people around? Will your phone have signal? Then it helps with the rest of the journey: a preview that rides the route before you do, an auto that is booked to follow the safe route, washrooms you can trust, and day trips that bring you home before dusk.
+For each trip it compares up to three routes and scores every 100 m of each one for the minute you will actually be there. Is the street lit after dark? Is a police station or a 24-hour pharmacy open? Are people around? Will your phone have signal? Then it helps with the rest of the journey: a preview that rides the route before you do, an auto that is booked to follow the safe route, washrooms you can trust, day trips that bring you home before dusk, and a city guide you can ask anything, answered from the same data.
 
 
 Live at **[musafira.app](https://musafira.app)**. Covers Pune and Bengaluru under first phase.
@@ -28,6 +28,7 @@ Live at **[musafira.app](https://musafira.app)**. Covers Pune and Bengaluru unde
    - [Safe Stops and domain proof](#safe-stops-and-domain-proof)
    - [Rider reports](#rider-reports)
    - [Day trips](#day-trips)
+   - [City guide](#city-guide)
    - [Place search, washrooms and contact](#place-search-washrooms-and-contact)
 5. [Data](#data)
    - [Offline city ingest](#offline-city-ingest)
@@ -58,6 +59,7 @@ Live at **[musafira.app](https://musafira.app)**. Covers Pune and Bengaluru unde
 | **Washrooms near me** | Open washrooms within 4 km, ranked by ride time: Musafira Safe Stops first, then OpenStreetMap public toilets and fuel stations. Filters for women's, free, pads, attendant and accessible. |
 | **Safe Stops** | Shop owners list their place for riders (washrooms, hours, period care, safety features and the Safe Stop Promise) and prove it by owning a GoDaddy domain. Listed stops count as safety stops in route scores and get a public page at `/s/<id>`. |
 | **Day trips** | Half a day to three days from a base place. Claude Haiku picks real places from a list the server provides; the server sets times in city time, checks opening hours and keeps rides before dusk. Works without AI too. |
+| **City guide** | Ask anything about the city: "Is Koregaon Park lively at 11 pm?", "Pharmacies open near FC Road?", "Safest way to Hinjewadi at 10 pm?". Share your location to ask from where you are, like "metro from here with a pharmacy on the way". Claude Sonnet looks it up with Musafira's own data for the hour you ask about, shows each look-up as it happens, names places you can tap to see on the map, and opens a route it planned in the route planner. No sign-in needed. |
 | **Contact** | A contact form that delivers to the site's GoDaddy mailbox. |
 
 The map opens on a night basemap with a day/night toggle. Phones get their own layout with a draggable bottom sheet.
@@ -124,7 +126,7 @@ flowchart LR
     fstore[("Firestore<br/>users, reports, safeStops")]:::store
     routing["Valhalla · TomTom · openrouteservice"]:::ext
     ny["Namma Yatri"]:::ext
-    claude["Claude Haiku"]:::ext
+    claude["Claude<br/>Haiku · Sonnet"]:::ext
     proof["RDAP · DNS"]:::ext
     domains["GoDaddy Domains API"]:::gd
     mailbox["GoDaddy Professional Email"]:::gd
@@ -229,20 +231,26 @@ flowchart TB
     f10a["useContact"]:::web --> f10b["contact.ts"]:::http --> f10c["email gateway<br/>SMTP fallback"]:::ext --> f10d["GoDaddy mailbox"]:::ext
   end
 
-  LEGEND ~~~ F1 ~~~ F2 ~~~ F3 ~~~ F4 ~~~ F5 ~~~ F6 ~~~ F7 ~~~ F8 ~~~ F9 ~~~ F10
+  subgraph F11["City guide"]
+    direction LR
+    f11a["useAssistant<br/>AssistantSheet"]:::web --> f11b["assistant.ts<br/>event stream"]:::http --> f11c["cityAssistant.ts<br/>assistantTools.ts"]:::svc --> f11d["assistant/*<br/>safety · stops"]:::eng --> f11e[("city file · reports<br/>Safe Stops")]:::data
+    f11c --> f11f["Claude Sonnet<br/>Valhalla"]:::ext
+  end
+
+  LEGEND ~~~ F1 ~~~ F2 ~~~ F3 ~~~ F4 ~~~ F5 ~~~ F6 ~~~ F7 ~~~ F8 ~~~ F9 ~~~ F10 ~~~ F11
 ```
 
 ### Layers and the rules between them
 
-The API is a ports-and-adapters design. The engines that decide anything about safety, rides, trips or washrooms are pure functions: no network, no database, no clock (time is passed in). Services around them do the IO and caching, and talk to the outside world only through small interfaces called *ports*. `server.ts` is the one place that picks real implementations, which is why every test runs on fakes without touching the network.
+The API is a ports-and-adapters design. The engines that decide anything about safety, rides, trips, washrooms or what a spot is like at an hour are pure functions: no network, no database, no clock (time is passed in). Services around them do the IO and caching, and talk to the outside world only through small interfaces called *ports*. `server.ts` is the one place that picks real implementations, which is why every test runs on fakes without touching the network.
 
 ```mermaid
 flowchart TB
   classDef box fill:#f8fafc,stroke:#64748b,color:#0f172a
   routes["src/routes<br/>parse input with zod, shape the reply, nothing else"]:::box
   services["src/planner<br/>application services: IO, caching, ranking, limits"]:::box
-  engines["Pure engines<br/>src/safety · src/rides · src/itinerary · src/stops · src/city · src/geo"]:::box
-  ports{{"src/planner/ports.ts<br/>RouteProvider · TrafficProvider · Geocoder · CarRouter<br/>RideHailing · TextModel · DomainLookup · Mailer"}}
+  engines["Pure engines<br/>src/safety · src/rides · src/itinerary · src/assistant · src/stops · src/city · src/geo"]:::box
+  ports{{"src/planner/ports.ts<br/>RouteProvider · TrafficProvider · Geocoder · CarRouter<br/>RideHailing · TextModel · ChatModel · DomainLookup · Mailer"}}
   adapters["src/integrations/*<br/>one folder per vendor"]:::box
   db["src/db<br/>Firestore stores behind small interfaces"]:::box
   server["src/server.ts · composition root<br/>reads config, builds every adapter, store and service, injects them"]:::box
@@ -488,6 +496,53 @@ flowchart TB
 
 Each reply line is day, slot and place: `1 B 81 Benne masala dosa` means day 1, breakfast, place 81, with a short note. Each line is checked on its own, and anything else (an unknown ref, the wrong slot, a repeat) is dropped. Lines beat JSON on output tokens, and a reply cut off mid-way still yields every complete line. A plan costs about $0.0006; spend is summed per UTC day and the model is skipped once it reaches `ANTHROPIC_DAILY_BUDGET_USD`. The model sees place names, areas and tags, and nothing about the rider. Any leg of the plan opens in the route planner for a full safety check.
 
+### City guide
+
+An agent on a short leash. Claude Sonnet decides what to look up and how to say it; every fact comes from a tool that reads Musafira's own data for the hour asked about, and the server owns places, times and limits.
+
+```mermaid
+sequenceDiagram
+  participant W as AssistantSheet + useAssistant
+  participant R as routes/assistant.ts
+  participant S as cityAssistant.ts
+  participant C as Claude Sonnet
+  participant T as assistantTools.ts
+  W->>R: POST /api/assistant, city and conversation
+  R->>S: ask(), known city and budget left?
+  loop up to 6 model calls
+    S->>C: rules (cached), city and clock, tools, conversation
+    C-->>S: tool calls, up to 4 run per step
+    S-->>W: step "Checking Koregaon Park at 23:00"
+    S->>T: run the tools in parallel
+    T-->>S: compact JSON, places as p1, p2 ...
+  end
+  C-->>S: answer that names places as [[p1]]
+  S-->>W: answer, its places and the last route planned
+```
+
+| Tool | Answers from |
+| --- | --- |
+| `find_place` | The city's place search, topped up by openrouteservice |
+| `check_area` | One spot at one time: light (night lights after dusk), people around (open places within 300 m), signal, help points open within 1 km, rider reports within 500 m |
+| `find_open_places` | Places of a category open at that time, nearest first |
+| `find_washrooms` | The *Washrooms near me* ranking, at that time |
+| `plan_route` | The route planner: up to three scored routes with dark metres, dead zones and the longest gap without help |
+| `find_along_route` | Places of a category within about 200 m of a planned route, open at the minute the rider passes them, in riding order |
+| `rider_reports` | Recent reports near a place, or the busiest areas city-wide |
+| `daylight` | Dawn, sunrise, sunset and dusk |
+| `find_sights` | Famous sights, or the nearest ones open |
+
+- **Same yardstick as the routes.** The area check reuses the score's curves and thresholds ([`src/assistant/area.ts`](src/assistant/area.ts)), so "dark" in an answer means what a dark stretch means on a route card.
+- **City time only.** Claude reads and writes `YYYY-MM-DDTHH:mm` in city time and never does time-zone arithmetic; the server converts.
+- **Your location, only when you share it.** The location button beside the question box watches the browser's position until you turn it off or close the panel, and each question carries it. Inside the city it becomes the place `me` that every tool accepts; Claude is told only the nearest area name ("near Shivajinagar") and distances from it, never coordinates. Unshared, Claude asks you to share it or name a place.
+- **Errands on the way.** `find_along_route` checks each place near the planned route at the minute the rider reaches it, so a pharmacy that shuts before she gets there is left out.
+- **Places by reference.** Each place a tool returns gets a ref for this question, and Claude writes `[[p3]]` where its name belongs. The server keeps only refs it issued and drops the rest, so an answer can't point at a place the tools didn't find. The app shows them as chips that fly the map there. Earlier turns are sent back with the brackets stripped, so old text can't mint refs.
+- **Stays on topic.** The guide is public and runs on a paid model, so it answers only about being out in the city: places, what's open, routes, washrooms, safety, local food and culture, and using Musafira. It declines code, homework, essays and unrelated trivia in a sentence, gives no medical, legal or money advice beyond pointing to open help nearby, and the rider can't talk it out of these rules. As a backstop, the server swaps any reply containing a code block for a reminder of what the guide is for.
+- **Tool results are data.** The rules tell Claude that text inside a result (a shop name, say) is never an instruction. Typical opening hours are flagged as estimates, and danger questions lead with 112 and the women's helpline 1091.
+- **Streamed.** Steps and the answer arrive as server-sent events, so the rider sees each look-up while Claude works. Closing the panel aborts the request.
+- **Capped.** 6 model calls and 4 tools per step, 20 questions an hour per client, and spend summed per UTC day from each reply's token usage, refused at `ASSISTANT_DAILY_BUDGET_USD` ($2 by default). The fixed rules and tool list are a cached prompt prefix, so repeated steps pay a twentieth of the input price for it.
+- **"Show this route"** opens the last route the guide planned in the route planner, scored with the rider's own Safety DNA.
+
 ### Place search, washrooms and contact
 
 ```mermaid
@@ -703,8 +758,8 @@ flowchart TB
   classDef ui fill:#f1f5f9,stroke:#64748b,color:#0f172a
   main["main.tsx"]:::web --> app["App.tsx<br/>wires hooks to components"]:::web
   main -->|"/s/id"| stop["StopPage.tsx<br/>public Safe Stop page"]:::web
-  app --> st["<b>state/</b> · hooks own state<br/>usePlanner · useSafetyProfile<br/>usePreview · useRideBooking<br/>useReport · useWashrooms<br/>useStopOnboarding · useItinerary<br/>useSheet · useMapTheme"]:::web
-  app --> co["<b>components/</b> · render only<br/>TripInputs · RouteCards · SafetyDna<br/>RideHud · RideSheet · RideTracker<br/>ReportSheet · WashroomSheet<br/>TripPlanner · ItineraryView<br/>ui/ shared controls"]:::ui
+  app --> st["<b>state/</b> · hooks own state<br/>usePlanner · useSafetyProfile<br/>usePreview · useRideBooking<br/>useReport · useWashrooms<br/>useStopOnboarding · useItinerary<br/>useAssistant · useSheet · useMapTheme"]:::web
+  app --> co["<b>components/</b> · render only<br/>TripInputs · RouteCards · SafetyDna<br/>RideHud · RideSheet · RideTracker<br/>ReportSheet · WashroomSheet<br/>TripPlanner · ItineraryView<br/>AssistantSheet · ui/ shared controls"]:::ui
   app --> mp["<b>map/</b><br/>MapView.tsx: MapLibre, camera<br/>sceneLayers.ts: deck.gl layers<br/>rebuilt every frame"]:::ui
   st --> api["api/client.ts<br/>typed fetch to /api"]:::web
   st --> auth["auth/useAuth.ts<br/>Firebase Auth"]:::web
@@ -723,13 +778,14 @@ All endpoints answer JSON; errors look like `{ "error": { "code", "message" } }`
 | Endpoint | Auth | Limit | Purpose |
 | --- | --- | --- | --- |
 | `GET /healthz` | | | Liveness, `{"status":"ok"}` |
-| `GET /api/config` | | | Parameters, presets, defaults, cities with ride support, contact address |
+| `GET /api/config` | | | Parameters, presets, defaults, cities with ride support, contact address, whether the city guide is on |
 | `GET /api/cities/:cityId/layers` | | | Night-light and cell-density grids for the map |
 | `GET /api/places/suggest?q&city` | | 300/min | Type-ahead place search |
 | `GET /api/places/reverse?lon&lat` | | 60/min | Name for a point on the map |
 | `POST /api/plan` | | 20/min | Fetch, analyse and score up to three routes; returns a `searchId` |
 | `POST /api/plan/:searchId/score` | | 120/min | Re-weight a stored search, no network calls |
 | `POST /api/itinerary` | | 30/h | Day-trip plan |
+| `POST /api/assistant` | | 20/h | Ask the city guide; streams steps and the answer as server-sent events |
 | `POST /api/reports` | sign-in | 30/h | Add a rider report (and 5/h, 20/day per rider) |
 | `GET /api/me` | sign-in | | Who am I |
 | `GET` `PUT /api/me/preferences` | sign-in | | Read or save Safety DNA |
@@ -754,7 +810,7 @@ Route planning is public on purpose: a rider must never need an account to find 
 
 1. **Score segments at their arrival minute, not routes at the departure minute.** Lighting, open shops and crowds change by the hour, and a 40-minute ride can cross dusk. *Trade-off:* every segment needs its own ETA, so the Valhalla client spreads each manoeuvre's time over its vertices.
 2. **Measure once, weigh many times.** `plan` does all the IO and analysis; `rescore` is pure arithmetic on a cached analysis, which is what makes sliders live. *Trade-off:* searches live in memory for 30 minutes, and traffic is a snapshot from plan time.
-3. **Pure engines behind ports.** Safety, rides, trips and washrooms are pure functions with time passed in, and vendors sit behind interfaces. Tests run on synthetic cities and fakes, and each integration is optional: no TomTom key means crowd scores use open places; no Anthropic key means the basic trip planner.
+3. **Pure engines behind ports.** Safety, rides, trips and washrooms are pure functions with time passed in, and vendors sit behind interfaces. Tests run on synthetic cities and fakes, and each integration is optional: no TomTom key means crowd scores use open places; no Anthropic key means the basic trip planner and no city guide.
 4. **A route can't hide its worst stretch.** The worst-10% term and multiplicative penalties make one isolated dark stretch count, and keep two bad routes distinguishable.
 5. **Unknown is not unsafe.** Missing data lowers confidence, not the score, and estimated opening hours are flagged as estimates.
 6. **Reports are evidence, not votes.** They decay, match the time of day and fade with distance, and three reports overturn a sensor. Ids are hashes, so no report can be traced to a rider.
@@ -764,16 +820,17 @@ Route planning is public on purpose: a rider must never need an account to find 
 10. **One process, one origin.** The API serves the built web app, so production needs no CORS, the CSP lives in one place, and a deploy is a single upload. *Trade-off:* in-memory state means one instance (see [Limits](#limits-and-whats-next)).
 11. **The browser never touches the database.** It loads only Firebase Auth; all data goes through the API, where zod and the auth guards apply.
 12. **City time, not server or browser time.** Opening hours, night rates, day bands and the dusk limit all use the city's wall clock, so the result doesn't depend on where the server or the rider's phone is set.
+13. **An agent that looks things up, not a chatbot with opinions.** The city guide chooses its own look-ups, but every fact comes from our tools for the hour asked, places are refs the server issued, and the step, rate and spend limits live on the server. Sonnet over Haiku because choosing tools and reading their results is the hard part. *Trade-off:* it costs more and an answer takes a few seconds, so look-ups stream as they happen and spend is capped per day.
 
 ## Security and privacy
 
 - **Secrets** live only in `.env` (gitignored) and GoDaddy's encrypted hosting secrets. The deploy bundle never includes `.env`, and secret values are never printed.
 - **Logs** redact `Authorization`, cookies and the `x-ny-session` header. Stored searches (route geometry) are never logged.
-- **Auth**: Firebase ID tokens are verified on the server. Account actions (reports, preferences, Safe Stop listings, domain checks) use `requireAuth`; route planning, washrooms and demo rides stay public.
+- **Auth**: Firebase ID tokens are verified on the server. Account actions (reports, preferences, Safe Stop listings, domain checks) use `requireAuth`; route planning, washrooms, the city guide and demo rides stay public.
 - **Input**: every body, query and upstream response is parsed with zod; request bodies are strict. Client errors carry stable codes, and upstream details never leak (a GoDaddy 401 is our credential problem, so it surfaces as 502).
-- **Abuse**: a global rate limit plus per-route limits, per-account limits in the services, and a honeypot field on the contact form.
+- **Abuse**: a global rate limit plus per-route limits, per-account limits in the services, a daily spend cap on each Claude feature, and a honeypot field on the contact form.
 - **Browser**: `helmet` sends a CSP listing every origin the page loads from (OpenFreeMap, Google Fonts, Firebase sign-in), and `same-origin-allow-popups` so Google sign-in can report back.
-- **Privacy by design**: reports store no reporter identity, the Namma Yatri token never reaches the browser, and the AI model sees place names, never the rider.
+- **Privacy by design**: reports store no reporter identity, the Namma Yatri token never reaches the browser, and the AI model sees place names, never the rider. The city guide sees only the conversation typed into its panel, never the account or Safety DNA; a location is sent only while the rider turns it on, Claude gets the nearest area name rather than coordinates, and it is never logged.
 - **GoDaddy**: `GODADDY_ENV` defaults to the OTE sandbox. GoDaddy keys have no scopes, so a production key can do anything on the account; revoke it when you are done.
 - **Firestore rules**: `firestore.rules` denies every client read and write, since only the admin SDK should touch data. Release it with `firebase deploy --only firestore:rules`.
 
@@ -826,7 +883,8 @@ Guests don't need an account: Safety DNA is kept in the browser, and signing in 
 | `VALHALLA_URL` | Routing | The public fair-use server |
 | `TOMTOM_API_KEY` | Live traffic when leaving now | People-around uses open places only |
 | `ORS_API_KEY` | Geocoding top-up, reverse lookup | City index only; reverse lookup returns 503 |
-| `ANTHROPIC_API_KEY`, `ANTHROPIC_DAILY_BUDGET_USD` | AI day trips (budget defaults to $1/day) | Basic trip planner |
+| `ANTHROPIC_API_KEY`, `ANTHROPIC_DAILY_BUDGET_USD` | AI day trips (budget defaults to $1/day) and the city guide | Basic trip planner; no city guide (Ask hidden, `/api/assistant` returns 503) |
+| `ASSISTANT_DAILY_BUDGET_USD` | City guide spend cap per UTC day (defaults to $2) | |
 | `NAMMA_YATRI_LIVE`, `NAMMA_YATRI_API_URL` | Live rides in Bengaluru | Demo rides everywhere |
 | `GODADDY_ENV`, `GODADDY_OTE_API_KEY/SECRET`, `GODADDY_PRODUCTION_API_KEY/SECRET` | Domain availability and ideas | Ideas use the registry answer; `/api/domains/*` returns 503 |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD` | Contact form | Form hidden; `/api/contact` returns 503 |
@@ -898,10 +956,13 @@ src/
   config/            zod-validated env; the only reader of process.env
   auth/              Firebase token verification, requireAuth guard
   routes/            one file per resource, thin: parse, delegate, shape
-  planner/           application services and ports (routes, rides, reports, Safe Stops, trips)
+  planner/           application services and ports (routes, rides, reports, Safe Stops, trips,
+                     city guide and its tools)
   safety/            pure scoring engine: segmentation, features/, community, stops, scoring
   rides/             pure ride engine: checkpoints, route guard, demo meter and driver
   itinerary/         pure trip engine: candidates, prompt and parser, fill, schedule
+  assistant/         pure city-guide helpers: area check at a time, places along a route,
+                     prompt, city-time strings
   stops/             Safe Stop questionnaire and domain proof, washroom ranking
   city/              city schema, spatial index, place search, opening hours
   geo/               distances, polylines, measured paths
@@ -930,6 +991,7 @@ Files with non-obvious logic (a formula, a tuning constant, time zones, an exter
 - **Public routing server.** `valhalla1.openstreetmap.de` is fair-use only; point `VALHALLA_URL` at a self-hosted Valhalla before real rider numbers.
 - **Proxies, not ground truth.** Night lights are a yearly satellite composite (they won't see a broken streetlight), cell density is not signal strength, and most OSM shops have no opening hours. Rider reports exist to correct exactly these gaps.
 - **Two cities.** Adding one means an ingest run plus a meter tariff for demo rides.
+- **The city guide can still be wrong.** It shows its look-ups and says when data is thin, but Claude can misread a result, and its knowledge outside the tools is general, not local. The city data doesn't tell metro, rail and bus stations apart, so it picks metro stations from what it knows of the lines. Its daily cap, like every limit here, is per process.
 - **Live rides** cover Bengaluru only, for rides leaving now, and stay off until `NAMMA_YATRI_LIVE=true`.
 - **No web tests yet**, and the TomTom, openrouteservice, SMTP and DNS clients have no tests of their own.
 

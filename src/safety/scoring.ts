@@ -24,8 +24,8 @@ import type { Measurement, RouteAnalysis, RouteScore, Stretch } from "#src/safet
 
 const MEAN_SHARE = 0.6;
 const WORST_SHARE_OF_LENGTH = 0.1;
-const DARK_BELOW = 0.35;
-const DEAD_ZONE_BELOW = 0.25;
+export const DARK_BELOW = 0.35;
+export const DEAD_ZONE_BELOW = 0.25;
 const DEAD_ZONE_MIN_METERS = 300;
 
 const lengthOf = (s: Stretch) => s.endMeters - s.startMeters;

@@ -311,6 +311,10 @@
     gap: 14px;
   }
 
+  .assistant__input {
+    font-size: 16px;
+  }
+
   .ride-panel {
     --ride-pad-bottom: calc(18px + env(safe-area-inset-bottom));
   }

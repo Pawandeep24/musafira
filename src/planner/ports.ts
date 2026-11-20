@@ -139,6 +139,51 @@ export interface TextModel {
   complete(request: TextRequest): Promise<TextReply>;
 }
 
+export interface ToolSpec {
+  readonly name: string;
+  readonly description: string;
+  readonly inputSchema: Readonly<Record<string, unknown>>;
+}
+
+export interface ToolCall {
+  readonly id: string;
+  readonly name: string;
+  readonly input: unknown;
+}
+
+export interface ToolOutcome {
+  readonly callId: string;
+  readonly content: string;
+  readonly isError: boolean;
+}
+
+/** One model reply. `raw` goes back unchanged on the next request, so blocks we don't read (thinking) survive the tool loop. */
+export interface ChatTurn {
+  readonly text: string;
+  readonly calls: readonly ToolCall[];
+  readonly stop: "tools" | "done" | "truncated" | "refused";
+  readonly raw: unknown;
+  readonly costUsd: number;
+}
+
+export type ChatMessage =
+  | { readonly kind: "text"; readonly role: "user" | "assistant"; readonly text: string }
+  | { readonly kind: "turn"; readonly turn: ChatTurn }
+  | { readonly kind: "results"; readonly results: readonly ToolOutcome[] };
+
+export interface ChatRequest {
+  /** Same for every request, so it is cached; `context` follows it and may change each time. */
+  readonly system: string;
+  readonly context: string;
+  readonly tools: readonly ToolSpec[];
+  readonly messages: readonly ChatMessage[];
+  readonly maxTokens: number;
+}
+
+export interface ChatModel {
+  chat(request: ChatRequest): Promise<ChatTurn>;
+}
+
 export interface SiteMail {
   readonly replyTo: { readonly name: string; readonly address: string };
   readonly subject: string;
