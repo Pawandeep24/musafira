@@ -7,8 +7,8 @@
 For each trip it compares up to three routes and scores every 100 m of each one for the minute you will actually be there. Is the street lit after dark? Is a police station or a 24-hour pharmacy open? Are people around? Will your phone have signal? Then it helps with the rest of the journey: a preview that rides the route before you do, an auto that is booked to follow the safe route, washrooms you can trust, day trips that bring you home before dusk, and a city guide you can ask anything, answered from the same data.
 
 
-Live at **[musafira.app](https://musafira.app)**. Covers Pune and Bengaluru under first phase.
-Check [Demo](https://youtu.be/fmg14REfWPo) here
+Live at **[musafira.app](https://musafira.app)**. Covers Pune and Bengaluru under first phase.  
+🎥 Check [**Demo**](https://youtu.be/fmg14REfWPo) here
 
 © 2026 Pawandeep Kaur. All rights reserved. See [License](#license).
 
